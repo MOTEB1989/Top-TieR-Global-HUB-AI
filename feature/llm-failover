@@ -1,0 +1,329 @@
+فيما يلي جميع أوامر Git والملفات المطلوبة لإنشاء فرع **feature/llm-failover** وإضافة دعم مزوّدات LLM متعددة مع راوتر الفشل-الآمن وتوصيله بالـAPI، كما طلبت (جاهز للنسخ واللصق):
+
+---
+
+### 1. إنشاء الفرع الجديد
+
+```bash
+git checkout -b feature/llm-failover
+```
+
+---
+
+### 2. إضافة مزوّدات النماذج
+
+```bash
+mkdir -p utils
+
+cat > utils/llm_providers.py <<'PY'
+import os, httpx
+from typing import List, Dict, Any, Optional
+
+class BaseLLMProvider:
+    name = "base"
+    async def chat(self, messages: List[Dict[str,str]], model: Optional[str]=None) -> str:
+        raise NotImplementedError
+
+class AzureGithubProvider(BaseLLMProvider):
+    name = "azure_github"
+    def __init__(self):
+        self.endpoint = os.getenv("AZURE_INFERENCE_ENDPOINT") or os.getenv("GITHUB_MODELS_ENDPOINT") or "https://models.github.ai/inference"
+        self.token = os.getenv("GITHUB_TOKEN") or os.getenv("AZURE_INFERENCE_TOKEN")
+        self.model = os.getenv("LLM_MODEL","openai/gpt-5")
+        if not self.token:
+            raise RuntimeError("GITHUB_TOKEN or AZURE_INFERENCE_TOKEN is required")
+
+    async def chat(self, messages, model=None) -> str:
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.endpoint}/chat/completions",
+                                  headers={"Authorization": f"Bearer {self.token}", "Content-Type":"application/json"},
+                                  json={"messages": messages, "model": model or self.model})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("choices",[{}])[0].get("message",{}).get("content","")
+
+class OpenAIProvider(BaseLLMProvider):
+    name = "openai"
+    def __init__(self):
+        self.key = os.getenv("OPENAI_API_KEY")
+        self.base = os.getenv("OPENAI_BASE","https://api.openai.com/v1")
+        self.model = os.getenv("OPENAI_MODEL","gpt-4o-mini")
+        if not self.key:
+            raise RuntimeError("OPENAI_API_KEY required")
+
+    async def chat(self, messages, model=None) -> str:
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.base}/chat/completions",
+                                  headers={"Authorization": f"Bearer {self.key}", "Content-Type":"application/json"},
+                                  json={"model": model or self.model, "messages": messages})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("choices",[{}])[0].get("message",{}).get("content","")
+
+class AnthropicProvider(BaseLLMProvider):
+    name = "anthropic"
+    def __init__(self):
+        self.key = os.getenv("ANTHROPIC_API_KEY")
+        self.model = os.getenv("ANTHROPIC_MODEL","claude-3-5-sonnet-20240620")
+        self.base = os.getenv("ANTHROPIC_BASE","https://api.anthropic.com/v1")
+        if not self.key:
+            raise RuntimeError("ANTHROPIC_API_KEY required")
+
+    async def chat(self, messages, model=None) -> str:
+        system = "\n".join([m["content"] for m in messages if m.get("role")=="system"])
+        user   = "\n\n".join([m["content"] for m in messages if m.get("role") in {"user","assistant"}])
+        payload = {"model": model or self.model, "max_tokens": 1024, "system": system or None,
+                   "messages":[{"role":"user","content": user}]}
+        headers = {"x-api-key": self.key, "anthropic-version": "2023-06-01", "content-type":"application/json"}
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.base}/messages", headers=headers, json=payload)
+            r.raise_for_status()
+            data = r.json()
+            parts = data.get("content", [])
+            return (parts[0].get("text","") if parts else str(data))
+
+class GoogleProvider(BaseLLMProvider):
+    name = "google"
+    def __init__(self):
+        self.key = os.getenv("GOOGLE_API_KEY")
+        self.model = os.getenv("GOOGLE_MODEL","gemini-1.5-pro")
+        self.base = os.getenv("GOOGLE_BASE","https://generativelanguage.googleapis.com/v1beta")
+        if not self.key:
+            raise RuntimeError("GOOGLE_API_KEY required")
+
+    async def chat(self, messages, model=None) -> str:
+        text = "\n\n".join([f"{m['role']}: {m['content']}" for m in messages])
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.base}/models/{model or self.model}:generateContent",
+                                  params={"key": self.key},
+                                  json={"contents":[{"parts":[{"text": text}]}]})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("candidates",[{}])[0].get("content",{}).get("parts",[{}])[0].get("text","")
+
+class MistralProvider(BaseLLMProvider):
+    name = "mistral"
+    def __init__(self):
+        self.key = os.getenv("MISTRAL_API_KEY")
+        self.base = os.getenv("MISTRAL_BASE","https://api.mistral.ai/v1")
+        self.model = os.getenv("MISTRAL_MODEL","mistral-medium")
+        if not self.key:
+            raise RuntimeError("MISTRAL_API_KEY required")
+
+    async def chat(self, messages, model=None) -> str:
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.base}/chat/completions",
+                                  headers={"Authorization": f"Bearer {self.key}", "Content-Type":"application/json"},
+                                  json={"model": model or self.model, "messages": messages})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("choices",[{}])[0].get("message",{}).get("content","")
+
+class OpenRouterProvider(BaseLLMProvider):
+    name = "openrouter"
+    def __init__(self):
+        self.key = os.getenv("OPENROUTER_API_KEY")
+        self.base = os.getenv("OPENROUTER_BASE","https://openrouter.ai/api/v1")
+        self.model = os.getenv("OPENROUTER_MODEL","openai/gpt-4o-mini")
+        if not self.key:
+            raise RuntimeError("OPENROUTER_API_KEY required")
+
+    async def chat(self, messages, model=None) -> str:
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{self.base}/chat/completions",
+                                  headers={"Authorization": f"Bearer {self.key}", "Content-Type":"application/json"},
+                                  json={"model": model or self.model, "messages": messages})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("choices",[{}])[0].get("message",{}).get("content","")
+
+class OllamaProvider(BaseLLMProvider):
+    name = "ollama"
+    def __init__(self):
+        self.base = os.getenv("OLLAMA_BASE","http://localhost:11434")
+        self.model = os.getenv("OLLAMA_MODEL","llama3")
+    async def chat(self, messages, model=None) -> str:
+        prompt = "\n\n".join([f"{m['role']}: {m['content']}" for m in messages])
+        async with httpx.AsyncClient(timeout=120) as client:
+            r = await client.post(f"{self.base}/api/generate",
+                                  json={"model": model or self.model, "prompt": prompt, "stream": False})
+            r.raise_for_status()
+            data = r.json()
+            return data.get("response","")
+
+def get_provider(name: Optional[str] = None) -> BaseLLMProvider:
+    name = (name or os.getenv("LLM_PROVIDER","azure_github")).lower()
+    if name in {"azure","github","azure_github"}: return AzureGithubProvider()
+    if name == "openai":     return OpenAIProvider()
+    if name == "anthropic":  return AnthropicProvider()
+    if name == "google":     return GoogleProvider()
+    if name == "mistral":    return MistralProvider()
+    if name == "openrouter": return OpenRouterProvider()
+    if name == "ollama":     return OllamaProvider()
+    raise RuntimeError(f"Unknown LLM_PROVIDER: {name}")
+PY
+```
+
+---
+
+### 3. راوتر الفشل الآمن
+
+```bash
+cat > utils/llm_router.py <<'PY'
+import os, time, asyncio
+from typing import List, Dict, Optional
+from .llm_providers import get_provider
+
+DEFAULT_TIMEOUT_S = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+DEFAULT_RETRIES   = int(os.getenv("LLM_RETRIES", "1"))
+CB_FAILS          = int(os.getenv("LLM_CIRCUIT_MAX_FAILS", "3"))
+CB_COOLDOWN_S     = int(os.getenv("LLM_CIRCUIT_COOLDOWN_SECONDS", "120"))
+
+_CIRCUIT = {}  # name -> {"fails": int, "until": epoch}
+
+def _circuit_opened(name: str) -> bool:
+    info = _CIRCUIT.get(name)
+    return bool(info and time.time() < info.get("until", 0))
+
+def _record_failure(name: str):
+    info = _CIRCUIT.get(name, {"fails": 0, "until": 0})
+    info["fails"] = info.get("fails", 0) + 1
+    if info["fails"] >= CB_FAILS:
+        info["until"] = time.time() + CB_COOLDOWN_S
+    _CIRCUIT[name] = info
+
+def _record_success(name: str):
+    _CIRCUIT[name] = {"fails": 0, "until": 0}
+
+def _providers_chain() -> List[str]:
+    primary = (os.getenv("LLM_PROVIDER") or "azure_github").strip()
+    fallbacks = [p.strip() for p in (os.getenv("LLM_FALLBACKS","").split(",") if os.getenv("LLM_FALLBACKS") else []) if p.strip()]
+    chain = [primary] + [p for p in fallbacks if p and p != primary]
+    seen, uniq = set(), []
+    for p in chain:
+        if p not in seen:
+            uniq.append(p); seen.add(p)
+    return uniq
+
+class LLMRouter:
+    def __init__(self, model: Optional[str] = None):
+        self.model = model
+
+    async def chat(self, messages: List[Dict[str,str]]) -> Dict[str,str]:
+        errors = []
+        for name in _providers_chain():
+            if _circuit_opened(name):
+                errors.append(f"{name}: circuit-open")
+                continue
+            try:
+                provider = get_provider(name)
+            except Exception as e:
+                errors.append(f"{name}: init-error:{e}")
+                _record_failure(name)
+                continue
+
+            retries = DEFAULT_RETRIES
+            last_err = None
+            for attempt in range(retries + 1):
+                try:
+                    res = await asyncio.wait_for(provider.chat(messages, model=self.model), timeout=DEFAULT_TIMEOUT_S)
+                    _record_success(name)
+                    return {"provider": name, "content": res}
+                except Exception as e:
+                    last_err = e
+                    await asyncio.sleep(min(1 + attempt, 3))
+
+            errors.append(f"{name}: {type(last_err).__name__}: {last_err}")
+            _record_failure(name)
+        raise RuntimeError("LLM failover exhausted: " + " | ".join(errors))
+PY
+```
+
+---
+
+### 4. تعديل وربط الـAPI (في `app_v2.py` أو ملف التطبيق الرئيسي):
+
+#### أعلى الملف:
+```python
+from utils.llm_router import LLMRouter
+```
+
+#### في مسار التلخيص `/v1/llm/summarize`:
+```python
+router = LLMRouter(model=get_flags().get("LLM_MODEL"))
+out = await router.chat(messages)
+return {"provider": out["provider"], "summary": out["content"]}
+```
+
+#### في `/v1/report` عند `summarize=true`:
+```python
+router = LLMRouter(model=get_flags().get("LLM_MODEL"))
+msg = [
+  {"role":"system","content":"أنت محلل استخبارات OSINT. لخّص التقرير التالي بإيجاز وبالعربية."},
+  {"role":"user","content": json.dumps(result, ensure_ascii=False)}
+]
+s = await router.chat(msg)
+result = {"report": result, "summary": s["content"], "provider": s["provider"], "language": lang or "ar"}
+```
+
+---
+
+### 5. إعدادات البيئة
+
+```bash
+cat >> .env.example <<'ENV'
+
+# LLM multi-provider
+LLM_PROVIDER=azure_github  # azure_github | openai | anthropic | google | mistral | openrouter | ollama
+LLM_MODEL=openai/gpt-5
+LLM_FALLBACKS=openai,anthropic,google,ollama
+
+# مهلات وقاطع دائرة
+LLM_TIMEOUT_SECONDS=60
+LLM_RETRIES=1
+LLM_CIRCUIT_MAX_FAILS=3
+LLM_CIRCUIT_COOLDOWN_SECONDS=120
+
+# مفاتيح مقدمي الخدمات (املأ ما تحتاجه)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GOOGLE_API_KEY=
+MISTRAL_API_KEY=
+OPENROUTER_API_KEY=
+GITHUB_TOKEN=
+AZURE_INFERENCE_TOKEN=
+ENV
+```
+
+---
+
+### 6. التزام ودفع التغييرات
+
+```bash
+git add .
+git commit -m "feat: LLM failover router + multi-provider adapters and API wiring"
+git push -u origin feature/llm-failover
+```
+
+---
+
+**اختبار سريع:**
+
+```bash
+# قائمة المزوّدين الحاليين
+curl -H "x-api-key: change_me_local_dev" http://localhost:8080/v1/llm/providers
+
+# تلخيص حر
+curl -H "x-api-key: change_me_local_dev" -H "Content-Type: application/json" \
+  -d '{"content":"نتائج Shodan وDeHashed لهذا المعرف معقّدة؛ لخصها في خمس نقاط.", "language":"ar"}' \
+  http://localhost:8080/v1/llm/summarize
+
+# تلخيص تقرير
+curl -H "x-api-key: change_me_local_dev" -H "Content-Type: application/json" \
+  -d '{"identifier":"8.8.8.8","scope":"full"}' \
+  "http://localhost:8080/v1/report?summarize=true&lang=ar"
+```
+
+---
+
+**ملاحظة:** يمكنك لاحقًا طلب patch موحد (Unified diff) أو فتح Pull Request مباشرة بعد هذه الخطوات. إذا احتجت أي تعديل أو دعم إضافي، أنا جاهز!
