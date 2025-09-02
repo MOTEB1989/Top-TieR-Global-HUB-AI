@@ -1,0 +1,613 @@
+تم — هذا كل ما تحتاجه كامل وجاهز للنسخ واللصق من الآيفون داخل GitHub.
+سنضيف devcontainer + إعداد تشغيل مباشر بزر Run داخل Codespaces.
+
+⸻
+
+1) ملف devcontainer (يشغّل البيئة تلقائيًا)
+
+أنشئ ملف: .devcontainer/devcontainer.json
+
+{
+  "name": "Top-TieR Global HUB AI",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "forwardPorts": [8080],
+  "remoteUser": "vscode"
+}
+
+أنشئ ملف: .devcontainer/README.md
+
+# Devcontainer for Codespaces
+
+- Python 3.11 image
+- Installs `requirements.txt` on create
+- Forwards port **8080** for FastAPI
+- Pre-installs Python + Docker extensions
+
+
+⸻
+
+2) تشغيل FastAPI بزر واحد داخل Codespaces
+
+أنشئ ملف: .vscode/launch.json
+
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI (uvicorn)",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "src.app:app",
+        "--host", "0.0.0.0",
+        "--port", "8080",
+        "--reload"
+      ],
+      "jinja": true,
+      "console": "integratedTerminal",
+      "env": {
+        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+        "NEO4J_URI": "${env:NEO4J_URI}",
+        "NEO4J_USER": "${env:NEO4J_USER}",
+        "NEO4J_PASS": "${env:NEO4J_PASS}"
+      }
+    }
+  ]
+}
+
+يقرأ المفاتيح تلقائيًا من Secrets في Codespaces. لا تضع القيم هنا.
+
+(اختياري) ضبط تلقائي خفيف للمحرر
+
+أنشئ ملف: .vscode/settings.json
+
+{
+  "python.analysis.typeCheckingMode": "off",
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/__pycache__": true
+  }
+}
+
+
+⸻
+
+3) كيف تضيفها من الآيفون (خطوتان متكررتان)
+	1.	افتح المستودع → Add file → Create new file.
+	2.	اكتب اسم الملف كامل مثل:
+
+.devcontainer/devcontainer.json
+
+الصق المحتوى ثم Commit changes.
+	•	كرر لنفس الخطوات مع:
+	•	.devcontainer/README.md
+	•	.vscode/launch.json
+	•	.vscode/settings.json (اختياري)
+
+⸻
+
+4) التشغيل الآن
+	•	من صفحة المستودع اضغط Code → Codespaces → Create codespace on main.
+	•	بعد الإنشاء، افتح تبويب Run and Debug في الشريط الجانبي، واختر:
+FastAPI (uvicorn) ثم اضغط Run.
+	•	سيفتح المنفذ 8080 تلقائيًا؛ ادخل:
+	•	/docs لتجربة واجهة Swagger
+	•	/ui/cyto/ لرسمة الجراف
+	•	/health للتحقق السريع
+
+⸻
+
+جاهز نضيف بعدها Dockerfile + docker-compose.yml داخل المستودع (لو حاب تشغّل من أي جهاز مستقبلاً) أم تفضّل أولًا نختبر التشغيل في Codespaces؟
+تمام! خلّيني أريك “كيف تسأل نموذجًا بلغة بشرية وهو يختار الأداة المناسبة وينفّذها” — عمليًا وعلى طول.
+
+خيار 1: تشغيل الوكيل الجاهز (الذي أضفناه لك)
+
+هذا هو الأسرع لتجربة الفكرة فورًا.
+
+# 1) ثبّت المتطلبات (مرة واحدة)
+pip install -r veritas_nexus_v2/requirements.txt
+
+# 2) شغّل واجهة Veritas Nexus (لو مشغّلتها مسبقًا)
+cd veritas_nexus_v2
+docker compose up --build -d  # API على http://localhost:8080
+
+# 3) (اختياري) فعّل LLM عبر OpenAI
+export OPENAI_API_KEY=sk-...
+export OPENAI_MODEL=gpt-4o-mini  # أو أي موديل مدعوم عندك
+
+# 4) اسأل الوكيل بسطر واحد (بدون LLM سيعمل بوضع rule-based)
+cd veritas_nexus_v2/agents
+python run_agent.py "أعطني تقريرًا كاملًا عن الرقم +966551234567 ثم ابحث عن أي أسماء مستعارة مرتبطة"
+
+ماذا يحدث هنا؟
+	•	الوكيل يقرأ طلبك بالعربية.
+	•	يقرّر: هذا هاتف → يستدعي أداة veritas_report (تستدعي /v1/report)؛ لو استُخرج بريد/يوزر سيضيف sherlock_search تلقائيًا.
+	•	يرجع لك JSON ملخّصًا (والتفاصيل محفوظة في Neo4j لو فعّلت التخزين).
+
+جرّب سيناريوهات أخرى:
+
+python run_agent.py "حلّل الـ IP 8.8.8.8 وشغّل Shodan وأعطني ملخص المخاطر"
+python run_agent.py "استخرج ما يمكن عن البريد ahmed@example.com واربطه بأي يوزر"
+python run_agent.py "ابحث ويبًا عن سياسات PDPL في السعودية وأعطني أهم 5 روابط موثوقة"
+
+خيار 2: مثال كود مصغّر يوضح “سؤال → أداة → تنفيذ”
+
+لو تحب ترى العصب بوضوح، هذا سكربت صغير (بايثون) يربط النموذج بالأدوات الثلاث الأساسية: تقرير المنصة، IntelX/Email/Phone، وSherlock. احفظه باسم demo_agent.py وشغّله.
+
+# demo_agent.py
+import os, json, subprocess, httpx
+from typing import Any, Dict
+
+VN_API_URL = os.getenv("VN_API_URL", "http://localhost:8080")
+VN_API_KEY = os.getenv("VN_API_KEY", "change_me_local_dev")
+
+def call_api(path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    headers = {"x-api-key": VN_API_KEY, "Content-Type": "application/json"}
+    with httpx.Client(timeout=60) as client:
+        r = client.post(f"{VN_API_URL}{path}", headers=headers, json=payload)
+        r.raise_for_status()
+        return r.json()
+
+# أدواتنا
+def veritas_report(identifier: str) -> Dict[str, Any]:
+    return call_api("/v1/report", {"identifier": identifier, "scope": "full"})
+
+def intelx_like(term: str) -> Dict[str, Any]:
+    if "@" in term:
+        return call_api("/v1/email/check", {"email": term, "include_breaches": True})
+    return call_api("/v1/phone/verify", {"identifier": term})
+
+def sherlock_search(username: str) -> Dict[str, Any]:
+    try:
+        out = subprocess.run(
+            ["sherlock", "--timeout", "5", "--print-found", username.lstrip("@")],
+            capture_output=True, text=True, timeout=120
+        )
+        return {"tool":"sherlock", "stdout": out.stdout}
+    except FileNotFoundError:
+        return {"tool":"sherlock", "error":"sherlock غير مثبت"}
+    except Exception as e:
+        return {"tool":"sherlock", "error": str(e)}
+
+# مخطّط بسيط: يختار الأداة حسب النص
+def run(query: str) -> Dict[str, Any]:
+    q = query.strip()
+    if q.startswith("ip ") or q.count(".") == 3:
+        # IP — دع التقرير يقرر (سيستدعي Shodan إن مُفعّل)
+        return {"action":"report(ip)", "data": veritas_report(q.split()[-1])}
+    if "@" in q:
+        # بريد
+        data = veritas_report(q)
+        return {"action":"report(email)", "data": data}
+    if q.startswith("@") or ("يوزر" in q and " " in q):
+        # احتمال اسم مستخدم
+        s = sherlock_search(q)
+        r = veritas_report(q)
+        return {"action":"sherlock+report(username)", "sherlock": s, "report": r}
+    # افتراضي: تقرير شامل وخلص
+    return {"action":"report", "data": veritas_report(q)}
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("usage: python demo_agent.py '<سؤال بالعربية>'")
+        raise SystemExit(1)
+    print(json.dumps(run(sys.argv[1]), ensure_ascii=False, indent=2))
+
+تشغيله:
+
+python demo_agent.py "أريد تقريرًا عن الرقم +966551234567 واربط أي بريد أو اسم مستعار"
+python demo_agent.py "ip 8.8.8.8"
+python demo_agent.py "@someuser"
+
+خيار 3: ربط LLM (LangChain) بنسخة مُحكَمة أكثر
+
+لو تريد نموذجًا يخطط باستخدام ReAct ويختار الأدوات تلقائيًا:
+
+from langchain.agents import Tool, initialize_agent
+from langchain_openai import ChatOpenAI
+import os, json, httpx, subprocess
+
+VN_API_URL = os.getenv("VN_API_URL","http://localhost:8080")
+VN_API_KEY = os.getenv("VN_API_KEY","change_me_local_dev")
+
+def _post(path, payload):
+    with httpx.Client(timeout=60) as c:
+        r = c.post(f"{VN_API_URL}{path}", headers={"x-api-key": VN_API_KEY, "Content-Type":"application/json"}, json=payload)
+        r.raise_for_status()
+        return r.json()
+
+def tool_report(q:str)->str: return json.dumps(_post("/v1/report", {"identifier": q, "scope":"full"}), ensure_ascii=False)
+def tool_email_phone(q:str)->str:
+    if "@" in q: return json.dumps(_post("/v1/email/check", {"email": q, "include_breaches": True}), ensure_ascii=False)
+    return json.dumps(_post("/v1/phone/verify", {"identifier": q}), ensure_ascii=False)
+def tool_sherlock(u:str)->str:
+    try:
+        r = subprocess.run(["sherlock","--timeout","5","--print-found", u.lstrip("@")], capture_output=True, text=True, timeout=120)
+        return r.stdout or r.stderr
+    except Exception as e:
+        return f"sherlock error: {e}"
+
+tools = [
+    Tool(name="veritas_report", func=tool_report, description="تقرير شامل لأي معرف (هاتف/بريد/يوزر/IP)"),
+    Tool(name="intelx_or_email_phone", func=tool_email_phone, description="تحقق سريع عبر خط هاتف/بريد"),
+    Tool(name="sherlock_search", func=tool_sherlock, description="بحث يوزر عبر الشبكات"),
+]
+
+llm = ChatOpenAI(model=os.getenv("OPENAI_MODEL","gpt-4o-mini"), temperature=0)
+
+agent = initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=False)
+
+# مثال سؤال طبيعي:
+question = "حلّل العنوان 8.8.8.8 وشغّل ما تحتاجه ثم أعطني ملخص المخاطر"
+answer = agent.run(question)
+print(answer)
+
+	•	الموديل سيقرّر: هذا IP → استخدم veritas_report (الذي سيستدعي Shodan إذا مفعّل) وقد يضيف أدوات أخرى بحسب الطلب.
+	•	تقدر تقيّده بتعليمات “عدم الهلوسة” و“استخدم الأدوات فقط” بوضع System Prompt أكثر صرامة.
+
+تمام—نشفّر القناة على ثلاث طبقات: بين العميل وواجهتك (HTTPS)، وبين خدماتك الداخلية (Neo4j وغيره)، ومع المزوّدين الخارجيين (TLS مضبوط). اختر المسار الذي يناسبك؛ وضعت لك نسخ-ولصق جاهزة.
+
+⸻
+
+1) تشفير من المتصفح/العملاء إلى الـ API (HTTPS)
+
+أسهل إنتاجيًا: Traefik + Let’s Encrypt (TLS تلقائي)
+
+ضع هذا كـ docker-compose.override.yml (بدّل veritas.example.com وإيميلك):
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --providers.docker=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=you@domain.com
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --api.insecure=false
+    ports:
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks: [web]
+
+  api:
+    # خدمتك FastAPI الحالية
+    build: .
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vn.rule=Host(`veritas.example.com`)
+      - traefik.http.routers.vn.entrypoints=websecure
+      - traefik.http.routers.vn.tls.certresolver=le
+      # HSTS
+      - traefik.http.middlewares.hsts.headers.stsSeconds=31536000
+      - traefik.http.middlewares.hsts.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.hsts.headers.stsPreload=true
+      - traefik.http.routers.vn.middlewares=hsts@docker
+    networks: [web, default]
+
+networks:
+  web:
+    external: false
+
+بعد تشغيل docker compose up --build -d—كل الزيارات ستكون https://veritas.example.com بتشفير TLS تلقائي + HSTS.
+
+بديل سريع للتجارب (داخل الحاوية نفسها)
+
+لو أردت TLS مباشر من Uvicorn (شهادة ذاتية للتجارب):
+
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+uvicorn app_v2:app --host 0.0.0.0 --port 8443 --ssl-keyfile key.pem --ssl-certfile cert.pem
+
+(للإنتاج استخدم Traefik/Caddy/Nginx مع Let’s Encrypt، وليس شهادة ذاتية.)
+
+خيار أقوى: mTLS (شهادة عميل مطلوبة)
+	•	أنشئ سلطة داخلية ووقّع شهادات العملاء:
+
+openssl genrsa -out ca.key 4096
+openssl req -x509 -new -key ca.key -out ca.crt -days 3650 -subj "/CN=VN-Client-CA"
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr -subj "/CN=veritas-client"
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 825 -sha256
+
+
+	•	فعّل تحقّق شهادة العميل في Traefik:
+
+# أضف إلى خدمة traefik:
+command:
+  - --entrypoints.websecure.http.tls.clientAuth.caFiles=/certs/ca.crt
+  - --entrypoints.websecure.http.tls.clientAuth.clientAuthType=RequireAndVerifyClientCert
+volumes:
+  - ./certs:/certs:ro
+
+
+
+الآن أي عميل بدون شهادة موقعة لن يصل للـ API.
+
+⸻
+
+2) تشفير بين الـ API و Neo4j (داخل الدوكر/الشبكة الداخلية)
+
+تفعيل TLS على Neo4j
+
+ضع شهادتك في مسار مخصص وفعّل سياسة bolt:
+
+services:
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: neo4j/Strong_Pass
+      NEO4J_dbms_security_ssl_policy_bolt_enabled: "true"
+      NEO4J_dbms_security_ssl_policy_bolt_base__directory: /certs/bolt
+      NEO4J_dbms_security_ssl_policy_bolt_private__key: private.key
+      NEO4J_dbms_security_ssl_policy_bolt_public__certificate: public.crt
+      NEO4J_dbms_connector_bolt_tls__level: REQUIRED
+    volumes:
+      - ./certs/neo4j/bolt:/certs/bolt:ro
+    # لا تفتح المنفذ للخارج إن ما تحتاجه
+
+وفي تطبيقك استخدم اتصالًا مشفّرًا:
+	•	شهادة موثّقة عامًّا: neo4j+s://neo4j:7687
+	•	شهادة ذاتية: neo4j+ssc://neo4j:7687
+
+مثال بايثون:
+
+from neo4j import GraphDatabase
+uri = os.getenv("NEO4J_URI", "neo4j+s://neo4j:7687")  # أو neo4j+ssc://
+driver = GraphDatabase.driver(uri, auth=(user, password))
+
+إن أبقيت Neo4j داخل شبكة Docker فقط ولم تفتح المنافذ للعالم، فأنت تقلل السطح الهجومي بشكل كبير، ومع TLS تصبح الاتصالات داخلية ومشفّرة أيضًا.
+
+⸻
+
+3) تشفير/تحصين الاتصالات الصادرة (Providers)
+	•	HTTPX يفعّل TLS افتراضيًا. حافظ على verify=True (الافتراضي).
+	•	إن استخدمت سلطة خاصة/Proxy بــ CA مخصص:
+	•	عرّف SSL_CERT_FILE=/path/ca.pem أو مرّر verify='/path/ca.pem' عند إنشاء httpx.Client(...).
+	•	حافظ على TLS 1.2+ في عاكسك العكسي (Traefik):
+
+# ملف ديناميكي لـ Traefik (tls.yml)، اختياري:
+tls:
+  options:
+    modern:
+      minVersion: VersionTLS12
+      sniStrict: true
+
+ثم اربطه:
+- --entrypoints.websecure.http.tls.options=modern@file
+
+⸻
+
+4) رؤوس أمان (يمكن على Traefik أو داخل FastAPI)
+
+إذا أردتها من التطبيق نفسه:
+
+from fastapi import FastAPI
+app = FastAPI()
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    resp = await call_next(request)
+    resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'"
+    return resp
+
+بديلًا، أبقِ هذه الرؤوس على طبقة Traefik كما في المثال السابق (أسهل مركزيًا).
+
+⸻
+
+5) مفاتيح وأسرار (at-rest)
+	•	لا تضع مفاتيح في Git. استخدم .env محلي/سرّي أو Docker secrets.
+	•	للتخزين المُشفّر للملفات/الأسرار في المستودع: sops + KMS لاحقًا.
+
+⸻
+
+اختبار سريع
+
+تأكد من HTTPS خارجي
+
+curl -I https://veritas.example.com
+# يجب أن ترى HTTP/2 200 و HSTS في الرؤوس
+
+تأكد من تشفير Neo4j
+
+# إن فتحت المنفذ للعالم لأغراض اختبار فقط
+openssl s_client -connect your-neo4j-host:7687 -starttls postgres  # (trick: سيتحقق من TLS، تجاهل البروتوكول)
+
+
+⸻
+
+خلاصة عملية	•	الرؤوس والسياسات تكمل الحماية ضد الهجمات الشائعة على الويب.
+
+الخطوة المنطقية التالية هي تحديد اسم النطاق (الدومين) والبريد لاستخدامهما في ملف Traefik، ثم تشغيل docker compose up. إذا رغبت، أجهّز لك ملف docker-compose.override.yml مُعدّ باسم نطاقك فورًا.
+تمام—نشفّر القناة على ثلاث طبقات: بين العميل وواجهتك (HTTPS)، وبين خدماتك الداخلية (Neo4j وغيره)، ومع المزوّدين الخارجيين (TLS مضبوط). اختر المسار الذي يناسبك؛ وضعت لك نسخ-ولصق جاهزة.
+
+⸻
+
+1) تشفير من المتصفح/العملاء إلى الـ API (HTTPS)
+
+أسهل إنتاجيًا: Traefik + Let’s Encrypt (TLS تلقائي)
+
+ضع هذا كـ docker-compose.override.yml (بدّل veritas.example.com وإيميلك):
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --providers.docker=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=you@domain.com
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --api.insecure=false
+    ports:
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks: [web]
+
+  api:
+    # خدمتك FastAPI الحالية
+    build: .
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vn.rule=Host(`veritas.example.com`)
+      - traefik.http.routers.vn.entrypoints=websecure
+      - traefik.http.routers.vn.tls.certresolver=le
+      # HSTS
+      - traefik.http.middlewares.hsts.headers.stsSeconds=31536000
+      - traefik.http.middlewares.hsts.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.hsts.headers.stsPreload=true
+      - traefik.http.routers.vn.middlewares=hsts@docker
+    networks: [web, default]
+
+networks:
+  web:
+    external: false
+
+بعد تشغيل docker compose up --build -d—كل الزيارات ستكون https://veritas.example.com بتشفير TLS تلقائي + HSTS.
+
+بديل سريع للتجارب (داخل الحاوية نفسها)
+
+لو أردت TLS مباشر من Uvicorn (شهادة ذاتية للتجارب):
+
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+uvicorn app_v2:app --host 0.0.0.0 --port 8443 --ssl-keyfile key.pem --ssl-certfile cert.pem
+
+(للإنتاج استخدم Traefik/Caddy/Nginx مع Let’s Encrypt، وليس شهادة ذاتية.)
+
+خيار أقوى: mTLS (شهادة عميل مطلوبة)
+	•	أنشئ سلطة داخلية ووقّع شهادات العملاء:
+
+openssl genrsa -out ca.key 4096
+openssl req -x509 -new -key ca.key -out ca.crt -days 3650 -subj "/CN=VN-Client-CA"
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr -subj "/CN=veritas-client"
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 825 -sha256
+
+
+	•	فعّل تحقّق شهادة العميل في Traefik:
+
+# أضف إلى خدمة traefik:
+command:
+  - --entrypoints.websecure.http.tls.clientAuth.caFiles=/certs/ca.crt
+  - --entrypoints.websecure.http.tls.clientAuth.clientAuthType=RequireAndVerifyClientCert
+volumes:
+  - ./certs:/certs:ro
+
+
+
+الآن أي عميل بدون شهادة موقعة لن يصل للـ API.
+
+⸻
+
+2) تشفير بين الـ API و Neo4j (داخل الدوكر/الشبكة الداخلية)
+
+تفعيل TLS على Neo4j
+
+ضع شهادتك في مسار مخصص وفعّل سياسة bolt:
+
+services:
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: neo4j/Strong_Pass
+      NEO4J_dbms_security_ssl_policy_bolt_enabled: "true"
+      NEO4J_dbms_security_ssl_policy_bolt_base__directory: /certs/bolt
+      NEO4J_dbms_security_ssl_policy_bolt_private__key: private.key
+      NEO4J_dbms_security_ssl_policy_bolt_public__certificate: public.crt
+      NEO4J_dbms_connector_bolt_tls__level: REQUIRED
+    volumes:
+      - ./certs/neo4j/bolt:/certs/bolt:ro
+    # لا تفتح المنفذ للخارج إن ما تحتاجه
+
+وفي تطبيقك استخدم اتصالًا مشفّرًا:
+	•	شهادة موثّقة عامًّا: neo4j+s://neo4j:7687
+	•	شهادة ذاتية: neo4j+ssc://neo4j:7687
+
+مثال بايثون:
+
+from neo4j import GraphDatabase
+uri = os.getenv("NEO4J_URI", "neo4j+s://neo4j:7687")  # أو neo4j+ssc://
+driver = GraphDatabase.driver(uri, auth=(user, password))
+
+إن أبقيت Neo4j داخل شبكة Docker فقط ولم تفتح المنافذ للعالم، فأنت تقلل السطح الهجومي بشكل كبير، ومع TLS تصبح الاتصالات داخلية ومشفّرة أيضًا.
+
+⸻
+
+3) تشفير/تحصين الاتصالات الصادرة (Providers)
+	•	HTTPX يفعّل TLS افتراضيًا. حافظ على verify=True (الافتراضي).
+	•	إن استخدمت سلطة خاصة/Proxy بــ CA مخصص:
+	•	عرّف SSL_CERT_FILE=/path/ca.pem أو مرّر verify='/path/ca.pem' عند إنشاء httpx.Client(...).
+	•	حافظ على TLS 1.2+ في عاكسك العكسي (Traefik):
+
+# ملف ديناميكي لـ Traefik (tls.yml)، اختياري:
+tls:
+  options:
+    modern:
+      minVersion: VersionTLS12
+      sniStrict: true
+
+ثم اربطه:
+- --entrypoints.websecure.http.tls.options=modern@file
+
+⸻
+
+4) رؤوس أمان (يمكن على Traefik أو داخل FastAPI)
+
+إذا أردتها من التطبيق نفسه:
+
+from fastapi import FastAPI
+app = FastAPI()
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    resp = await call_next(request)
+    resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'"
+    return resp
+
+بديلًا، أبقِ هذه الرؤوس على طبقة Traefik كما في المثال السابق (أسهل مركزيًا).
+
+⸻
+
+5) مفاتيح وأسرار (at-rest)
+	•	لا تضع مفاتيح في Git. استخدم .env محلي/سرّي أو Docker secrets.
+	•	للتخزين المُشفّر للملفات/الأسرار في المستودع: sops + KMS لاحقًا.
+
+⸻
+
+اختبار سريع
+
+تأكد من HTTPS خارجي
+
+curl -I https://veritas.example.com
+# يجب أن ترى HTTP/2 200 و HSTS في الرؤوس
+
+تأكد من تشفير Neo4j
+
+# إن فتحت المنفذ للعالم لأغراض اختبار فقط
+openssl s_client -connect your-neo4j-host:7687 -starttls postgres  # (trick: سيتحقق من TLS، تجاهل 
+
+ 
