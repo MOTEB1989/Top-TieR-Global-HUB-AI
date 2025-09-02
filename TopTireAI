@@ -1,0 +1,242 @@
+تمام—نجهّز لك حِزمة تشغيل كاملة مرّة واحدة تقدر تضيفها من الآيفون بس عبر “Create new file” أو برفع ملفات. بتطلع معك منصة صغيرة شغّالة:
+	•	FastAPI API
+	•	سكربت اختبار OpenAI
+	•	CI جاهز (workflows)
+	•	أمثلة .env
+	•	اختبار بسيط
+	•	README مختصر
+
+انسخ–ألصق الملفات أدناه بنفس أسماء المسارات.
+
+⸻
+
+1) ملفات المشروع (انسخها كما هي)
+
+src/app.py
+
+import os
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from openai import OpenAI
+
+app = FastAPI(title="Top-TieR Global HUB AI")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    # لا نتعطل لو المفتاح مفقود—نسمح /health يشتغل
+    pass
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
+class ChatIn(BaseModel):
+    message: str
+
+@app.get("/health")
+def health():
+    return {"ok": True, "openai_key_loaded": bool(OPENAI_API_KEY)}
+
+@app.post("/chat")
+def chat(payload: ChatIn):
+    if client is None:
+        raise HTTPException(status_code=400, detail="OPENAI_API_KEY not configured.")
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": payload.message},
+            ],
+            max_tokens=128,
+        )
+        return {"reply": resp.choices[0].message.content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+src/test_openai.py
+
+import os
+from openai import OpenAI
+
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise SystemExit("❌ لا يوجد OPENAI_API_KEY في البيئة/Secrets.")
+
+client = OpenAI(api_key=api_key)
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "قل: ناجح"}
+    ],
+    max_tokens=5,
+)
+print("✅ استجابة OpenAI:", resp.choices[0].message.content)
+
+requirements.txt
+
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+openai==1.43.0
+pydantic==2.8.2
+
+tests/test_health.py
+
+from fastapi.testclient import TestClient
+from src.app import app
+
+client = TestClient(app)
+
+def test_health():
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert "ok" in r.json()
+
+.env.example
+
+# انسخ إلى .env محلياً (لا ترفعه)
+OPENAI_API_KEY=
+# أمثلة مفاتيح أخرى للمستقبل:
+NEO4J_URI=
+NEO4J_USER=
+NEO4J_PASS=
+SERPAPI_KEY=
+
+.gitignore
+
+.env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+.github/workflows/hygiene.yml
+
+name: hygiene
+on: [push, pull_request]
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: --no-progress --verbose --exclude-mail --timeout 20s "**/*.md"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            **/*.md
+
+.github/workflows/conditional-ci.yml
+
+name: conditional-ci
+on: [push, pull_request]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if git ls-files '*.py' | grep -q .; then
+            echo "has_py=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_py=false" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.detect.outputs.has_py == 'true'
+        with:
+          python-version: '3.11'
+      - if: steps.detect.outputs.has_py == 'true'
+        run: pip install -r requirements.txt pytest
+      - if: steps.detect.outputs.has_py == 'true'
+        run: pytest -q
+
+.github/workflows/test-openai.yml
+
+name: test-openai
+on:
+  workflow_dispatch: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run test script
+        run: python src/test_openai.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+README.md (مختصر)
+
+# Top-TieR Global HUB AI
+
+- FastAPI `/health`, `/chat`
+- OpenAI via `OPENAI_API_KEY` (GitHub Secrets)
+- CI: hygiene + conditional Python + manual test-openai
+
+## Run (Codespaces/locally)
+```bash
+pip install -r requirements.txt
+uvicorn src.app:app --host 0.0.0.0 --port 8080 --reload
+# health:
+curl http://localhost:8080/health
+# chat:
+curl -X POST http://localhost:8080/chat -H "Content-Type: application/json" -d '{"message":"Hello"}'
+
+---
+
+# 2) كيف تضيفها من الآيفون؟
+- افتح المستودع → **Add file → Create new file**.
+- في خانة الاسم اكتب المسار كامل (مثال: `src/app.py`) والصق المحتوى، ثم **Commit changes**.
+- كرر لكل ملف أعلاه.  
+نصيحة: ابدأ بـ `requirements.txt` ثم `src/app.py` ثم `tests/test_health.py`، وبعدها ملفات الـworkflows.
+
+---
+
+# 3) شغّلها من الآيفون عبر Codespaces
+1) من صفحة المستودع: **Code → Codespaces → Create codespace on main**.  
+2) داخل محرر Codespaces افتح **Terminal** وشغّل:
+```bash
+pip install -r requirements.txt
+uvicorn src.app:app --host 0.0.0.0 --port 8080 --reload
+
+	3.	جرّب:
+
+	•	من التيرمنال:
+
+curl http://localhost:8080/health
+curl -X POST http://localhost:8080/chat -H "Content-Type: application/json" -d '{"message":"قل كلمة: نجاح"}'
+
+
+	•	أو افتح المتصفح داخل Codespaces: http://127.0.0.1:8080/docs
+
+المفتاح: بما أنك أضفت OPENAI_API_KEY في Settings → Secrets, سيتوفر تلقائيًا داخل Codespaces وداخل الـWorkflows.
+
+⸻
+
+4) تشغيل اختبار الـAPI مفتاحك من Actions
+	•	افتح تبويب Actions في المستودع.
+	•	اختر test-openai → اضغط Run workflow.
+لو الإعداد صحيح سترى في السجل سطرًا يشبه: ✅ استجابة OpenAI: ناجح.
+
+⸻
+
+انتهى الإعداد “مرّة واحدة”. إن احتجتني أضيف ملفات جاهزة أخرى (devcontainer لـCodespaces، أو Docker Compose)، أعطني الإشارة وسأجهزها بالمثل.
