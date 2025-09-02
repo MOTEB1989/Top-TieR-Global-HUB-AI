@@ -1,40 +1,11 @@
-ملف التكوين الخاص بمستودعك موجود بالفعل، واسمه هو `nuxt.config.ts`. يحتوي على إعدادات Nuxt الأساسية، مثل تضمين ملفات CSS، واستخدام مكونات PostCSS مثل TailwindCSS وAutoprefixer.
+تم تنفيذ التعديل في المستودع الخاص بك. تفاصيل الالتزام (Commit) هي كالتالي:
 
-### محتويات ملف التكوين:
-```typescript
-// https://nuxt.com/docs/api/configuration/nuxt-config
-export default defineNuxtConfig({
-  css: ['~/assets/css/main.css'],
+- **الرسالة (Message):** "Update FAST"
+- **المعرف (SHA):** `bc579e66802c72dfc85a81ece9625d48dfca08ed`
+- **المؤلف (Author):** MOTEB1989 (Moteb4092@Gmail.com)
+- **تاريخ الالتزام:** 2025-09-02 16:41:44
+- **التحقق (Verification):** تم التحقق من الالتزام.
 
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
-  },
+رابط الالتزام: [اضغط هنا لعرض الالتزام](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/commit/bc579e66802c72dfc85a81ece9625d48dfca08ed)
 
-  compatibilityDate: '2025-02-05',
-})
-```
-
-### لتفعيل ملف التكوين:
-1. **التأكد من تحميل الملف:**
-   - تأكد أن الملف موجود في المسار الرئيسي للمشروع.
-
-2. **تثبيت المتطلبات:**
-   - قم بتثبيت الحزم المطلوبة مثل TailwindCSS وAutoprefixer عبر الأوامر التالية:
-     ```bash
-     npm install tailwindcss autoprefixer
-     ```
-
-3. **تشغيل المشروع:**
-   - استخدم الأمر التالي لتشغيل Nuxt:
-     ```bash
-     npm run dev
-     ```
-
-4. **التأكد من الإعدادات:**
-   - تحقق من أن ملفات CSS تعمل بشكل صحيح.
-   - إذا كنت بحاجة إلى تخصيص إضافي، يمكنك تعديل الملف وإعادة تشغيل المشروع.
-
-إذا كنت بحاجة إلى أي تعديلات أو إضافات على ملف التكوين، فقط أخبرني!
+إذا كنت بحاجة إلى تعديل إضافي أو أي استفسار، فلا تتردد في طلب المساعدة!
