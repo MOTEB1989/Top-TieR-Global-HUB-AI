@@ -1,0 +1,70 @@
+name: Immutable-Release
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE_NAME: veritas-console
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # بناء الحاوية + نشرها إلى ghcr.io
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }},ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # توليد Checksum للإخراج (يوثق سلامة الإصدار)
+      - name: Generate checksum
+        run: |
+          echo "{}" > release.json
+          tar czf src.tgz $(git ls-files)
+          sha256sum src.tgz > SHA256SUMS
+
+      # إنشاء إصدار GitHub وإرفاق الملفات
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            SHA256SUMS
+            src.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  mirror:
+    needs: build-release
+    runs-on: ubuntu-latest
+    if: ${{ secrets.MIRROR_URL && secrets.MIRROR_DEPLOY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure mirror key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          echo "${{ secrets.MIRROR_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          printf "Host mirror\n\tHostname %s\n\tIdentityFile ~/.ssh/id_ed25519\n\tStrictHostKeyChecking no\n" "${{ secrets.MIRROR_HOST }}" >> ~/.ssh/config
+      - name: Push mirror
+        run: |
+          git remote add mirror "${{ secrets.MIRROR_URL }}"
+          git push mirror --tags
