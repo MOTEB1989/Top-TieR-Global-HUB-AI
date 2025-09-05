@@ -20,6 +20,8 @@ Thank you for your interest in contributing to the Top-TieR-Global-HUB-AI projec
    ```
 7. **Open a Pull Request:** Go to the original repository and open a pull request. Provide a clear description of the changes you made.
 
+**Note:** Pull requests in this repository are automatically assigned to MOTEB1989 for review through our CODEOWNERS configuration.
+
 ## Code of Conduct
 Please make sure to read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) to maintain a welcoming and inclusive environment for all contributors.
 

@@ -1,0 +1,5 @@
+# Global code owners
+# This file automatically requests reviewers for pull requests
+
+# All files in the repository require review from MOTEB1989
+* @MOTEB1989
