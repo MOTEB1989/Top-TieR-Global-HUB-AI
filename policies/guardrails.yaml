@@ -1,0 +1,10 @@
+disclaimers:
+  legal_ksa: "This domain is intended for legal advice and may not substitute for professional legal counsel."
+  medical_global: "This domain provides medical information but does not constitute medical advice."
+  psychology: "This domain is for informational purposes and should not replace professional psychological services."
+  islamic_scholarship: "This domain offers insights based on Islamic teachings and scholarship."
+  securecomms: "This domain focuses on secure communication practices and tools."
+
+PII_redaction_patterns:
+  - "Social Security Number: \d{3}-\d{2}-\d{4}"
+  - "Email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
