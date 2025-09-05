@@ -1,0 +1,32 @@
+version: 1
+global:
+  must_include_disclaimer: true
+  legal_disclaimer_ar: >
+    هذا النظام يجمع معلومات متاحة للعموم فقط، والنتائج قد تكون غير دقيقة أو قديمة.
+    لستَ بصدد استشارة مهنية، وتحمل أنت المسؤولية القانونية عن الاستخدام.
+domains:
+  law:
+    allowed_sources: [public_court_records, official_gazettes, bar_association_statements, mainstream_media]
+    banned_actions: [personal_identification_by_force, doxxing, private_db_access]
+    domain_disclaimer_ar: >
+      لستَ بصدد استشارة قانونية. إن احتجت رأيًا ملزِمًا فتواصل مع محامٍ مرخّص.
+  medicine:
+    allowed_sources: [official_health_orgs, peer_reviewed_studies, hospital_public_pages]
+    banned_actions: [diagnose_individual, request_phi, prescribe_treatment]
+    domain_disclaimer_ar: >
+      هذه ليست نصيحة طبية. استشر مختصًا مؤهلاً للحالات الفردية الطارئة/التشخيص.
+  finance:
+    allowed_sources: [regulator_notices, audited_reports, mainstream_financial_media]
+    banned_actions: [insider_tips, individualized_investment_advice, real_time_trade_signals]
+    domain_disclaimer_ar: >
+      ليست نصيحة استثمارية. قد تتغير الأسواق بسرعة؛ قم ببحثك واطلب مستشارًا مرخّصًا.
+  cybersecurity:
+    allowed_sources: [cve_databases, vendor_advisories, public_bugtrackers, docs]
+    banned_actions: [exploitation_guides, unauthorized_access, zero_day_distribution]
+    domain_disclaimer_ar: >
+      لأغراض التوعية فقط. يُمنع أي نشاط استغلالي أو وصول غير مصرّح.
+  journalism:
+    allowed_sources: [public_records, on_the_record_statements, archives, verified_media]
+    banned_actions: [covert_surveillance, paid_data_brokers_personal, deceptive_impersonation]
+    domain_disclaimer_ar: >
+      ركّز على الصالح العام واحترام الخصوصية وتقليل الضرر والتحقق من المصادر.
