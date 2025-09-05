@@ -1,0 +1,28 @@
+# This file defines code ownership for the repository
+# MOTEB1989 will be automatically requested as a reviewer for all pull requests
+
+# Global owner - MOTEB1989 owns everything by default
+* @MOTEB1989
+
+# Specific patterns for important files
+/.github/ @MOTEB1989
+/setup_veritas.sh @MOTEB1989
+/upgrade_veritas.sh @MOTEB1989
+/harden_repo.sh @MOTEB1989
+/CONTRIBUTING.md @MOTEB1989
+/README.md @MOTEB1989
+/CHECKLIST.md @MOTEB1989
+
+# Python files
+*.py @MOTEB1989
+
+# Documentation
+/docs/ @MOTEB1989
+*.md @MOTEB1989
+
+# Configuration files
+*.yml @MOTEB1989
+*.yaml @MOTEB1989
+*.json @MOTEB1989
+Dockerfile @MOTEB1989
+requirements.txt @MOTEB1989
