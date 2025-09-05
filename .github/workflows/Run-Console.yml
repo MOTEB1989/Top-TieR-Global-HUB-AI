@@ -1,0 +1,58 @@
+name: Run Console
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'analyze|verify|evaluate|report|search|trace'
+        required: true
+        default: 'analyze'
+      domain:
+        description: 'osint|medical|realestate|legal'
+        required: true
+        default: 'osint'
+      target:
+        description: 'target value (number/email/text/etc)'
+        required: true
+        default: '+9665XXXXXXX'
+      scope:
+        description: 'basic|deep|full'
+        required: false
+        default: 'basic'
+      depth:
+        description: 'basic|deep|advanced'
+        required: false
+        default: 'basic'
+      sources:
+        description: 'auto or comma-list'
+        required: false
+        default: 'auto'
+jobs:
+  run-console:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run Console
+        run: |
+          set -e
+          CMD="${{ github.event.inputs.command }}"
+          DOMAIN="${{ github.event.inputs.domain }}"
+          TARGET="${{ github.event.inputs.target }}"
+          SCOPE="${{ github.event.inputs.scope }}"
+          DEPTH="${{ github.event.inputs.depth }}"
+          SOURCES="${{ github.event.inputs.sources }}"
+          FLAG="--target"
+          case "$CMD" in
+            verify)   FLAG="--value" ;;
+            evaluate) FLAG="--property" ;;
+            report)   FLAG="--identifier" ;;
+            search)   FLAG="--query" ;;
+          esac
+          python veritas_console.py "$CMD" --domain "$DOMAIN" "$FLAG" "$TARGET" --scope "$SCOPE" --depth "$DEPTH" --sources "$SOURCES" > out.json
+      - name: Upload output
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-output
+          path: out.json
