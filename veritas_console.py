@@ -16,10 +16,8 @@ APP_VERSION = "2.0"
 
 def build_parser():
     p = argparse.ArgumentParser(description="Veritas OSINT Console")
-    p.add_argument(
-        "command",
-        choices=["analyze", "verify", "evaluate", "report", "search", "trace"],
-    )
+
+    # Common arguments
     p.add_argument(
         "--domain",
         required=True,
@@ -46,7 +44,7 @@ def build_parser():
 
     for cmd, flag in commands:
         sp = subparsers.add_parser(cmd, help=f"{cmd} command")
-        sp.add_argument(flag.replace("--", ""), required=True, help=f"Target for {cmd}")
+        sp.add_argument(flag.replace("--", ""), help=f"Target for {cmd}")
 
     return p
 
