@@ -8,10 +8,42 @@ permissions:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      PIP_DEFAULT_TIMEOUT: 60
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - name: Static check
-        run: python -m py_compile veritas_console.py || true
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          
+      - name: Upgrade pip, setuptools, wheel
+        run: pip install -U pip setuptools wheel
+        
+      - name: Install project dependencies with retries
+        run: pip install --retries 5 --default-timeout 60 -r requirements.txt
+        
+      - name: Install tooling
+        run: pip install pytest flake8 black isort
+        
+      - name: Black format check
+        run: black --check .
+        
+      - name: isort import order check
+        run: isort --check-only .
+        
+      - name: Flake8 linting
+        run: flake8 .
+        
+      - name: FastAPI dependencies check and api_server compilation
+        run: |
+          python -c "import fastapi, uvicorn, pydantic" || pip install fastapi uvicorn pydantic --no-warn-script-location
+          python -m py_compile api_server.py
+          
+      - name: Verify console script compilation
+        run: python -m py_compile veritas_console.py
