@@ -69,7 +69,7 @@ ehthumbs.db
 Thumbs.db
 
 # Docker
-.dockerignore
+# .dockerignore should be committed, so it's not ignored
 
 # Temporary files
 *.tmp
