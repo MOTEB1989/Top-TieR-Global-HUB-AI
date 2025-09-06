@@ -15,9 +15,9 @@ def normalize_text(txt: str) -> str:
     t = (txt or "").strip().translate(ARABIC_DIGITS)
     return re.sub(r"\s+", " ", t)
 def normalize_phone(v: str) -> str:
-    import re
     v = normalize_text(v); digits = re.sub(r"\D", "", v)
     if digits.startswith("05"): return "+966" + digits[1:]
+    if digits.startswith("5") and len(digits) == 9: return "+966" + digits
     if digits.startswith("5") and len(digits) == 9: return "+966" + digits
     if digits.startswith("966"): return "+" + digits
     if digits.startswith("00"): return "+" + digits[2:]
