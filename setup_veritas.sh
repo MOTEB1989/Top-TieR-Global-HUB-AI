@@ -110,7 +110,10 @@ def step_parallel_fetch(sources, query, depth="basic", max_workers=6):
         for fut in as_completed(futs):
             try:
                 data = fut.result()
-                if isinstance(data, list): res.extend(data)
+                if isinstance(data, list):
+                    res.extend(data)
+                else:
+                    res.append({"source":futs[fut],"error":"Result is not a list","ts":now_iso()})
             except Exception as e:
                 res.append({"source":futs[fut],"error":str(e),"ts":now_iso()})
     return res
