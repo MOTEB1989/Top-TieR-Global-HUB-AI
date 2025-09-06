@@ -1,6 +1,1 @@
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-pydantic>=2.5.0
-python-multipart>=0.0.6
-requests==2.32.4
-python-dotenv>=1.0.0
+:fastapi>=0.104.1uvicorn[standard]>=0.24.0pydantic>=2.5.0python-multipart>=0.0.6requests==2.32.4python-dotenv>=1.0.0
