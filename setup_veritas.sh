@@ -1,11 +1,11 @@
-تمام—هذه كل الأوامر والملفات التي تحتاجها لربط المشروع بنجاح. انسخ السكربت كما هو (أو قُل لـ Copilot يضيفه ويشغّله في جذر المستودع). السكربت يجهّز: الكونسول، الـ API، Docker، Workflows (تشغيل، نشر إلى GHCR، وBootstrap)، وكذلك devcontainer لتهيئة Codespaces.
-
-سكربت واحد يجهّز كل شيء (جاهز للنسخ)
-
-احفظه باسم setup_veritas.sh ثم شغّله في جذر المستودع.
-
 #!/usr/bin/env bash
 set -euo pipefail
+
+# تمام—هذه كل الأوامر والملفات التي تحتاجها لربط المشروع بنجاح. انسخ السكربت كما هو (أو قُل لـ Copilot يضيفه ويشغّله في جذر المستودع). السكربت يجهّز: الكونسول، الـ API، Docker، Workflows (تشغيل، نشر إلى GHCR، وBootstrap)، وكذلك devcontainer لتهيئة Codespaces.
+#
+# سكربت واحد يجهّز كل شيء (جاهز للنسخ)
+#
+# احفظه باسم setup_veritas.sh ثم شغّله في جذر المستودع.
 
 # =========================
 # Veritas Bootstrap Script
@@ -427,18 +427,17 @@ MD
 
 echo “✅ تم توليد ملفات Veritas. الآن نفّذ: git add -A && git commit -m ‘Add Veritas stack’ && git push”
 
-## بعد إضافة الملفات — أوامر تشغيل/اختبار سريعة
-لو تستخدم **GitHub CLI (gh)**، هذه أوامر مفيدة:
+# ## بعد إضافة الملفات — أوامر تشغيل/اختبار سريعة
+# لو تستخدم **GitHub CLI (gh)**، هذه أوامر مفيدة:
 
-```bash
-# تشغيل الـ Workflow الذي يشغّل الكونسول
-gh workflow run "Run-Console.yml" -f command=analyze -f domain=osint -f target=+96651234567
+# ```bash
+# gh workflow run "Run-Console.yml" -f command=analyze -f domain=osint -f target=+96651234567
+#
+# # تشغيل نشر Docker إلى GHCR
+# gh workflow run "Deploy-GHCR.yml"
+#
+# # تنزيل ناتج التشغيل (artifact) لـ Run-Console (عدّل run-id)
+# gh run download <run-id> -n console-output
 
-# تشغيل نشر Docker إلى GHCR
-gh workflow run "Deploy-GHCR.yml"
-
-# تنزيل ناتج التشغيل (artifact) لـ Run-Console (عدّل run-id)
-gh run download <run-id> -n console-output
-
-كل ما سبق يستخدم GITHUB_TOKEN الافتراضي—لا حاجة لـ PAT الآن.
-إذا أردت إضافة نشر تلقائي إلى خادمك (Azure/AWS/GCP أو Runner ذاتي)، أعطني البيئة وسأجهز لك Workflow إضافي بنفس الأسلوب.
+# كل ما سبق يستخدم GITHUB_TOKEN الافتراضي—لا حاجة لـ PAT الآن.
+# إذا أردت إضافة نشر تلقائي إلى خادمك (Azure/AWS/GCP أو Runner ذاتي)، أعطني البيئة وسأجهز لك Workflow إضافي بنفس الأسلوب.
