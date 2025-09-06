@@ -19,6 +19,14 @@ def run(req: RunRequest):
     elif req.command == "evaluate": flag = "--property"
     elif req.command == "report": flag = "--identifier"
     elif req.command == "search": flag = "--query"
-    cmd = f"python veritas_console.py {shlex.quote(req.command)} --domain {shlex.quote(req.domain)} {flag} {shlex.quote(req.target)} --scope {shlex.quote(req.scope)} --depth {shlex.quote(req.depth)} --sources {shlex.quote(req.sources)}"
-    out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+    cmd = [
+        "python", "veritas_console.py",
+        req.command,
+        "--domain", req.domain,
+        flag, req.target,
+        "--scope", req.scope,
+        "--depth", req.depth,
+        "--sources", req.sources
+    ]
+    out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     return json.loads(out.decode("utf-8"))
