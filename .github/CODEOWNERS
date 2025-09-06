@@ -1,0 +1,22 @@
+# Global code owners
+# MOTEB1989 will be automatically requested for review on all PRs
+
+# All files require review from MOTEB1989
+* @MOTEB1989
+
+# Specific important files that should definitely be reviewed
+*.sh @MOTEB1989
+*.py @MOTEB1989
+*.md @MOTEB1989
+*.yml @MOTEB1989
+*.yaml @MOTEB1989
+*.json @MOTEB1989
+Dockerfile @MOTEB1989
+
+# GitHub configuration files
+/.github/ @MOTEB1989
+
+# Documentation and configuration
+/docs/ @MOTEB1989
+/policies/ @MOTEB1989
+/scripts/ @MOTEB1989

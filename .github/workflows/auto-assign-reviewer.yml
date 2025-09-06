@@ -1,0 +1,42 @@
+name: Auto Assign Reviewer
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request MOTEB1989 as reviewer
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            
+            // Check if MOTEB1989 is already requested
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: number,
+            });
+            
+            const isAlreadyRequested = pr.requested_reviewers.some(
+              reviewer => reviewer.login === 'MOTEB1989'
+            );
+            
+            if (!isAlreadyRequested) {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: number,
+                reviewers: ['MOTEB1989']
+              });
+              
+              console.log('Successfully requested MOTEB1989 as reviewer');
+            } else {
+              console.log('MOTEB1989 is already requested as reviewer');
+            }
