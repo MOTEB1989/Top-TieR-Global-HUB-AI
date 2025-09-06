@@ -1,11 +1,6 @@
 name: Comment on PR #6
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - copilot/fix-f99f8933-db63-4dbf-aee8-6caf44f487f8
-    paths:
-      - '.github/workflows/comment-on-pr6.yml'
 
 permissions:
   pull-requests: write
@@ -14,7 +9,6 @@ permissions:
 jobs:
   comment-on-pr:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/copilot/fix-f99f8933-db63-4dbf-aee8-6caf44f487f8'
     steps:
       - name: Post comment on PR #6
         uses: actions/github-script@v7
