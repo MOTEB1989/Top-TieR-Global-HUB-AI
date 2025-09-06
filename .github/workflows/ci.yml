@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["copilot/fix-6c7d53d9-4880-46a5-b06a-5b167e1906cb", "main"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
