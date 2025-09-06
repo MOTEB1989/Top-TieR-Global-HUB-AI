@@ -1,10 +1,12 @@
-import yaml
 from pathlib import Path
+
+import yaml
+
 
 def test_policy_load_and_domains():
     policy_path = Path("tests/policy/policy.yaml")
     assert policy_path.exists(), "❌ ملف policy.yaml غير موجود"
-    
+
     with open(policy_path, "r", encoding="utf-8") as f:
         policy = yaml.safe_load(f)
 
@@ -19,5 +21,5 @@ def test_policy_load_and_domains():
         assert "allowed_sources" in d, f"❌ {domain} بدون allowed_sources"
         assert "banned_actions" in d, f"❌ {domain} بدون banned_actions"
         assert "domain_disclaimer_ar" in d, f"❌ {domain} بدون disclaimer"
-    
+
     print("✅ policy.yaml محمّل بشكل صحيح ويحتوي جميع التخصصات الأساسية")
