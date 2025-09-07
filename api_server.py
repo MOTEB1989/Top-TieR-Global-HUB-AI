@@ -1,8 +1,10 @@
 import os
 from typing import Any, Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from gpt_client import GPTClient, GPTRequest, GPTResponse
 
 # Fallback if python-dotenv is not available
 try:
@@ -17,6 +19,9 @@ app = FastAPI(
     description="Veritas Nexus v2 - Open-source OSINT platform API",
     version="2.0.0",
 )
+
+# Initialize GPT client
+gpt_client = GPTClient()
 
 
 class HealthResponse(BaseModel):
@@ -47,6 +52,24 @@ async def get_api():
 async def health_check() -> Dict[str, Any]:
     """Simple health check"""
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.post("/gpt", response_model=GPTResponse)
+async def gpt_endpoint(request: GPTRequest):
+    """GPT endpoint for text generation"""
+    if not gpt_client.is_available():
+        raise HTTPException(
+            status_code=503,
+            detail="GPT service unavailable. OpenAI API key not configured."
+        )
+    
+    try:
+        response = await gpt_client.generate_response(request)
+        return response
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
