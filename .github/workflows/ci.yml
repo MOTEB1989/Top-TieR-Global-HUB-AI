@@ -1,0 +1,54 @@
+name: OpenSearchHub CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: appdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U app"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://app:app@localhost:5432/appdb
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps (runtime + dev)
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install black==24.8.0 flake8==7.1.0 isort==5.13.2
+
+      - name: Create optional 'root' role (if your code needs it)
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PSQL="psql postgresql://app:app@localhost:5432/appdb -v ON_ERROR_STOP=1"
+          $PSQL -c "DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='root') THEN CREATE ROLE root LOGIN SUPERUSER PASSWORD 'root'; END IF; END $$;"
+
+      - name: Lint (black/flake8/isort)
+        run: |
+          black --check --diff .
+          isort --check-only --diff .
+          flake8 .
+
+      - name: Run tests
+        run: |
+          pytest -q
