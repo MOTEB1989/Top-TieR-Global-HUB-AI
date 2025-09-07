@@ -47,7 +47,10 @@
    # Development mode with auto-reload
    python api_server.py
    
-   # Or with uvicorn directly
+   # Or with uvicorn directly (new entrypoint)
+   uvicorn search_hub.api.app:app --reload --host 0.0.0.0 --port 8000
+   
+   # Or with uvicorn using backward-compatible entrypoint
    uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 

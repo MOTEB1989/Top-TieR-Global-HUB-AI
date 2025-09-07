@@ -22,6 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY api_server.py .
+COPY gpt_client.py .
+COPY search_hub/ ./search_hub/
 COPY veritas_console.py ./ 2>/dev/null || echo "veritas_console.py not found, continuing..."
 
 # Create non-root user for security
@@ -36,5 +38,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Default command
-CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command - using new search_hub structure
+CMD ["uvicorn", "search_hub.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# For backward compatibility, you can also use:
+# CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000"]

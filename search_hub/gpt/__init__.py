@@ -1,0 +1,1 @@
+"""GPT client module for OpenAI integration"""
