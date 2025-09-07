@@ -1,8 +1,10 @@
 import os
 from typing import Any, Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from gpt_client import gpt_client
 
 # Fallback if python-dotenv is not available
 try:
@@ -23,6 +25,18 @@ class HealthResponse(BaseModel):
     message: str
     status: str
     version: str
+
+
+class GPTRequest(BaseModel):
+    prompt: str
+    max_tokens: int = 150
+
+
+class GPTResponse(BaseModel):
+    success: bool = True
+    response: str = ""
+    error: str = ""
+    message: str = ""
 
 
 @app.get("/", response_model=HealthResponse)
@@ -47,6 +61,32 @@ async def get_api():
 async def health_check() -> Dict[str, Any]:
     """Simple health check"""
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.post("/gpt", response_model=GPTResponse)
+async def generate_gpt_response(request: GPTRequest):
+    """Generate a response using OpenAI GPT."""
+    if not gpt_client.is_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="GPT service not available. OpenAI API key not configured."
+        )
+    
+    result = await gpt_client.generate_response(
+        prompt=request.prompt,
+        max_tokens=request.max_tokens
+    )
+    
+    if "error" in result:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{result['error']}: {result['message']}"
+        )
+    
+    return GPTResponse(
+        success=result["success"],
+        response=result["response"]
+    )
 
 
 if __name__ == "__main__":
