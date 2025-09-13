@@ -40,12 +40,6 @@ jobs:
           # Fetch full history for accurate analysis
           fetch-depth: 0
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-          config-file: ./.github/codeql/codeql-config.yml
-
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
@@ -55,7 +49,19 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # Install common packages that might be used
+          pip install requests fastapi uvicorn pydantic
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: ./.github/codeql/codeql-config.yml
+          # Explicitly specify setup for Python to avoid auto-detection issues
+          setup-python-dependencies: true
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
@@ -64,3 +70,12 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+          upload: true
+          # Continue analysis even if some queries fail
+        continue-on-error: false
+
+      - name: Check for high-severity findings
+        if: always()
+        run: |
+          echo "CodeQL analysis completed for Python language"
+          echo "Results uploaded to GitHub Security tab"

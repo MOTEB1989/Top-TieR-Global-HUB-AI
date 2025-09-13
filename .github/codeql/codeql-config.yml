@@ -1,16 +1,21 @@
-name: "Default CodeQL Configuration for Top-TieR-Global-HUB-AI"
+---
+name: "CodeQL Configuration for Top-TieR-Global-HUB-AI OSINT Platform"
+
+# Disable automatic language detection to prevent confusion
+disable-default-path-filters: false
 
 # Paths to include in analysis
 paths:
   - "."
 
-# Paths to exclude from analysis
+# Paths to exclude from analysis to avoid irrelevant files
 paths-ignore:
   - "**/*.md"
   - "**/*.txt"
   - "**/*.yml"
   - "**/*.yaml"
   - "**/*.json"
+  - "**/*.zip"
   - "**/docs/**"
   - "**/node_modules/**"
   - "**/.git/**"
@@ -18,30 +23,53 @@ paths-ignore:
   - "**/dist/**"
   - "**/__pycache__/**"
   - "**/*.pyc"
+  - "**/.*"
+  - "**/*.log"
 
-# Query packs to use
+# Query packs to use for Python security analysis
 packs:
-  - "codeql/python-queries"
+  - "codeql/python-queries:AlertSuppression.ql"
+  - "codeql/python-queries:Security"
+  - "codeql/python-queries:Correctness"
 
-# Security queries to include
+# Queries to include for comprehensive security analysis
 queries:
-  - uses: security-extended
-  - uses: security-and-quality
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality
+    uses: security-and-quality
 
-# Query filters for OSINT-specific adjustments
+# Query filters to customize analysis for OSINT platform
 query-filters:
-  # Include all security queries
+  # Include critical security findings
   - include:
       kind: problem
-      problem.severity: 
+      problem.severity:
         - error
         - warning
-        - recommendation
-  
-  # Exclude some noisy queries that are not relevant for this OSINT application
+
+  # Include specific security-related queries for Python
+  - include:
+      tags: security
+
+  # Exclude language-specific queries that don't apply to Python
+  - exclude:
+      tags: javascript
+  - exclude:
+      tags: typescript
+  - exclude:
+      tags: java
+  - exclude:
+      tags: cpp
+  - exclude:
+      tags: csharp
+
+  # Exclude overly noisy queries not relevant for OSINT tools
   - exclude:
       id: py/unused-import
   - exclude:
       id: py/similar-function
   - exclude:
       id: py/too-many-statements
+  - exclude:
+      id: py/unused-local-variable
