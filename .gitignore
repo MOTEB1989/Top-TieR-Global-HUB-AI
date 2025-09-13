@@ -102,3 +102,11 @@ yarn-error.log*
 *.bak
 *.backup
 *.old
+
+# CodeQL Analysis
+.codeql/
+codeql-databases/
+*.sarif
+*.qls
+.qlpack
+codeql-pack.lock.yml
