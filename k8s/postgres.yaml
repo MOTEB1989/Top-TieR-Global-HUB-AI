@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_DB
+          value: app_db
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: postgres-secret
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        image: postgres:15-alpine
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-data-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  selector:
+    app: postgres
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+data:
+  password: cG9zdGdyZXM=
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+
