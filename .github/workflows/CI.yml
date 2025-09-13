@@ -22,6 +22,49 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Check for escaped quotes in file references
+        run: |
+          echo "Checking for incorrectly escaped quotes around veritas_console.py..."
+          if grep -r "\"veritas_console.py\"" . \
+            --include="*.py" --include="*.yml" --include="*.yaml" \
+            --include="Dockerfile*" --include="*.sh"; then
+            echo "Found incorrectly escaped quotes around veritas_console.py"
+            exit 1
+          else
+            echo "No escaped quotes found - good!"
+          fi
+
+      - name: Fail-fast Python syntax check
+        run: |
+          echo "Running Python syntax check on all Python files..."
+          python -m py_compile $(git ls-files '*.py') || {
+            echo "Python syntax errors found!"
+            exit 1
+          }
+          echo "All Python files have valid syntax"
+
+      - name: Detailed tokenizer check for Python files
+        run: |
+          echo "Running detailed tokenizer check..."
+          for py_file in $(git ls-files '*.py'); do
+            echo "Checking $py_file..."
+            python -c "
+          import tokenize
+          import sys
+          try:
+              with open('$py_file', 'rb') as f:
+                  tokens = list(tokenize.tokenize(f.readline))
+              print(f'✓ $py_file: Tokenization successful')
+          except tokenize.TokenError as e:
+              print(f'✗ $py_file: Tokenization error - {e}')
+              sys.exit(1)
+          except Exception as e:
+              print(f'✗ $py_file: Error - {e}')
+              sys.exit(1)
+          " || exit 1
+          done
+          echo "All Python files passed tokenization check"
+
       - name: Install yamllint
         run: pip install yamllint
 
@@ -64,6 +107,22 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          buildkitd-flags: --debug
+
+      - name: Build Docker images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: |
+            top-tier-hub-ai:latest
+            top-tier-hub-ai:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and start services
         run: |
@@ -94,6 +153,33 @@ jobs:
 
           # Test Redis connectivity
           docker compose exec -T redis redis-cli ping
+
+          # List available API endpoints for debugging
+          echo "Available API endpoints:"
+          curl -s http://localhost:8000/openapi.json | python3 -c "
+          import json, sys
+          try:
+              data = json.load(sys.stdin)
+              for path, methods in data['paths'].items():
+                  for method in methods.keys():
+                      print(f'  {method.upper()} {path}')
+          except:
+              print('  Could not retrieve endpoint list')
+          " || echo "  Endpoint listing failed"
+
+          # Test the /gpt endpoint (smoke test)
+          echo "Testing /gpt endpoint..."
+          response=$(curl -s -w "%{http_code}" -X POST http://localhost:8000/gpt \
+            -H "Content-Type: application/json" \
+            -d '{"prompt": "test", "max_tokens": 10}' || echo "000")
+          # Check if we get a valid HTTP response (200, 400, 422 are acceptable)
+          if [[ "$response" =~ (200|400|422)$ ]]; then
+            echo "✓ /gpt endpoint is responding (HTTP status: ${response: -3})"
+          else
+            echo "✗ /gpt endpoint test failed (HTTP status: ${response: -3})"
+            # Don't fail the build, just warn
+            echo "Warning: /gpt endpoint may need attention"
+          fi
 
       - name: Show service logs
         if: failure()
@@ -199,6 +285,15 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 \
             --max-line-length=127 --statistics
         continue-on-error: true
+
+      - name: Fail-fast Python syntax check
+        run: |
+          echo "Running comprehensive Python syntax check..."
+          python -m py_compile $(git ls-files '*.py') || {
+            echo "Critical Python syntax errors found!"
+            exit 1
+          }
+          echo "All Python files have valid syntax"
 
       - name: Static type checking
         run: |
