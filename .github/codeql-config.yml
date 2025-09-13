@@ -1,3 +1,4 @@
+---
 name: "Top-TieR-Global-HUB-AI CodeQL Configuration"
 
 # Paths to include in CodeQL analysis
@@ -17,7 +18,7 @@ paths-ignore:
   - "**/*.md"
   - "**/*.rst"
   - "**/*.txt"
-  
+
   # Exclude configuration files
   - "**/*.yml"
   - "**/*.yaml"
@@ -25,17 +26,17 @@ paths-ignore:
   - "**/*.toml"
   - "**/*.ini"
   - "**/*.cfg"
-  
+
   # Exclude Docker and deployment files
   - "Dockerfile*"
   - "docker-compose*.yml"
   - ".dockerignore"
-  
+
   # Exclude CI/CD and GitHub files
   - ".github/"
   - ".gitignore"
   - ".env*"
-  
+
   # Exclude temporary and build artifacts
   - "**/__pycache__/"
   - "**/*.pyc"
@@ -45,17 +46,17 @@ paths-ignore:
   - "**/node_modules/"
   - "**/dist/"
   - "**/build/"
-  
+
   # Exclude compressed files and archives
   - "**/*.zip"
   - "**/*.tar.gz"
   - "**/*.rar"
   - "**/*.7z"
-  
+
   # Exclude shell scripts (focus on Python only)
   - "**/*.sh"
   - "**/*.bash"
-  
+
   # Exclude specific directories that are not part of the main codebase
   - "db/"
   - "docs/"
@@ -74,6 +75,6 @@ queries:
 python:
   # Additional Python-specific configuration
   setup-python-dependencies: true
-  
+
 # Performance configuration
 compilation-mode: none
