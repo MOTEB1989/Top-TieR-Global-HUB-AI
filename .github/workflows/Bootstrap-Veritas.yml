@@ -1,0 +1,36 @@
+name: Bootstrap-Veritas
+on:
+  workflow_dispatch:
+    inputs:
+      create_files:
+        description: 'Create/Update veritas files'
+        default: 'yes'
+        required: true
+permissions:
+  contents: write
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create/Update files
+        if: ${{ github.event.inputs.create_files == 'yes' }}
+        run: |
+          set -e
+          mkdir -p .github/workflows
+          git config user.name "veritas-bot"
+          git config user.email "veritas-bot@users.noreply.github.com"
+          [[ -f veritas_console.py ]] || echo "# placeholder" > veritas_console.py
+          [[ -f api_server.py     ]] || echo "# placeholder" > api_server.py
+          [[ -f requirements.txt  ]] || echo "fastapi\nuvicorn" > requirements.txt
+          [[ -f Dockerfile        ]] || cat > Dockerfile <<'DOCK'
+FROM python:3.11-slim
+WORKDIR /app
+COPY veritas_console.py api_server.py requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8000
+CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000"]
+DOCK
+          git add -A
+          git commit -m "Bootstrap Veritas Console files" || echo "Nothing to commit"
+          git push
