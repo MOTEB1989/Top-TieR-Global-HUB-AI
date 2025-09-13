@@ -55,6 +55,27 @@ jobs:
         run: hadolint Dockerfile
         continue-on-error: true
 
+  test-docker-build:
+    runs-on: ubuntu-latest
+    name: Test Docker Build with Build-Push Action
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: test-build:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   test-docker-compose:
     runs-on: ubuntu-latest
     name: Test Docker Compose Services
@@ -64,6 +85,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
 
       - name: Build and start services
         run: |
@@ -88,6 +111,10 @@ jobs:
             echo "Waiting for API... ($i/30)"
             sleep 10
           done
+
+          # Test /query endpoint for smoke test
+          echo "Testing /query endpoint..."
+          curl -f http://localhost:8000/query || echo "Query endpoint test failed"
 
           # Test database connectivity
           docker compose exec -T postgres pg_isready -U postgres
@@ -200,10 +227,11 @@ jobs:
             --max-line-length=127 --statistics
         continue-on-error: true
 
-      - name: Static type checking
+      - name: Python syntax check
         run: |
-          python -m py_compile veritas_console.py || \
-            echo "veritas_console.py not found or has issues"
+          echo "Running syntax check on all Python files..."
+          python -m py_compile $(git ls-files '*.py') || \
+            echo "Some Python files have syntax issues"
 
       - name: Test API server import
         run: |

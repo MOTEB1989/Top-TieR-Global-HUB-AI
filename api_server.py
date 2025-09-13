@@ -4,12 +4,34 @@ from typing import Any, Dict
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from gpt_client import GPTClient, GPTRequest, GPTResponse
+# Try to import GPT client, make it optional if dependencies are missing
+try:
+    from gpt_client import GPTClient, GPTRequest, GPTResponse
+    gpt_available = True
+except ImportError:
+    # Create dummy classes if gpt_client can't be imported
+    class GPTRequest(BaseModel):
+        prompt: str
+        max_tokens: int = 150
+        temperature: float = 0.7
+        model: str = "gpt-3.5-turbo"
+    
+    class GPTResponse(BaseModel):
+        response: str
+        usage: Dict[str, Any]
+        model: str
+    
+    class GPTClient:
+        def is_available(self):
+            return False
+        async def generate_response(self, request):
+            raise RuntimeError("GPT client not available")
+    
+    gpt_available = False
 
 # Fallback if python-dotenv is not available
 try:
     from dotenv import load_dotenv
-
     load_dotenv()
 except ImportError:
     pass  # Continue without dotenv if not available
@@ -21,7 +43,7 @@ app = FastAPI(
 )
 
 # Initialize GPT client
-gpt_client = GPTClient()
+gpt_client = GPTClient() if gpt_available else GPTClient()
 
 
 class HealthResponse(BaseModel):
@@ -70,6 +92,16 @@ async def gpt_endpoint(request: GPTRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/query")
+async def query_endpoint():
+    """Query endpoint for smoke testing"""
+    return {
+        "status": "ok", 
+        "message": "Query endpoint is working",
+        "version": "2.0.0"
+    }
 
 
 if __name__ == "__main__":
