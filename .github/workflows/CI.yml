@@ -154,18 +154,31 @@ jobs:
           # Test Redis connectivity
           docker compose exec -T redis redis-cli ping
 
-          # Test the /query endpoint (smoke test)
-          echo "Testing /query endpoint..."
-          response=$(curl -s -w "%{http_code}" -X POST http://localhost:8000/query \
+          # List available API endpoints for debugging
+          echo "Available API endpoints:"
+          curl -s http://localhost:8000/openapi.json | python3 -c "
+          import json, sys
+          try:
+              data = json.load(sys.stdin)
+              for path, methods in data['paths'].items():
+                  for method in methods.keys():
+                      print(f'  {method.upper()} {path}')
+          except:
+              print('  Could not retrieve endpoint list')
+          " || echo "  Endpoint listing failed"
+
+          # Test the /gpt endpoint (smoke test)
+          echo "Testing /gpt endpoint..."
+          response=$(curl -s -w "%{http_code}" -X POST http://localhost:8000/gpt \
             -H "Content-Type: application/json" \
-            -d '{"query": "test", "options": {}}' || echo "000")
+            -d '{"prompt": "test", "max_tokens": 10}' || echo "000")
           # Check if we get a valid HTTP response (200, 400, 422 are acceptable)
           if [[ "$response" =~ (200|400|422)$ ]]; then
-            echo "✓ /query endpoint is responding (HTTP status: ${response: -3})"
+            echo "✓ /gpt endpoint is responding (HTTP status: ${response: -3})"
           else
-            echo "✗ /query endpoint test failed (HTTP status: ${response: -3})"
+            echo "✗ /gpt endpoint test failed (HTTP status: ${response: -3})"
             # Don't fail the build, just warn
-            echo "Warning: /query endpoint may need attention"
+            echo "Warning: /gpt endpoint may need attention"
           fi
 
       - name: Show service logs
