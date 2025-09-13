@@ -53,6 +53,7 @@ coverage.xml
 # Logs
 *.log
 logs/
+console_audit.log
 
 # Database
 *.db
