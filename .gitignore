@@ -87,10 +87,9 @@ temp/
 .env.neo4j
 .env.postgres
 .env.secrets
-*secret*
-*secrets*
-credentials/
-auth/
+/secrets/
+/credentials/
+/auth/
 
 # Kubernetes local configs
 kubeconfig
