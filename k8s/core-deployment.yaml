@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+  labels:
+    app: core
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      containers:
+      - name: core
+        image: ghcr.io/moteb1989/top-tier-global-hub-ai:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PORT
+          value: "8080"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: redis-url
+        - name: NEO4J_URL
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: url
+        - name: NEO4J_USER
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: username
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: password
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core
+  labels:
+    app: core
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: core

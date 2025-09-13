@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osint
+  labels:
+    app: osint
+    component: osint-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: osint
+  template:
+    metadata:
+      labels:
+        app: osint
+    spec:
+      containers:
+      - name: osint
+        image: ghcr.io/moteb1989/top-tier-global-hub-ai-osint:latest
+        ports:
+        - containerPort: 8081
+          name: http
+        env:
+        - name: OSINT_HOST
+          value: "0.0.0.0"
+        - name: OSINT_PORT
+          value: "8081"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: NEO4J_URL
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: url
+        - name: NEO4J_USER
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: username
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-auth
+              key: password
+        - name: OSINT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osint-secrets
+              key: api-key
+        - name: SOCIAL_MEDIA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osint-secrets
+              key: social-media-api-key
+        livenessProbe:
+          httpGet:
+            path: /osint/health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /osint/ready
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: osint
+  labels:
+    app: osint
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 8081
+    name: http
+  selector:
+    app: osint

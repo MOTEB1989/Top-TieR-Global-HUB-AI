@@ -83,6 +83,11 @@ temp/
 .env.staging
 .env.production
 
+# Security: Neo4j credentials and secrets
+.env.neo4j
+**/secrets.yaml
+/opt/veritas/.env.neo4j
+
 # Node.js (if any frontend components)
 node_modules/
 npm-debug.log*
