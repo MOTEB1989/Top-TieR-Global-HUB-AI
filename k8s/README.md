@@ -12,6 +12,26 @@ This directory contains Kubernetes manifests for deploying the Top-TieR-Global-H
 
 ### 1. Create Secrets
 
+#### Neo4j Authentication Secret
+
+The Neo4j deployment now uses the `veritas-neo4j-secrets` secret for improved security:
+
+```bash
+# Option 1: Create secret directly (recommended for production)
+kubectl create secret generic veritas-neo4j-secrets \
+  --from-literal=NEO4J_USER=neo4j \
+  --from-literal=NEO4J_PASSWORD=your-secure-password-here
+
+# Option 2: Use the example file
+cp veritas-neo4j-secrets.yaml.example veritas-neo4j-secrets.yaml
+# Edit veritas-neo4j-secrets.yaml with your actual credentials
+kubectl apply -f veritas-neo4j-secrets.yaml
+# Remove the file for security
+rm veritas-neo4j-secrets.yaml
+```
+
+#### Application Secrets
+
 Copy the example secrets file and update with your credentials:
 
 ```bash
@@ -25,7 +45,7 @@ kubectl apply -f secrets.yaml
 Deploy the services in the following order:
 
 ```bash
-# Deploy Neo4j database
+# Deploy Neo4j database (StatefulSet)
 kubectl apply -f neo4j.yaml
 
 # Wait for Neo4j to be ready
@@ -67,8 +87,9 @@ Each service includes health probes for monitoring:
 - **Readiness**: `/osint/ready` - Checks if the OSINT service is ready
 
 ### Neo4j (ports 7474/7687)
-- **Liveness**: TCP check on port 7687 (bolt)
-- **Readiness**: HTTP check on port 7474 (browser)
+- **Liveness**: Cypher-shell query execution check
+- **Readiness**: Cypher-shell query execution check
+- **Authentication**: Uses `veritas-neo4j-secrets` secret with separate user/password fields
 
 ## Security Configuration
 
@@ -76,8 +97,10 @@ Each service includes health probes for monitoring:
 
 The Neo4j deployment uses Kubernetes secrets for authentication:
 
-- Secret name: `neo4j-auth`
-- Required keys: `auth`, `url`, `username`, `password`
+- Secret name: `veritas-neo4j-secrets`
+- Required keys: `NEO4J_USER`, `NEO4J_PASSWORD`
+- Uses StatefulSet for better data persistence and ordered deployment
+- Health checks use cypher-shell for more accurate database status validation
 
 ### Application Secrets
 
@@ -123,7 +146,7 @@ curl http://localhost:8081/osint/health
 
 ### Common Issues
 
-1. **Neo4j connection failures**: Check that the `neo4j-auth` secret is properly configured
+1. **Neo4j connection failures**: Check that the `veritas-neo4j-secrets` secret is properly configured
 2. **Image pull errors**: Ensure container images are accessible from your cluster
 3. **Resource limits**: Adjust resource requests/limits based on your cluster capacity
 
@@ -134,8 +157,8 @@ curl http://localhost:8081/osint/health
 kubectl describe pod <pod-name>
 
 # Check secret contents (base64 encoded)
-kubectl get secret neo4j-auth -o yaml
+kubectl get secret veritas-neo4j-secrets -o yaml
 
-# Test connectivity between services
-kubectl exec -it <core-pod> -- curl http://neo4j:7474
+# Test Neo4j connectivity and health
+kubectl exec -it <neo4j-pod> -- cypher-shell -u neo4j -p your-password "RETURN 1"
 ```
