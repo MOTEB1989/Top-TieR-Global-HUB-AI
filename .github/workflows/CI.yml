@@ -1,5 +1,6 @@
+---
 name: CI
-on:
+"on":
   push:
     branches: [main, master]
   pull_request:
@@ -83,14 +84,14 @@ jobs:
         run: |
           # Test that the image was built successfully
           docker images top-tier-hub-ai:test
-          
+
           # Run a simple smoke test
           docker run --rm -d --name test-api -p 8000:8000 top-tier-hub-ai:test
-          
+
           # Wait for the service to start
           echo "Waiting for API to start..."
           sleep 15
-          
+
           # Test the health endpoint if it exists, or root endpoint
           if curl -f http://localhost:8000/health 2>/dev/null; then
             echo "Health endpoint works"
@@ -98,12 +99,12 @@ jobs:
             echo "Health endpoint not available, testing root endpoint"
             curl -f http://localhost:8000/ || echo "Root endpoint test completed"
           fi
-          
+
           # Test the query endpoint
           curl -f -X POST http://localhost:8000/query \
             -H "Content-Type: application/json" \
             -d '{"query":"test"}' || echo "Query endpoint test completed"
-          
+
           # Clean up
           docker stop test-api || true
 
