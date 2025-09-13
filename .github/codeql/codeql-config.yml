@@ -1,0 +1,47 @@
+name: "Default CodeQL Configuration for Top-TieR-Global-HUB-AI"
+
+# Paths to include in analysis
+paths:
+  - "."
+
+# Paths to exclude from analysis
+paths-ignore:
+  - "**/*.md"
+  - "**/*.txt"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.json"
+  - "**/docs/**"
+  - "**/node_modules/**"
+  - "**/.git/**"
+  - "**/build/**"
+  - "**/dist/**"
+  - "**/__pycache__/**"
+  - "**/*.pyc"
+
+# Query packs to use
+packs:
+  - "codeql/python-queries"
+
+# Security queries to include
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Query filters for OSINT-specific adjustments
+query-filters:
+  # Include all security queries
+  - include:
+      kind: problem
+      problem.severity: 
+        - error
+        - warning
+        - recommendation
+  
+  # Exclude some noisy queries that are not relevant for this OSINT application
+  - exclude:
+      id: py/unused-import
+  - exclude:
+      id: py/similar-function
+  - exclude:
+      id: py/too-many-statements
