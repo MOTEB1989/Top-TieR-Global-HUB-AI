@@ -6,15 +6,67 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-modern-green.svg)](https://fastapi.tiangolo.com)
 
+## Project Objectives
+
+Top-TieR-Global-HUB-AI is an educational OSINT (Open Source Intelligence) platform designed to:
+
+🎯 **Primary Goals:**
+- **Data Collection**: Aggregate information from multiple open sources for intelligence analysis
+- **Graph Analysis**: Store and visualize relationships using Neo4j graph database
+- **API Access**: Provide modern REST API endpoints for programmatic access
+- **Intelligence Processing**: Utilize AI agents for automated analysis and insights
+- **Educational Focus**: Serve as a learning platform for OSINT methodologies and techniques
+
+🔧 **Technical Objectives:**
+- Modern microservices architecture with Docker containerization
+- Scalable data processing with async Python and FastAPI
+- Real-time graph visualization with Cytoscape.js
+- Comprehensive testing and CI/CD pipeline
+- Security-first design with proper authentication and data handling
+
+⚖️ **Ethical Considerations:**
+- Educational and research purposes only
+- Compliance with data protection regulations
+- Respect for source terms of service
+- Transparent data handling and retention policies
+
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.11 or higher
 - Git
-- (Optional) Docker for containerized deployment
+- Docker and Docker Compose (recommended for full system deployment)
+- curl and jq (for OSINT query scripts)
 
-### Installation
+### Method 1: Docker Compose Deployment (Recommended)
+
+The fastest way to get the complete system running with all services:
+
+```bash
+# Clone the repository
+git clone https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI.git
+cd Top-TieR-Global-HUB-AI
+
+# Start all services with Docker Compose
+docker compose up -d
+
+# Check service health
+docker compose ps
+
+# Access the application
+# API: http://localhost:8000
+# Interactive Docs: http://localhost:8000/docs
+# Neo4j Browser: http://localhost:7474 (user: neo4j, password: password)
+```
+
+Services included in Docker Compose:
+- **API Server**: FastAPI application on port 8000
+- **PostgreSQL**: Primary database on port 5432
+- **Redis**: Caching layer on port 6379
+- **Neo4j**: Graph database on ports 7474 (browser) and 7687 (bolt)
+
+### Method 2: Local Development Setup
 
 1. **Clone the repository:**
    ```bash
@@ -55,6 +107,59 @@
    - API: http://localhost:8000
    - Interactive API Docs: http://localhost:8000/docs
    - Health Check: http://localhost:8000/health
+
+## OSINT Query Scripts
+
+The repository includes powerful command-line tools for OSINT data collection and analysis:
+
+### snap_osint_query.sh
+
+A comprehensive OSINT query tool that provides quick access to the platform's capabilities:
+
+```bash
+# Make script executable
+chmod +x scripts/snap_osint_query.sh
+
+# Check API server status
+./scripts/snap_osint_query.sh status
+
+# Search for domain information
+./scripts/snap_osint_query.sh search "domain:example.com"
+
+# Analyze an IP address
+./scripts/snap_osint_query.sh analyze "192.168.1.1"
+
+# Export results in different formats
+./scripts/snap_osint_query.sh export json
+./scripts/snap_osint_query.sh export csv
+
+# Run comprehensive health check
+./scripts/snap_osint_query.sh health
+
+# Get help and see all options
+./scripts/snap_osint_query.sh --help
+```
+
+### Script Features:
+- **Multi-format output**: JSON, CSV, and graph exports
+- **Comprehensive logging**: Detailed logs with timestamps and color coding
+- **Error handling**: Robust error detection and recovery
+- **Health monitoring**: Check status of all system components
+- **Configurable**: Set API endpoints and output directories via environment variables
+
+### Script Examples:
+
+```bash
+# Set custom API endpoint
+export API_BASE_URL="https://your-api.example.com"
+./scripts/snap_osint_query.sh status
+
+# Use custom output directory
+./scripts/snap_osint_query.sh --output ./my_results search "target:investigation"
+
+# Enable verbose logging
+./scripts/snap_osint_query.sh --verbose analyze "email@example.com"
+```
 
 ## Environment Variables
 
@@ -132,6 +237,26 @@ flake8 .
 ```
 
 ### Docker Development
+
+#### Option 1: Docker Compose (Full Stack)
+```bash
+# Build and start all services
+docker compose up --build
+
+# Run in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+
+# Stop and remove volumes (clean reset)
+docker compose down -v
+```
+
+#### Option 2: Single Container
 ```bash
 # Build container
 docker build -t top-tier-hub-ai .
@@ -139,8 +264,27 @@ docker build -t top-tier-hub-ai .
 # Run container
 docker run -p 8000:8000 --env-file .env top-tier-hub-ai
 
-# Or use docker-compose (if available)
-docker-compose up --build
+# Run with volume for development
+docker run -p 8000:8000 -v $(pwd):/app top-tier-hub-ai
+```
+
+### Local Development with Docker Services
+
+For local development with external databases:
+
+```bash
+# Start only the databases
+docker compose up postgres redis neo4j -d
+
+# Set environment variables to connect to Docker services
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/app_db"
+export REDIS_URL="redis://localhost:6379/0"
+export NEO4J_URL="bolt://localhost:7687"
+export NEO4J_USER="neo4j"
+export NEO4J_PASSWORD="password"
+
+# Run the API server locally
+python api_server.py
 ```
 
 ## Architecture
