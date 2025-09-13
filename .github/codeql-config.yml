@@ -1,0 +1,35 @@
+---
+name: "CodeQL Configuration for Top-TieR-Global-HUB-AI"
+
+paths:
+  # Include Python code directories
+  - "*.py"                     # Root level Python files
+  - "utils/**"                 # Utils directory
+  - "tests/**"                 # Tests directory
+  - "veritas-mini-web/**"      # Veritas mini web application
+  - "core/**"                  # Future core directory
+  - "osint/**"                 # Future OSINT directory
+
+paths-ignore:
+  # Ignore documentation and non-code files
+  - "**/*.md"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.docx"
+  - "**/*.txt"
+  - "**/*.zip"
+  - "**/*.sh"
+  # Ignore build artifacts and dependencies
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/__pycache__/**"
+  - "**/.pytest_cache/**"
+  # Ignore configuration and non-code directories
+  - ".github/**"
+  - "docs/**"
+  - "policies/**"
+  - ".git/**"
+  - "db/**"
+  - "feature/**"
+  - "scripts/**"
