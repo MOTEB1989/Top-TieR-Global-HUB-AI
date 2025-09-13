@@ -1,0 +1,79 @@
+name: "Top-TieR-Global-HUB-AI CodeQL Configuration"
+
+# Paths to include in CodeQL analysis
+paths:
+  # Include main Python application files
+  - "api_server.py"
+  - "gpt_client.py"
+  - "utils/"
+  - "veritas-mini-web/"
+  - "tests/"
+  # Include any Python scripts
+  - "scripts/"
+
+# Paths to exclude from CodeQL analysis
+paths-ignore:
+  # Exclude documentation files
+  - "**/*.md"
+  - "**/*.rst"
+  - "**/*.txt"
+  
+  # Exclude configuration files
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.json"
+  - "**/*.toml"
+  - "**/*.ini"
+  - "**/*.cfg"
+  
+  # Exclude Docker and deployment files
+  - "Dockerfile*"
+  - "docker-compose*.yml"
+  - ".dockerignore"
+  
+  # Exclude CI/CD and GitHub files
+  - ".github/"
+  - ".gitignore"
+  - ".env*"
+  
+  # Exclude temporary and build artifacts
+  - "**/__pycache__/"
+  - "**/*.pyc"
+  - "**/*.pyo"
+  - "**/*.pyd"
+  - "**/.pytest_cache/"
+  - "**/node_modules/"
+  - "**/dist/"
+  - "**/build/"
+  
+  # Exclude compressed files and archives
+  - "**/*.zip"
+  - "**/*.tar.gz"
+  - "**/*.rar"
+  - "**/*.7z"
+  
+  # Exclude shell scripts (focus on Python only)
+  - "**/*.sh"
+  - "**/*.bash"
+  
+  # Exclude specific directories that are not part of the main codebase
+  - "db/"
+  - "docs/"
+  - "feature/"
+  - "policies/"
+
+# Disable default queries and use security and quality focused ones
+disable-default-queries: false
+
+# Query filters - focus on security and code quality
+queries:
+  - uses: security-and-quality
+  - uses: security-extended
+
+# Language-specific configuration
+python:
+  # Additional Python-specific configuration
+  setup-python-dependencies: true
+  
+# Performance configuration
+compilation-mode: none

@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osint-deployment
+  labels:
+    app: top-tier-hub-osint
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: top-tier-hub-osint
+  template:
+    metadata:
+      labels:
+        app: top-tier-hub-osint
+    spec:
+      containers:
+      - name: veritas-mini-web
+        image: top-tier-hub-veritas:latest
+        ports:
+        - containerPort: 8088
+        env:
+        - name: MINI_WEB_HOST
+          value: "0.0.0.0"
+        - name: MINI_WEB_PORT
+          value: "8088"
+        - name: MAIN_API_URL
+          value: "http://core-service:8000"
+        - name: NEO4J_URL
+          value: "bolt://neo4j-service:7687"
+        - name: NEO4J_USER
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-credentials
+              key: username
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: neo4j-credentials
+              key: password
+        - name: REDIS_URL
+          value: "redis://redis-service:6379/1"
+        - name: API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: veritas-credentials
+              key: api-token
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: veritas-credentials
+              key: secret-key
+        - name: ENABLE_CACHE
+          value: "true"
+        - name: ENABLE_MONITORING
+          value: "true"
+        - name: DEBUG
+          value: "false"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8088
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8088
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: osint-service
+spec:
+  selector:
+    app: top-tier-hub-osint
+  ports:
+  - protocol: TCP
+    port: 8088
+    targetPort: 8088
+  type: ClusterIP

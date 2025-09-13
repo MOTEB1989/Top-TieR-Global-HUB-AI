@@ -64,10 +64,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: false
           load: true
-          tags: local/veritas-gateway:test
+          tags: local/top-tier-hub:test
 
       - name: Start services (Compose)
         run: docker compose up -d
@@ -77,14 +77,13 @@ jobs:
 
       - name: Health check
         run: |
-          for i in {1..60}; do curl -sf http://localhost:8080/health && break || true; sleep 2; done
-          curl -sSf http://localhost:8080/health
+          for i in {1..60}; do curl -sf http://localhost:8000/health && break || true; sleep 2; done
+          curl -sSf http://localhost:8000/health
 
-      - name: Smoke test — Unified Query
+      - name: Smoke test — API Query
         run: |
-          curl -s -X POST http://localhost:8080/query \
+          curl -s -X GET http://localhost:8000/ \
             -H "Content-Type: application/json" \
-            -d '{"query":"+966500000000","type":"phone","scope":["osint"],"trace":true}' \
             | tee /tmp/smoke.json
           test -s /tmp/smoke.json
 
@@ -104,13 +103,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build & Push gateway
+      - name: Build & Push main app
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/veritas-gateway:ci-${{ github.sha }}
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/top-tier-hub:ci-${{ github.sha }}
 
   notify:
     needs: [build-test, push-image]
