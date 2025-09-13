@@ -184,8 +184,10 @@ The application supports configuration through environment variables. Copy `.env
 |----------|---------|-------------|
 | `DATABASE_URL` | `postgresql://user:pass@localhost/db` | Primary database connection |
 | `NEO4J_URL` | `bolt://localhost:7687` | Neo4j graph database URL |
-| `NEO4J_USER` | `neo4j` | Neo4j username |
-| `NEO4J_PASSWORD` | `password` | Neo4j password |
+| `NEO4J_AUTH_USER` | `neo4j` | Neo4j username (for Docker) |
+| `NEO4J_AUTH_PASSWORD` | `password` | Neo4j password (for Docker) |
+
+**Note**: For enhanced security, Neo4j credentials should be stored in `/opt/veritas/.env.neo4j` outside the Git repository. See `.env.neo4j.example` for the format.
 
 ### Security Settings
 | Variable | Example | Description |
