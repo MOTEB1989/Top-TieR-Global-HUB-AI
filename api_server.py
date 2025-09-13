@@ -12,6 +12,22 @@ class RunRequest(BaseModel):
     depth: str = "basic"
     sources: str = "auto"
 
+class QueryRequest(BaseModel):
+    query: str
+
+@app.get("/")
+def read_root():
+    return {"message": "Veritas Console API", "status": "running"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "Veritas Console API"}
+
+@app.post("/query")
+def query(req: QueryRequest):
+    """Simple query endpoint for testing purposes"""
+    return {"query": req.query, "status": "processed", "message": "Query received successfully"}
+
 @app.post("/run")
 def run(req: RunRequest):
     flag = "--target"
