@@ -273,8 +273,11 @@ async def gpt_endpoint(request: GPTRequest):
 @app.get("/metrics")
 async def get_metrics(format: str = "json"):
     """Get system metrics in JSON or Prometheus format"""
+    from fastapi.responses import PlainTextResponse
+    
     if format.lower() == "prometheus":
-        return metrics.get_prometheus_metrics()
+        prometheus_data = metrics.get_prometheus_metrics()
+        return PlainTextResponse(prometheus_data, media_type="text/plain")
     
     return {
         "real_time": metrics.get_real_time_metrics(),

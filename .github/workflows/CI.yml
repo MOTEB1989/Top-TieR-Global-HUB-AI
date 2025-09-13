@@ -22,20 +22,29 @@ jobs:
           submodules: false
           fetch-depth: 0
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
       - name: Fail-fast Python syntax
         run: |
           python -m py_compile $(git ls-files '*.py') || exit 1
-          python - << 'PY'
-          import sys, tokenize, os
-          p='veritas_console.py'
-          if os.path.exists(p):
-            try:
-              with open(p,'rb') as f:
-                for _ in tokenize.tokenize(f.readline): pass
-              print('OK:', p)
-            except tokenize.TokenError as e:
-              print('TokenError in', p, ':', e); sys.exit(1)
-          PY
+          
+      - name: Install Python linting tools
+        run: |
+          pip install flake8 black isort
+          
+      - name: Python linting
+        run: |
+          # Check with flake8 (lenient settings for now)
+          flake8 --max-line-length=120 --ignore=E203,W503 $(git ls-files '*.py') || echo "Flake8 issues found but continuing"
+          
+          # Check formatting with black (check only, don't fix)
+          black --check --diff $(git ls-files '*.py') || echo "Black formatting issues found but continuing"
 
       - name: Install linters
         run: |
@@ -64,10 +73,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: false
           load: true
-          tags: local/veritas-gateway:test
+          tags: local/top-tier-hub:test
 
       - name: Start services (Compose)
         run: docker compose up -d
@@ -77,14 +86,14 @@ jobs:
 
       - name: Health check
         run: |
-          for i in {1..60}; do curl -sf http://localhost:8080/health && break || true; sleep 2; done
-          curl -sSf http://localhost:8080/health
+          for i in {1..60}; do curl -sf http://localhost:8000/health && break || true; sleep 2; done
+          curl -sSf http://localhost:8000/health
 
       - name: Smoke test — Unified Query
         run: |
-          curl -s -X POST http://localhost:8080/query \
+          curl -s -X POST http://localhost:8000/query \
             -H "Content-Type: application/json" \
-            -d '{"query":"+966500000000","type":"phone","scope":["osint"],"trace":true}' \
+            -d '{"query":"test phone number +966500000000","scope":["osint"],"trace":true}' \
             | tee /tmp/smoke.json
           test -s /tmp/smoke.json
 
@@ -108,9 +117,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/veritas-gateway:ci-${{ github.sha }}
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/top-tier-hub:ci-${{ github.sha }}
 
   notify:
     needs: [build-test, push-image]
