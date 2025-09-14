@@ -1,0 +1,5 @@
+addReviewers: true
+addAssignees: false
+reviewers:
+  - MOTEB1989
+numberOfReviewers: 1
