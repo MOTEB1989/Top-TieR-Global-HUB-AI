@@ -1,6 +1,8 @@
 import os
-import pytest
+import sys
 from unittest.mock import patch, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from api_server import app

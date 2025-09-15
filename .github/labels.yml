@@ -1,0 +1,79 @@
+- name: "status/wip"
+  color: "d4c5f9"
+  description: "Work in progress"
+
+- name: "status/blocked"
+  color: "b60205"
+  description: "Blocked by dependency or failing checks"
+
+- name: "status/ready"
+  color: "0e8a16"
+  description: "Ready for review/merge"
+
+- name: "priority/high"
+  color: "b60205"
+  description: "High priority"
+
+- name: "priority/medium"
+  color: "fbca04"
+  description: "Medium priority"
+
+- name: "priority/low"
+  color: "c2e0c6"
+  description: "Low priority"
+
+- name: "type/ci"
+  color: "1d76db"
+  description: "CI/CD workflows and pipelines"
+
+- name: "type/security"
+  color: "5319e7"
+  description: "Security, auth, scanning"
+
+- name: "type/refactor"
+  color: "0052cc"
+  description: "Refactoring / cleanup"
+
+- name: "type/feature"
+  color: "0e8a16"
+  description: "New feature"
+
+- name: "type/bug"
+  color: "d73a4a"
+  description: "Bug fix"
+
+- name: "area/neo4j"
+  color: "0366d6"
+  description: "Neo4j config, auth, data"
+
+- name: "area/k8s"
+  color: "1a7f37"
+  description: "Kubernetes manifests & ops"
+
+- name: "area/docker"
+  color: "6f42c1"
+  description: "Dockerfiles, Compose, Buildx"
+
+- name: "area/codeql"
+  color: "5319e7"
+  description: "CodeQL configuration or results"
+
+- name: "needs/docs"
+  color: "0e8a16"
+  description: "Documentation updates required"
+
+- name: "needs/tests"
+  color: "fbca04"
+  description: "Test coverage required or failing"
+
+- name: "automerge/candidate"
+  color: "c5def5"
+  description: "Eligible for automerge when checks pass"
+
+- name: "breaking-change"
+  color: "e11d21"
+  description: "Potentially breaking behavior change"
+
+- name: "dependencies"
+  color: "0366d6"
+  description: "Dependency updates"

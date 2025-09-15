@@ -97,7 +97,7 @@ Services included in Docker Compose:
 5. **Run the API server:**
    ```bash
    # Development mode with auto-reload
-   python api_server.py
+   python -m api_server
    
    # Or with uvicorn directly
    uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
@@ -286,7 +286,7 @@ export NEO4J_USER="neo4j"
 export NEO4J_PASSWORD="password"
 
 # Run the API server locally
-python api_server.py
+python -m api_server
 ```
 
 ## Architecture
