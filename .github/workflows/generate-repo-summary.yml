@@ -1,0 +1,29 @@
+name: Generate repository summary
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: |
+          chmod +x scripts/generate_repo_summary.sh || true
+
+      - name: Run repo summary generator
+        run: |
+          mkdir -p artifacts
+          ./scripts/generate_repo_summary.sh
+
+      - name: Upload repo_summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo_summary.txt
+          path: repo_summary.txt
