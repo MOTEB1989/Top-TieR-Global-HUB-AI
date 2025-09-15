@@ -1,0 +1,34 @@
+name: Context Collector
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-collector:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+
+      - name: Make script executable
+        run: chmod +x collect_context_for_claude.sh
+
+      - name: Run context collector
+        run: ./collect_context_for_claude.sh
+
+      - name: Upload generated files
+        uses: actions/upload-artifact@v4
+        with:
+          name: context-files
+          path: |
+            CLAUDE_CONTEXT.md
+            CLAUDE_CONTEXT.json
