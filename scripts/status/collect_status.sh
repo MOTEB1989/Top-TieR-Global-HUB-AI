@@ -102,6 +102,7 @@ summary_neo4j_http() {
   local host="${NEO4J_HOST:-localhost}" port="${NEO4J_HTTP_PORT:-7474}"
   if command -v curl >/dev/null 2>&1; then
     echo "Probing http://$host:$port/"
+    echo "WARNING: Using HTTP to connect to Neo4j may expose sensitive data. Use HTTPS in production or secure environments." >&2
     curl -fsS "http://$host:$port/" | head -n 5 || echo "Neo4j HTTP endpoint not reachable"
   else
     echo "curl not installed. Skip."
