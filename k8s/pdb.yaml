@@ -1,0 +1,20 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: veritas-core-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: veritas-core
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: osint-engine-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: osint-engine
