@@ -1,0 +1,162 @@
+name: Veritas Nexus • Health (Auto)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+  schedule:
+    - cron: "*/30 * * * *"   # كل 30 دقيقة (UTC)
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: veritas-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # خدماتك المحلية أو داخل K8s (يتبدّل تلقائيًا لاحقًا إن وُجد kubeconfig)
+      CORE_URL: http://localhost:8080
+      OSINT_URL: http://localhost:8081
+      NEO4J_HTTP: http://localhost:7474
+      NEO4J_USER: ${{ secrets.NEO4J_USER }}
+      NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # ← تفعيل مفتاح OpenAI هنا
+      KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq python3-pip netcat-openbsd
+          pip3 install --no-cache-dir requests
+
+      - name: Auto-select K8s Services if kubeconfig is provided
+        if: ${{ env.KUBECONFIG_B64 != '' }}
+        run: |
+          echo "$KUBECONFIG_B64" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          echo "CORE_URL=http://veritas-core-svc"        >> $GITHUB_ENV
+          echo "OSINT_URL=http://osint-engine-svc:8081"  >> $GITHUB_ENV
+          echo "NEO4J_HTTP=http://neo4j:7474"            >> $GITHUB_ENV
+
+      - name: Show targets (debug)
+        run: |
+          echo "CORE_URL=$CORE_URL"
+          echo "OSINT_URL=$OSINT_URL"
+          echo "NEO4J_HTTP=$NEO4J_HTTP"
+          test -n "$OPENAI_API_KEY" && echo "OPENAI_API_KEY is set ✔" || (echo "OPENAI_API_KEY is MISSING ❌"; exit 1)
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/veritas_health_check.sh || true
+
+      - name: Run Veritas health checks (retry)
+        id: runcheck
+        run: |
+          set -o pipefail
+          attempt() {
+            echo "== Veritas Health Attempt $1 ($(date -u +%FT%TZ)) =="
+            ./scripts/veritas_health_check.sh
+          }
+          attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
+
+      - name: Verify OpenAI key by a minimal API call
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python3 scripts/verify_openai.py 2>&1 | tee -a health.log
+
+      - name: Upload health log
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: veritas-health-log
+          path: health.log
+          retention-days: 7
+
+      - name: Job summary
+        if: ${{ success() || failure() }}
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ Health Check: **PASSED**" >> $GITHUB_STEP_SUMMARY
+            echo "- Core/OSINT/Neo4j + OpenAI key all OK." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Health Check: **FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "- راجع Artifact: **veritas-health-log**." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  open-issue-on-failure:
+    runs-on: ubuntu-latest
+    needs: [health-check]
+    if: ${{ needs.health-check.result == 'failure' }}
+    steps:
+      - name: Download health log
+        uses: actions/download-artifact@v4
+        with:
+          name: veritas-health-log
+          path: ./artifacts
+
+      - name: Create GitHub Issue (auto)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let tail = 'log unavailable';
+            try { tail = fs.readFileSync('./artifacts/health.log','utf8').split('\n').slice(-120).join('\n'); } catch(e) {}
+            const title = `❌ Veritas Health Failed – ${new Date().toISOString()}`;
+            const body = [
+              'Health check failed.',
+              `Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `Commit: ${context.sha}`,
+              '',
+              '#### Tail of health.log',
+              '```',
+              tail,
+              '```'
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['health-check','automation','bug']
+            });
+
+  auto-close-on-success:
+    runs-on: ubuntu-latest
+    needs: [health-check]
+    if: ${{ needs.health-check.result == 'success' }}
+    steps:
+      - name: Close open health issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'health-check'
+            });
+            for (const i of issues) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: i.number,
+                body: `✅ Health restored in run https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: i.number,
+                state: 'closed'
+              });
+            }
