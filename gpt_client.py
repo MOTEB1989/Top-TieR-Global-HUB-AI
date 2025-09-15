@@ -59,3 +59,39 @@ class GPTClient:
 
 # Global client instance
 gpt_client = GPTClient()
+
+
+def main():
+    """Health check main function for OpenAI API availability"""
+    print("🔍 Running OpenAI Health Check...")
+    
+    client = GPTClient()
+    if not client.is_available():
+        print("❌ OpenAI API key not configured")
+        exit(1)
+    
+    try:
+        # Simple test to verify API connectivity
+        import asyncio
+        from gpt_client import GPTRequest
+        
+        async def test_connection():
+            request = GPTRequest(
+                prompt="Say 'OK' if you can hear me",
+                max_tokens=5,
+                temperature=0.1
+            )
+            response = await client.generate_response(request)
+            return response
+        
+        response = asyncio.run(test_connection())
+        print(f"✅ OpenAI API connection successful: {response.response}")
+        exit(0)
+        
+    except Exception as e:
+        print(f"❌ OpenAI API health check failed: {str(e)}")
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
