@@ -3,6 +3,7 @@
 **Veritas Nexus v2** — منصة OSINT مفتوحة المصدر للتجارب التعليمية: تجمع البيانات من مصادر متعددة، تخزنها في Neo4j، توفر REST API (FastAPI)، وكيل ذكي (LangChain Agent)، وواجهة بصرية (Cytoscape.js).
 
 [![CI](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/CI.yml/badge.svg)](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/CI.yml)
+[![Post-merge Validation (Readonly)](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/post-merge-validation.yml/badge.svg?branch=main)](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/post-merge-validation.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-modern-green.svg)](https://fastapi.tiangolo.com)
 
@@ -323,6 +324,7 @@ docker push your-registry/top-tier-hub-ai
 ### CI/CD
 The repository includes GitHub Actions workflows for:
 - Continuous Integration testing
+- Post-merge Validation (Readonly): Safe, read-only health checks post-merge and on-demand
 - Automated security scanning
 - Container registry publishing
 - Immutable release creation
