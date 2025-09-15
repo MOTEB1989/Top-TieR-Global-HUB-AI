@@ -1,0 +1,82 @@
+name: Health Check OpenAI
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # ⏰ كل يوم الساعة 6 صباحاً UTC
+  workflow_dispatch:        # ✅ تشغيل يدوي من GitHub
+
+permissions:
+  contents: read
+
+concurrency:
+  group: health-check-openai
+  cancel-in-progress: false
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # غيّر هذا إلى رابط نقطة النهاية الخارجية لديك (إن لم يكن لديك نقطة نهاية، اتركه كما هو وسيُعتبر الفحص الخارجي فاشلاً/متجاوزاً)
+      EXTERNAL_URL: https://your-deployed-app-url/check-key
+
+    steps:
+      - name: 🛠️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 📦 Install dependencies (if requirements.txt exists)
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: ✅ Internal check with gpt_client.py
+        id: internal
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ ! -f "gpt_client.py" ]; then
+            echo "gpt_client.py not found"
+            echo "INTERNAL_FAILED=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          python gpt_client.py || { echo "INTERNAL_FAILED=true" >> "$GITHUB_ENV"; exit 0; }
+
+      - name: 🌍 External check with deployed endpoint
+        id: external
+        run: |
+          if [ -z "${{ env.EXTERNAL_URL }}" ]; then
+            echo "No EXTERNAL_URL set, skipping external check"
+            echo "EXTERNAL_FAILED=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          curl -fsS "${{ env.EXTERNAL_URL }}" >/dev/null || echo "EXTERNAL_FAILED=true" >> "$GITHUB_ENV"
+
+      - name: 📝 Job summary
+        run: |
+          {
+            echo "## Health Check Summary"
+            echo ""
+            echo "- Internal failed: ${INTERNAL_FAILED:-false}"
+            echo "- External failed: ${EXTERNAL_FAILED:-false}"
+            echo ""
+            echo "Repo: $GITHUB_REPOSITORY"
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 🔔 Send Alert if failed
+        if: env.INTERNAL_FAILED == 'true' || env.EXTERNAL_FAILED == 'true'
+        env:
+          WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "No ALERT_WEBHOOK_URL secret configured; skipping alert"
+            exit 0
+          fi
+          MESSAGE="⚠️ Health Check Failed! Internal: ${INTERNAL_FAILED:-false}, External: ${EXTERNAL_FAILED:-false} | Repo: $GITHUB_REPOSITORY | Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -fsS -X POST -H "Content-Type: application/json" -d "{\"content\":\"$MESSAGE\"}" "$WEBHOOK_URL" || true
