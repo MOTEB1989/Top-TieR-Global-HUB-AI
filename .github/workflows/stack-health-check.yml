@@ -1,0 +1,56 @@
+name: Stack Health Check
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # ⏰ تشغيل يوميًا عند منتصف الليل UTC
+  workflow_dispatch:       # 🚀 تشغيل يدوي من Actions
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Load environment variables (optional)
+        shell: bash
+        run: |
+          if [ -f .env ]; then
+            echo "Loading .env"
+            set -a
+            source .env
+            set +a
+          else
+            echo "⚠️ No .env file found, workflow may fail if required vars are missing."
+          fi
+
+      - name: 🐳 Start Docker Compose stack
+        run: |
+          docker compose up -d
+          docker ps -a
+
+      - name: ⏳ Wait briefly for services
+        run: |
+          sleep 10
+
+      - name: ✅ Run Veritas health check
+        run: |
+          chmod +x scripts/veritas_health_check.sh || true
+          bash scripts/veritas_health_check.sh | tee health.log
+
+      - name: 📤 Upload health logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-check-logs
+          path: |
+            health.log
+            scripts/veritas_health_check.sh
+
+      - name: 🧹 Shut down stack
+        if: always()
+        run: docker compose down
