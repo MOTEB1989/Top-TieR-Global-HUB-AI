@@ -77,6 +77,11 @@ jobs:
           source .env
           set +a
 
+          echo "=== Starting Docker Compose Services ==="
+          echo "Environment: $ENVIRONMENT"
+          echo "API Host: $API_HOST"
+          echo "API Port: $API_PORT"
+
           echo "Starting core Docker Compose services..."
           # Start only core services that are essential for health checking
           # Skip problematic services that might not build in CI
@@ -92,6 +97,9 @@ jobs:
 
           # Wait for services to stabilize
           sleep 30
+
+          echo "=== Current Service Status ==="
+          docker compose ps
 
       - name: Wait for services to be healthy
         run: |
@@ -129,6 +137,7 @@ jobs:
           # Run the health check script
           echo "Running Veritas health check..."
           ./scripts/veritas_health_check.sh
+        continue-on-error: false  # Fail the workflow if health checks fail
 
       - name: Collect service logs on failure
         if: failure()
