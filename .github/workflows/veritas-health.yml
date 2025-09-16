@@ -1,13 +1,12 @@
 name: Veritas Nexus • Health (Auto)
 
-on:
+"on":
   # Disabled automatic health checks to prevent CI failures
-  # push:
-  #   branches: [ main, develop ]
-  # pull_request:
-  # schedule:
-  #   - cron: "*/30 * * * *"   # تلقائي كل 30 دقيقة (UTC)
-  workflow_dispatch:  # Allow manual triggering only
+  # Original triggers:
+  # - push: branches [ main, develop ]
+  # - pull_request
+  # - schedule: every 30 minutes
+  workflow_dispatch: {}  # Allow manual triggering only
 
 jobs:
   health-check:

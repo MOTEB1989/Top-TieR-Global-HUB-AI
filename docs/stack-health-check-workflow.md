@@ -92,6 +92,8 @@ This workflow complements the existing `veritas-health.yml` workflow by:
 - Providing daily automated validation
 - Testing the complete service stack rather than individual components
 
+**Note:** The `veritas-health.yml` workflow has been configured for manual triggering only to prevent CI failures when services aren't available in the GitHub Actions environment.
+
 ## Maintenance
 
 ### Regular Tasks
