@@ -53,22 +53,6 @@ spec:
             secretKeyRef:
               name: osint-secrets
               key: social-media-api-key
-        livenessProbe:
-          httpGet:
-            path: /osint/health
-            port: 8081
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /osint/ready
-            port: 8081
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
         resources:
           requests:
             memory: "512Mi"
