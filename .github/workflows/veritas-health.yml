@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
+      # Target local docker-compose services by default
+      CORE_URL: http://localhost:8000
+      VERITAS_WEB_URL: http://localhost:8080
       NEO4J_HTTP: http://localhost:7474
       NEO4J_USER: ${{ secrets.NEO4J_USER }}
       NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
-      # لو عندك فحص عبر Services داخل K8s، وفّرت kubeconfig كسِر
+      # For K8s service checks, provide kubeconfig as secret
       KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
     steps:
       - name: Checkout
@@ -30,20 +30,64 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
 
+      - name: Set up environment
+        run: |
+          # Create .env file from .env.example as base
+          cp .env.example .env 2>/dev/null || echo "# Generated .env for CI" > .env
+          
+          # Add CI-specific configuration
+          echo "ENVIRONMENT=ci" >> .env
+          echo "DEBUG=false" >> .env
+          echo "NEO4J_USER=neo4j" >> .env
+          echo "NEO4J_PASSWORD=testpassword123" >> .env
+          
+          # Create Neo4j env file in expected location for docker-compose
+          sudo mkdir -p /opt/veritas
+          sudo tee /opt/veritas/.env.neo4j > /dev/null << EOF
+          NEO4J_AUTH=neo4j/testpassword123
+          NEO4J_AUTH_USER=neo4j
+          NEO4J_AUTH_PASSWORD=testpassword123
+          NEO4J_DATABASE=neo4j
+          EOF
+
+      - name: Start core services
+        run: |
+          echo "Starting Docker Compose services..."
+          # Start essential services for health checking
+          docker compose up -d redis postgres neo4j
+          
+          # Wait for core services to be ready
+          echo "Waiting for core services to start..."
+          sleep 30
+          
+          # Try to start the main API service
+          echo "Starting main API service..."
+          docker compose up -d api || echo "API service failed to start, will check if it's running elsewhere..."
+          
+          # Try to start veritas-web if enabled
+          echo "Starting veritas-web service..."
+          docker compose --profile mini-web up -d veritas-web || echo "Veritas-web service failed to start, may not be configured..."
+          
+          # Wait for services to stabilize
+          sleep 20
+          
+          echo "=== Current Service Status ==="
+          docker compose ps
+
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
         run: |
           echo "$KUBECONFIG_B64" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-          # استهدف Services داخل الكلاستر بدل localhost
-          echo "CORE_URL=http://veritas-core-svc"      >> $GITHUB_ENV
-          echo "OSINT_URL=http://osint-engine-svc:8081" >> $GITHUB_ENV
-          echo "NEO4J_HTTP=http://neo4j:7474"           >> $GITHUB_ENV
+          # Target services inside the cluster instead of localhost
+          echo "CORE_URL=http://veritas-core-svc:8000"    >> $GITHUB_ENV
+          echo "VERITAS_WEB_URL=http://veritas-web-svc:8080" >> $GITHUB_ENV
+          echo "NEO4J_HTTP=http://neo4j:7474"             >> $GITHUB_ENV
 
       - name: Show targets
         run: |
           echo "CORE_URL=$CORE_URL"
-          echo "OSINT_URL=$OSINT_URL"
+          echo "VERITAS_WEB_URL=$VERITAS_WEB_URL"
           echo "NEO4J_HTTP=$NEO4J_HTTP"
 
       - name: Make script executable
