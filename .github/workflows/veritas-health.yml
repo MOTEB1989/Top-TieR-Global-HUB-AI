@@ -28,7 +28,36 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y jq netcat-openbsd
+          sudo apt-get install -y jq netcat-openbsd curl
+
+      - name: Set up Python environment
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start background services for health check
+        run: |
+          # Start main API service in background
+          cd ${{ github.workspace }}
+          python -m uvicorn api_server:app --host 0.0.0.0 --port 8000 &
+          
+          # Start veritas-web service in background
+          cd ${{ github.workspace }}/veritas-web
+          MINI_WEB_PORT=8080 MAIN_API_URL=http://localhost:8000 python app.py &
+          
+          # Wait for services to start
+          sleep 10
+          
+          # Verify services are responding
+          echo "Waiting for services to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health > /dev/null && curl -s http://localhost:8080/health > /dev/null; then
+              echo "Services are ready"
+              break
+            fi
+            echo "Waiting for services... attempt $i/30"
+            sleep 2
+          done
 
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
