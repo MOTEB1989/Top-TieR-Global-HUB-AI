@@ -73,16 +73,17 @@ services:
   veritas-web:
     build: ./veritas-web
     ports:
-      - "8080:8080"
+      - "8080:8088"  # Map external 8080 to internal 8088
     env_file:
       - /opt/veritas/.env.neo4j
     environment:
       - NODE_ENV=production
+      - MINI_WEB_PORT=8088  # Ensure service runs on correct port
     depends_on:
       neo4j:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8088/health"]  # Check internal port
       interval: 30s
       timeout: 10s
       retries: 3
