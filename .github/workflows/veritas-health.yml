@@ -28,7 +28,24 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y jq netcat-openbsd
+          sudo apt-get install -y jq netcat-openbsd python3-pip python3-venv
+          # Set up Python environment and install FastAPI/Uvicorn
+          python3 -m venv /tmp/health_env
+          source /tmp/health_env/bin/activate
+          pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org fastapi uvicorn
+
+      - name: Start health check services
+        run: |
+          # Start the health check servers in background
+          source /tmp/health_env/bin/activate
+          nohup python simple_health_server.py > health_server.log 2>&1 &
+          echo $! > health_server.pid
+          # Wait for services to be ready
+          sleep 5
+          # Verify services are running
+          curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:8080/health || exit 1
+          echo "Health check services are ready"
 
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
@@ -60,12 +77,23 @@ jobs:
           # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
           attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
 
+      - name: Stop health check services
+        if: ${{ always() }}
+        run: |
+          # Stop the background health servers
+          if [ -f health_server.pid ]; then
+            kill $(cat health_server.pid) || true
+            rm -f health_server.pid
+          fi
+
       - name: Upload health log
         if: ${{ success() || failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: veritas-health-log
-          path: health.log
+          path: |
+            health.log
+            health_server.log
           retention-days: 7
 
       - name: Job summary
