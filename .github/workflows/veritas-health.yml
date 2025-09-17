@@ -14,7 +14,8 @@ jobs:
     timeout-minutes: 15
     env:
       # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
+      CORE_URL: http://localhost:8000
+      VERITAS_WEB_URL: http://localhost:8080
       OSINT_URL: http://localhost:8081
       NEO4J_HTTP: http://localhost:7474
       NEO4J_USER: ${{ secrets.NEO4J_USER }}
@@ -30,6 +31,25 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
 
+      - name: Start services if not using K8s
+        if: ${{ env.KUBECONFIG_B64 == '' }}
+        run: |
+          echo "Starting services with docker compose..."
+          # Set default environment variables for local testing
+          export NEO4J_USER="${{ secrets.NEO4J_USER || 'neo4j' }}"
+          export NEO4J_PASSWORD="${{ secrets.NEO4J_PASS || 'password' }}"
+          export NEO4J_DATABASE="neo4j"
+          
+          # Start services in background
+          docker compose up -d --wait
+          
+          # Wait for services to be ready
+          echo "Waiting for services to start..."
+          sleep 30
+          
+          # Check if services are running
+          docker compose ps
+
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
         run: |
@@ -43,6 +63,7 @@ jobs:
       - name: Show targets
         run: |
           echo "CORE_URL=$CORE_URL"
+          echo "VERITAS_WEB_URL=$VERITAS_WEB_URL"
           echo "OSINT_URL=$OSINT_URL"
           echo "NEO4J_HTTP=$NEO4J_HTTP"
 
@@ -67,6 +88,13 @@ jobs:
           name: veritas-health-log
           path: health.log
           retention-days: 7
+
+      - name: Cleanup services
+        if: ${{ always() && env.KUBECONFIG_B64 == '' }}
+        run: |
+          echo "Stopping services..."
+          docker compose down -v || true
+          docker system prune -f || true
 
       - name: Job summary
         if: ${{ success() || failure() }}
