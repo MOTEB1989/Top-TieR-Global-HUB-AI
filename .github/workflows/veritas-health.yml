@@ -75,25 +75,53 @@ jobs:
           echo "Waiting for services to start..."
           sleep 10
           
-          # Wait for Core API
+          # Wait for Core API with better error handling
+          echo "Checking Core API readiness..."
+          API_READY=false
           for i in {1..30}; do
-            if curl -f http://localhost:8000/health >/dev/null 2>&1; then
+            if curl -f --connect-timeout 5 --max-time 10 http://localhost:8000/health >/dev/null 2>&1; then
               echo "✅ Core API is ready"
+              API_READY=true
               break
             fi
             echo "⏳ Waiting for Core API... ($i/30)"
             sleep 2
           done
           
-          # Wait for Veritas Web  
+          if [ "$API_READY" != "true" ]; then
+            echo "❌ Core API failed to start within timeout"
+            echo "Checking if process is still running..."
+            if ps -p $API_PID > /dev/null 2>&1; then
+              echo "Process is running but not responding"
+            else
+              echo "Process has died"
+            fi
+            exit 1
+          fi
+          
+          # Wait for Veritas Web with better error handling
+          echo "Checking Veritas Web readiness..."
+          WEB_READY=false
           for i in {1..30}; do
-            if curl -f http://localhost:8080/health >/dev/null 2>&1; then
+            if curl -f --connect-timeout 5 --max-time 10 http://localhost:8080/health >/dev/null 2>&1; then
               echo "✅ Veritas Web is ready"
+              WEB_READY=true
               break
             fi
             echo "⏳ Waiting for Veritas Web... ($i/30)"
             sleep 2
           done
+          
+          if [ "$WEB_READY" != "true" ]; then
+            echo "❌ Veritas Web failed to start within timeout"
+            echo "Checking if process is still running..."
+            if ps -p $WEB_PID > /dev/null 2>&1; then
+              echo "Process is running but not responding"
+            else
+              echo "Process has died"
+            fi
+            exit 1
+          fi
 
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
@@ -102,6 +130,14 @@ jobs:
         id: runcheck
         run: |
           set -o pipefail
+          
+          echo "=== Pre-health check debugging ==="
+          echo "Processes on port 8000:"
+          netstat -tulpn | grep :8000 || echo "No process on port 8000"
+          echo "Processes on port 8080:"
+          netstat -tulpn | grep :8080 || echo "No process on port 8080"
+          echo "=== Running health checks ==="
+          
           attempt() {
             echo "== Veritas Health Check Attempt $1 ($(date -u +%FT%TZ)) =="
             ./scripts/veritas_health_check.sh
