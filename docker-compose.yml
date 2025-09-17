@@ -55,29 +55,31 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
-    env_file:
-      - /opt/veritas/.env.neo4j
     environment:
       - NEO4J_dbms_security_auth__enabled=true
-      - NEO4J_AUTH=${NEO4J_USER}:${NEO4J_PASSWORD}
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-password}
+      - NEO4J_DATABASE=${NEO4J_DATABASE:-neo4j}
     volumes:
       - neo4j-data:/data
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u \"$NEO4J_USER\" -p \"$NEO4J_PASSWORD\" 'RETURN 1' || exit 1"]
+      test: ["CMD-SHELL", "cypher-shell -u \"${NEO4J_USER:-neo4j}\" -p \"${NEO4J_PASSWORD:-password}\" 'RETURN 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
 
-  # Veritas Mini-Web Service (Optional - enable manually)
+  # Veritas Mini-Web Service
   veritas-web:
     build: ./veritas-web
     ports:
       - "8080:8080"
-    env_file:
-      - /opt/veritas/.env.neo4j
     environment:
       - NODE_ENV=production
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-password}
+      - NEO4J_DATABASE=${NEO4J_DATABASE:-neo4j}
     depends_on:
       neo4j:
         condition: service_healthy
@@ -87,8 +89,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles:
-      - mini-web  # Optional profile - start with: docker compose --profile mini-web up
 
 volumes:
   postgres_data:

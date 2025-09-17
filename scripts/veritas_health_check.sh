@@ -6,6 +6,15 @@ date
 # Initialize error counter
 ERROR_COUNT=0
 
+# Configuration with environment variable support
+CORE_API_URL="${CORE_URL:-http://localhost:8000}/health"
+VERITAS_WEB_URL="${VERITAS_WEB_URL:-http://localhost:8080}/health"
+
+echo "Configuration:"
+echo "  CORE_API_URL: $CORE_API_URL"
+echo "  VERITAS_WEB_URL: $VERITAS_WEB_URL"
+echo ""
+
 check_service() {
   local name=$1
   local url=$2
@@ -23,11 +32,11 @@ check_service() {
   fi
 }
 
-# Core API على المنفذ 8000
-check_service "CORE_API" "http://localhost:8000/health"
+# Core API health check
+check_service "CORE_API" "$CORE_API_URL"
 
-# Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+# Veritas Mini-Web health check  
+check_service "VERITAS_WEB" "$VERITAS_WEB_URL"
 
 echo "== Health check complete =="
 
