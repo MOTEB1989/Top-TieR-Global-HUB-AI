@@ -95,6 +95,10 @@ jobs:
           echo "Starting main API service..."
           docker compose up -d api || echo "API service failed to start, continuing..."
 
+          # Try to start the veritas-web service
+          echo "Starting veritas-web service..."
+          docker compose up -d veritas-web || echo "Veritas-web service failed to start, continuing..."
+
           # Wait for services to stabilize
           sleep 30
 

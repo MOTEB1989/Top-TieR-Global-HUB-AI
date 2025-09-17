@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 15
     env:
       # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
+      CORE_URL: http://localhost:8000
       OSINT_URL: http://localhost:8081
       NEO4J_HTTP: http://localhost:7474
       NEO4J_USER: ${{ secrets.NEO4J_USER }}

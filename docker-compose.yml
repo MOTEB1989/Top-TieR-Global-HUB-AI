@@ -69,7 +69,7 @@ services:
       retries: 10
       start_period: 20s
 
-  # Veritas Mini-Web Service (Optional - enable manually)
+  # Veritas Mini-Web Service
   veritas-web:
     build: ./veritas-web
     ports:
@@ -87,8 +87,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles:
-      - mini-web  # Optional profile - start with: docker compose --profile mini-web up
 
 volumes:
   postgres_data:
