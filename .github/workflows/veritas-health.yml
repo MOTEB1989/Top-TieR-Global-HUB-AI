@@ -29,6 +29,9 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
+          # Install Python dependencies for running services locally
+          pip3 install -r requirements.txt
+          pip3 install -r veritas-web/requirements.txt
 
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
@@ -46,8 +49,10 @@ jobs:
           echo "OSINT_URL=$OSINT_URL"
           echo "NEO4J_HTTP=$NEO4J_HTTP"
 
-      - name: Make script executable
-        run: chmod +x scripts/veritas_health_check.sh
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/veritas_health_check.sh
+          chmod +x scripts/start_services_for_health_check.sh
 
       - name: Run health checks (with retry)
         id: runcheck
@@ -55,7 +60,14 @@ jobs:
           set -o pipefail
           attempt() {
             echo "== Veritas Health Check Attempt $1 ($(date -u +%FT%TZ)) =="
-            ./scripts/veritas_health_check.sh
+            # Check if kubeconfig is provided to determine execution mode
+            if [[ -n "$KUBECONFIG_B64" && -f "$HOME/.kube/config" ]]; then
+              # K8s mode - run health check directly against cluster services
+              ./scripts/veritas_health_check.sh
+            else
+              # Local mode - start services and run health check
+              ./scripts/start_services_for_health_check.sh
+            fi
           }
           # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
           attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
