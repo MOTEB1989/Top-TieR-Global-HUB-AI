@@ -7,8 +7,17 @@ date
 ERROR_COUNT=0
 
 # Configuration with environment variable support
-CORE_API_URL="${CORE_URL:-http://localhost:8000}/health"
-VERITAS_WEB_URL="${VERITAS_WEB_URL:-http://localhost:8080}/health"
+CORE_API_URL="${CORE_URL:-http://localhost:8000}"
+VERITAS_WEB_URL="${VERITAS_WEB_URL:-http://localhost:8080}"
+
+# Add /health if not already present
+if [[ ! "$CORE_API_URL" =~ /health$ ]]; then
+    CORE_API_URL="${CORE_API_URL}/health"
+fi
+
+if [[ ! "$VERITAS_WEB_URL" =~ /health$ ]]; then
+    VERITAS_WEB_URL="${VERITAS_WEB_URL}/health"
+fi
 
 echo "Configuration:"
 echo "  CORE_API_URL: $CORE_API_URL"
