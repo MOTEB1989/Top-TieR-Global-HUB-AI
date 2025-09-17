@@ -49,6 +49,13 @@ jobs:
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
 
+      - name: Start services for health check
+        run: |
+          # Start core services needed for health check
+          docker compose up -d api --wait
+          docker compose --profile mini-web up -d veritas-web --wait
+          sleep 10  # Allow services to fully start
+
       - name: Run health checks (with retry)
         id: runcheck
         run: |
@@ -67,6 +74,11 @@ jobs:
           name: veritas-health-log
           path: health.log
           retention-days: 7
+
+      - name: Cleanup services
+        if: ${{ always() }}
+        run: |
+          docker compose down -v || true
 
       - name: Job summary
         if: ${{ success() || failure() }}
