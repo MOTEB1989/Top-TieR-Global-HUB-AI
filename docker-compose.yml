@@ -55,15 +55,15 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
-    env_file:
-      - /opt/veritas/.env.neo4j
     environment:
       - NEO4J_dbms_security_auth__enabled=true
-      - NEO4J_AUTH=${NEO4J_USER}:${NEO4J_PASSWORD}
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-neo4j123}
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1G
     volumes:
       - neo4j-data:/data
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u \"$NEO4J_USER\" -p \"$NEO4J_PASSWORD\" 'RETURN 1' || exit 1"]
+      test: ["CMD-SHELL", "cypher-shell -u \"${NEO4J_USER:-neo4j}\" -p \"${NEO4J_PASSWORD:-neo4j123}\" 'RETURN 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -71,15 +71,22 @@ services:
 
   # Veritas Mini-Web Service (Optional - enable manually)
   veritas-web:
-    build: ./veritas-web
+    build: ./veritas-mini-web
     ports:
       - "8080:8080"
-    env_file:
-      - /opt/veritas/.env.neo4j
     environment:
-      - NODE_ENV=production
+      - MINI_WEB_HOST=0.0.0.0
+      - MINI_WEB_PORT=8080
+      - DEBUG=false
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-neo4j123}
+      - NEO4J_URL=bolt://neo4j:7687
+      - MAIN_API_URL=http://api:8000
+      - REDIS_URL=redis://redis:6379/1
     depends_on:
       neo4j:
+        condition: service_healthy
+      api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
