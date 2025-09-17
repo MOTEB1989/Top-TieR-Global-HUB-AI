@@ -26,8 +26,8 @@ check_service() {
 # Core API على المنفذ 8000
 check_service "CORE_API" "http://localhost:8000/health"
 
-# Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+# Veritas Web UI على المنفذ 8080 (container port 8088 mapped to host 8080)
+check_service "WEB_UI" "http://localhost:8080/health"
 
 echo "== Health check complete =="
 
