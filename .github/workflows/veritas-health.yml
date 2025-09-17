@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
+      # استهداف محلي (standalone services) بشكل افتراضي
+      CORE_URL: http://localhost:8000
+      OSINT_URL: http://localhost:8088
       NEO4J_HTTP: http://localhost:7474
       NEO4J_USER: ${{ secrets.NEO4J_USER }}
       NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
@@ -29,6 +29,26 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
+          
+      - name: Setup Python environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start API services for health check
+        run: |
+          # Start Core API service in background
+          export PYTHONPATH=.
+          nohup python api_server/__init__.py > core_api.log 2>&1 &
+          CORE_API_PID=$!
+          echo "CORE_API_PID=$CORE_API_PID" >> $GITHUB_ENV
+          
+          # Start Veritas Web service in background
+          nohup python veritas-web/app.py > veritas_web.log 2>&1 &
+          VERITAS_WEB_PID=$!
+          echo "VERITAS_WEB_PID=$VERITAS_WEB_PID" >> $GITHUB_ENV
+          
+          echo "Started services with PIDs - Core API: $CORE_API_PID, Veritas Web: $VERITAS_WEB_PID"
 
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
@@ -36,8 +56,8 @@ jobs:
           echo "$KUBECONFIG_B64" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
           # استهدف Services داخل الكلاستر بدل localhost
-          echo "CORE_URL=http://veritas-core-svc"      >> $GITHUB_ENV
-          echo "OSINT_URL=http://osint-engine-svc:8081" >> $GITHUB_ENV
+          echo "CORE_URL=http://veritas-core-svc:8000"      >> $GITHUB_ENV
+          echo "OSINT_URL=http://osint-engine-svc:8088" >> $GITHUB_ENV
           echo "NEO4J_HTTP=http://neo4j:7474"           >> $GITHUB_ENV
 
       - name: Show targets
@@ -65,8 +85,25 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: veritas-health-log
-          path: health.log
+          path: |
+            health.log
+            core_api.log
+            veritas_web.log
           retention-days: 7
+
+      - name: Cleanup services
+        if: ${{ always() }}
+        run: |
+          # Kill background services if they were started
+          if [ ! -z "$CORE_API_PID" ]; then
+            kill $CORE_API_PID 2>/dev/null || true
+          fi
+          if [ ! -z "$VERITAS_WEB_PID" ]; then
+            kill $VERITAS_WEB_PID 2>/dev/null || true
+          fi
+          # Kill any remaining processes on these ports
+          pkill -f "api_server" || true
+          pkill -f "veritas-web" || true
 
       - name: Job summary
         if: ${{ success() || failure() }}
