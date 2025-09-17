@@ -30,6 +30,18 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install aiofiles httpx cryptography neo4j redis
+
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
         run: |
@@ -49,6 +61,34 @@ jobs:
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
 
+      - name: Start services for health check
+        run: |
+          # Start CORE_API in background
+          echo "Starting CORE_API on port 8000..."
+          python3 -c "from api_server import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)" &
+          CORE_PID=$!
+          echo "CORE_PID=$CORE_PID" >> $GITHUB_ENV
+          
+          # Start VERITAS_WEB in background  
+          echo "Starting VERITAS_WEB on port 8080..."
+          cd veritas-web && MINI_WEB_PORT=8080 python3 app.py &
+          VERITAS_PID=$!
+          echo "VERITAS_PID=$VERITAS_PID" >> $GITHUB_ENV
+          cd ..
+          
+          # Wait for services to be ready
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Verify services are running
+          echo "Checking CORE_API..."
+          curl -f "http://localhost:8000/health" || echo "CORE_API not ready yet"
+          echo "Checking VERITAS_WEB..."
+          curl -f "http://localhost:8080/health" || echo "VERITAS_WEB not ready yet"
+          
+          # Wait a bit more for full startup
+          sleep 5
+
       - name: Run health checks (with retry)
         id: runcheck
         run: |
@@ -59,6 +99,20 @@ jobs:
           }
           # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
           attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
+
+      - name: Cleanup services
+        if: always()
+        run: |
+          echo "Stopping services..."
+          if [ -n "$CORE_PID" ]; then
+            kill $CORE_PID || true
+          fi
+          if [ -n "$VERITAS_PID" ]; then
+            kill $VERITAS_PID || true
+          fi
+          # Kill any remaining uvicorn processes
+          pkill -f uvicorn || true
+          sleep 2
 
       - name: Upload health log
         if: ${{ success() || failure() }}
