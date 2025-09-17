@@ -30,6 +30,12 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq netcat-openbsd
 
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r veritas-web/requirements.txt
+
       - name: Auto-select K8s Services if kubeconfig is provided
         if: ${{ env.KUBECONFIG_B64 != '' }}
         run: |
@@ -49,6 +55,30 @@ jobs:
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
 
+      - name: Start services
+        run: |
+          # Start API server in background
+          python3 api_server/__init__.py &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> $GITHUB_ENV
+          
+          # Start Veritas-web service in background
+          cd veritas-web
+          MINI_WEB_PORT=8080 python3 app.py &
+          VERITAS_PID=$!
+          echo "VERITAS_PID=$VERITAS_PID" >> $GITHUB_ENV
+          cd ..
+          
+          # Wait for services to be ready
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Check if services are responding
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:8000/health
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:8080/health
+          
+          echo "Services are ready"
+
       - name: Run health checks (with retry)
         id: runcheck
         run: |
@@ -67,6 +97,19 @@ jobs:
           name: veritas-health-log
           path: health.log
           retention-days: 7
+
+      - name: Cleanup services
+        if: ${{ always() }}
+        run: |
+          # Kill background services
+          if [ -n "${API_PID:-}" ]; then
+            echo "Stopping API server (PID $API_PID)..."
+            kill $API_PID || true
+          fi
+          if [ -n "${VERITAS_PID:-}" ]; then
+            echo "Stopping Veritas-web service (PID $VERITAS_PID)..."
+            kill $VERITAS_PID || true
+          fi
 
       - name: Job summary
         if: ${{ success() || failure() }}
