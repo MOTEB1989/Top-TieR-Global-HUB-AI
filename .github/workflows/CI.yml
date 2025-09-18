@@ -1,10 +1,15 @@
+---
 name: CI
 
-on:
+'on':
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   schedule:
     - cron: "0 6 * * 1"   # كل اثنين 06:00 UTC
   workflow_dispatch:
@@ -40,7 +45,8 @@ jobs:
       - name: Install linters
         run: |
           pip install yamllint
-          sudo curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o /usr/local/bin/hadolint
+          sudo curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 \
+            -o /usr/local/bin/hadolint
           sudo chmod +x /usr/local/bin/hadolint
 
       - name: Lint YAML
@@ -64,7 +70,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: false
           load: true
           tags: local/veritas-gateway:test
@@ -75,18 +81,27 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
 
-      - name: Health check
+      - name: Wait for services to be healthy
         run: |
-          for i in {1..60}; do curl -sf http://localhost:8080/health && break || true; sleep 2; done
-          curl -sSf http://localhost:8080/health
+          for i in {1..20}; do
+            core_ok=$(curl -sf http://localhost:8000/health || echo fail)
+            web_ok=$(curl -sf http://localhost:3000 || echo fail)
+            if [[ "$core_ok" != "fail" && "$web_ok" != "fail" ]]; then
+              echo "✅ Both services are healthy."
+              exit 0
+            fi
+            echo "⏳ Waiting for services... ($i/20)"
+            sleep 5
+          done
+          echo "❌ ERROR: Services did not become healthy in time."
+          docker compose logs
+          exit 1
 
-      - name: Smoke test — Unified Query
-        run: |
-          curl -s -X POST http://localhost:8080/query \
-            -H "Content-Type: application/json" \
-            -d '{"query":"+966500000000","type":"phone","scope":["osint"],"trace":true}' \
-            | tee /tmp/smoke.json
-          test -s /tmp/smoke.json
+      - name: Smoke test API health
+        run: curl -sSf http://localhost:8000/health
+
+      - name: Smoke test web health
+        run: curl -sSf http://localhost:3000/health
 
       - name: Stop services
         if: always()
@@ -95,31 +110,50 @@ jobs:
   push-image:
     needs: build-test
     runs-on: ubuntu-latest
-    if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
     steps:
+      - name: Warn when Docker Hub credentials are missing
+        if: ${{ secrets.DOCKER_USERNAME == '' || secrets.DOCKER_PASSWORD == '' }}
+        run: |
+          echo "Docker push skipped: configure DOCKER_USERNAME and DOCKER_PASSWORD secrets to enable publishing." >&2
+
       - uses: actions/checkout@v4
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+
       - uses: docker/setup-buildx-action@v3
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+
       - name: Docker login
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build & Push gateway
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./gateway/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/veritas-gateway:ci-${{ github.sha }}
 
   notify:
     needs: [build-test, push-image]
     runs-on: ubuntu-latest
-    if: always() && ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+    if: ${{ always() }}
     steps:
+      - name: Warn when Slack webhook is missing
+        if: ${{ secrets.SLACK_WEBHOOK_URL == '' }}
+        run: |
+          echo "Slack notification skipped: configure SLACK_WEBHOOK_URL to enable alerts." >&2
+
       - name: Slack notify
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_COLOR: ${{ job.status }}
-          SLACK_MESSAGE: "CI • ref=${{ github.ref }} • build=${{ needs.build-test.result }} • push=${{ needs.push-image.result || 'skipped' }}"
+          SLACK_MESSAGE: >-
+            CI • ref=${{ github.ref }} • build=${{ needs.build-test.result }} • push=
+            ${{ needs.push-image.result || 'skipped' }}

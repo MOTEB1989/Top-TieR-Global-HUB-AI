@@ -14,8 +14,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     env:
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
+      CORE_URL: http://localhost:8000
+      OSINT_URL: http://localhost:3000
       NEO4J_HTTP: http://localhost:7474
       NEO4J_USER: ${{ secrets.NEO4J_USER }}
       NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
@@ -25,12 +25,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Warn when Neo4j credentials are missing
+        if: ${{ secrets.NEO4J_USER == '' || secrets.NEO4J_PASS == '' }}
+        run: |
+          echo "Neo4j smoke tests will run in anonymous mode." >&2
+          echo "Configure NEO4J_USER/NEO4J_PASS secrets to enable credentialed checks." >&2
+
+      - name: Warn when OpenAI key is missing
+        if: ${{ secrets.OPENAI_API_KEY == '' }}
+        run: |
+          echo "OpenAI validation skipped." >&2
+          echo "Configure OPENAI_API_KEY to enable API checks." >&2
+
       - name: Boot minimal stack (core + osint + neo4j) if docker compose exists
         if: ${{ hashFiles('docker-compose.yml','docker-compose.yaml','compose.yaml','compose.yml') != '' }}
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        if: ${{ hashFiles('docker-compose.yml','docker-compose.yaml','compose.yaml','compose.yml') != '' }}
         run: |
-          docker compose up -d
-          # give services a short warm-up
-          sleep 10
+          for i in {1..20}; do
+            core_ok=$(curl -sf http://localhost:8000/health || echo fail)
+            web_ok=$(curl -sf http://localhost:3000 || echo fail)
+            if [[ "$core_ok" != "fail" && "$web_ok" != "fail" ]]; then
+              echo "✅ Both services are healthy."
+              exit 0
+            fi
+            echo "⏳ Waiting for services... ($i/20)"
+            sleep 5
+          done
+          echo "❌ ERROR: Services did not become healthy in time."
+          docker compose logs
+          exit 1
 
       - name: Verify OpenAI key (ping /v1/models)
         if: ${{ secrets.OPENAI_API_KEY != '' }}
@@ -61,10 +87,7 @@ jobs:
           path: safe_smoke.log
           retention-days: 7
 
-        # Optional Slack alert (set secret SLACK_WEBHOOK_URL)
-        # - name: Notify Slack on failure
-        #   if: failure() && secrets.SLACK_WEBHOOK_URL != ''
-        #   run: |
-        #     curl -X POST -H 'Content-type: application/json' \
-        #       --data "{\"text\":\"Post-merge failed on $GITHUB_SHA. See artifacts.\"}" \
-        #       ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on failure (disabled placeholder)
+        if: ${{ false }}
+        run: |
+          echo "Slack alert disabled. Update the condition and command when SLACK_WEBHOOK_URL is configured."

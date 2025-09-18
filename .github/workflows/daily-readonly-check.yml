@@ -17,8 +17,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     env:
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
+      CORE_URL: http://localhost:8000
+      OSINT_URL: http://localhost:3000
       NEO4J_HTTP: http://localhost:7474
       # Optional: if secrets are present, Neo4j RETURN 1 will be tested; otherwise safely skipped
       NEO4J_USER: ${{ secrets.NEO4J_USER }}
@@ -27,6 +27,11 @@ jobs:
       DRY_RUN: "1"
     steps:
       - uses: actions/checkout@v4
+
+      - name: Warn when Neo4j credentials are missing
+        if: ${{ secrets.NEO4J_USER == '' || secrets.NEO4J_PASS == '' }}
+        run: |
+          echo "Daily readonly check: NEO4J_USER/NEO4J_PASS secrets absent; Neo4j auth probes will be skipped." >&2
 
       - name: Ensure curl+jq
         run: |

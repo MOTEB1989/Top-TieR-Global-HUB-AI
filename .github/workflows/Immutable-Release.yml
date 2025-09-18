@@ -1,7 +1,9 @@
+---
 name: Immutable-Release
-on:
+'on':
   push:
-    tags: ["v*.*.*"]
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
 
 permissions:
@@ -33,7 +35,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }},ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
           labels: ${{ steps.meta.outputs.labels }}
 
       # توليد Checksum للإخراج (يوثق سلامة الإصدار)
@@ -56,15 +60,30 @@ jobs:
   mirror:
     needs: build-release
     runs-on: ubuntu-latest
-    if: ${{ secrets.MIRROR_URL && secrets.MIRROR_DEPLOY_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Configure mirror key
+      - name: Warn when mirror deployment secrets are missing
+        if: ${{ secrets.MIRROR_URL == '' || secrets.MIRROR_DEPLOY_KEY == '' || secrets.MIRROR_HOST == '' }}
         run: |
-          install -m 600 -D /dev/null ~/.ssh/id_ed25519
-          echo "${{ secrets.MIRROR_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          printf "Host mirror\n\tHostname %s\n\tIdentityFile ~/.ssh/id_ed25519\n\tStrictHostKeyChecking no\n" "${{ secrets.MIRROR_HOST }}" >> ~/.ssh/config
+          echo "Mirror push skipped: mirroring secrets are missing." >&2
+          echo "Set MIRROR_URL, MIRROR_DEPLOY_KEY, and MIRROR_HOST to enable mirroring." >&2
+
+      - uses: actions/checkout@v4
+        if: ${{ secrets.MIRROR_URL != '' && secrets.MIRROR_DEPLOY_KEY != '' && secrets.MIRROR_HOST != '' }}
+
+      - name: Configure mirror key
+        if: ${{ secrets.MIRROR_URL != '' && secrets.MIRROR_DEPLOY_KEY != '' && secrets.MIRROR_HOST != '' }}
+        run: |
+            install -m 600 -D /dev/null ~/.ssh/id_ed25519
+            echo "${{ secrets.MIRROR_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+            {
+              echo "Host mirror"
+              echo "  Hostname ${{ secrets.MIRROR_HOST }}"
+              echo "  IdentityFile ~/.ssh/id_ed25519"
+              echo "  StrictHostKeyChecking no"
+            } > ~/.ssh/config
+
       - name: Push mirror
+        if: ${{ secrets.MIRROR_URL != '' && secrets.MIRROR_DEPLOY_KEY != '' && secrets.MIRROR_HOST != '' }}
         run: |
           git remote add mirror "${{ secrets.MIRROR_URL }}"
           git push mirror --tags

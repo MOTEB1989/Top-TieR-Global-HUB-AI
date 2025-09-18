@@ -1,6 +1,7 @@
+---
 name: Context Collector
 
-on:
+'on':
   workflow_dispatch:
   push:
     branches:
@@ -19,11 +20,17 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq
 
-      - name: Make script executable
-        run: chmod +x collect_context_for_claude.sh
+      - name: Ensure collector script is executable
+        if: ${{ hashFiles('scripts/collect_context_for_claude.sh') != '' }}
+        run: chmod +x scripts/collect_context_for_claude.sh
 
       - name: Run context collector
-        run: ./collect_context_for_claude.sh
+        if: ${{ hashFiles('scripts/collect_context_for_claude.sh') != '' }}
+        run: ./scripts/collect_context_for_claude.sh
+
+      - name: Warn when collector script is missing
+        if: ${{ hashFiles('scripts/collect_context_for_claude.sh') == '' }}
+        run: echo "collect_context_for_claude.sh not found; please add the script under scripts/ before rerunning." >&2
 
       - name: Upload generated files
         uses: actions/upload-artifact@v4

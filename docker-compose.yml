@@ -6,12 +6,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - ENVIRONMENT=development
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      ENVIRONMENT: development
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     volumes:
       - .:/app
     healthcheck:
@@ -55,11 +57,11 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
-    env_file:
-      - /opt/veritas/.env.neo4j
     environment:
-      - NEO4J_dbms_security_auth__enabled=true
-      - NEO4J_AUTH=${NEO4J_USER}:${NEO4J_PASSWORD}
+      NEO4J_AUTH: neo4j/password
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: password
+      NEO4J_dbms_security_auth__enabled: "true"
     volumes:
       - neo4j-data:/data
     healthcheck:
@@ -69,26 +71,31 @@ services:
       retries: 10
       start_period: 20s
 
-  # Veritas Mini-Web Service (Optional - enable manually)
+  # Veritas Mini-Web Service
   veritas-web:
     build: ./veritas-web
     ports:
-      - "8080:8080"
-    env_file:
-      - /opt/veritas/.env.neo4j
+      - "3000:8088"
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      MAIN_API_URL: http://api:8000
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: password
+      REDIS_URL: redis://redis:6379/1
     depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       neo4j:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8088/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles:
-      - mini-web  # Optional profile - start with: docker compose --profile mini-web up
 
 volumes:
   postgres_data:
