@@ -2,7 +2,8 @@
 services:
   # Main API service
   api:
-    build: .
+    build:
+      context: ./api_server
     ports:
       - "8000:8000"
     environment:
@@ -13,7 +14,7 @@ services:
       - redis
       - postgres
     volumes:
-      - .:/app
+      - ./api_server:/app
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
       interval: 30s
