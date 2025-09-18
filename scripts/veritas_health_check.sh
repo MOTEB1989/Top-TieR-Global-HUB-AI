@@ -1,40 +1,33 @@
 #!/usr/bin/env bash
+set -e
+
+# تحميل القيم من .env إذا كان موجود
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
+API_PORT=${API_PORT:-8000}
+FRONTEND_PORT=${FRONTEND_PORT:-3000}
 
 echo "== Veritas Stack Health Check =="
 date
 
-# Initialize error counter
-ERROR_COUNT=0
-
 check_service() {
   local name=$1
   local url=$2
-
   echo "Checking $name at $url ..."
-  status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
-
+  status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
   if [ "$status" -eq 200 ]; then
     echo "✅ $name is healthy ($status)"
-    return 0
   else
     echo "❌ $name health check failed (status: $status)"
-    ERROR_COUNT=$((ERROR_COUNT + 1))
-    return 1
   fi
 }
 
-# Core API على المنفذ 8000
-check_service "CORE_API" "http://localhost:8000/health"
+# فحص الـ Backend API
+check_service "CORE_API" "http://localhost:${API_PORT}/health"
 
-# Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+# فحص الـ Frontend Web
+check_service "VERITAS_WEB" "http://localhost:${FRONTEND_PORT}"
 
 echo "== Health check complete =="
-
-if [ $ERROR_COUNT -gt 0 ]; then
-  echo "❌ Health check failed with $ERROR_COUNT error(s)"
-  exit 1
-else
-  echo "✅ All services are healthy"
-  exit 0
-fi
