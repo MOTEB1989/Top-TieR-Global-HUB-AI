@@ -1,0 +1,43 @@
+name: Daily Veritas Health (Readonly)
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # مرة يوميًا UTC 06:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    env:
+      # عناوين فحص افتراضية — لا تُشغّل خدمات.
+      CORE_URL:  http://localhost:8080
+      OSINT_URL: http://localhost:8081
+      NEO4J_HTTP: http://localhost:7474
+      # وضع آمن افتراضي
+      DRY_RUN: "1"
+      SAFE_MODE: "1"
+      # لا نفشل الـ CI إن كانت الخدمات غير موجودة (تنبيه فقط)
+      STRICT: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run readonly bootstrap
+        shell: bash
+        run: |
+          chmod +x scripts/ci_readonly_bootstrap.sh || true
+          bash scripts/ci_readonly_bootstrap.sh | tee daily_health.log
+
+      - name: Upload log
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-health-log
+          path: daily_health.log
+          retention-days: 7

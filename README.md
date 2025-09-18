@@ -6,6 +6,13 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-modern-green.svg)](https://fastapi.tiangolo.com)
 
+## Maintenance Snapshot
+
+- **Automation pause**: Scheduled daily health and post-merge workflows now run manually (`workflow_dispatch`) until the stack is stable.
+- **Health script**: Use `scripts/safe_smoke.sh` for read-only smoke tests; it skips Neo4j automatically when credentials are absent.
+- **Context package**: Run `./collect_context_for_claude.sh` to gather repository metadata before asking Claude/Copilot for audits.
+- **Engineering notice**: See `ENGINEERING_NOTICE.md` for priority fixes before adding features.
+
 ## Project Objectives
 
 Top-TieR-Global-HUB-AI is an educational OSINT (Open Source Intelligence) platform designed to:

@@ -1,0 +1,37 @@
+name: Health Check OpenAI
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # ⏰ كل يوم الساعة 6 صباحاً UTC
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: 📦 Give script permission
+        run: chmod +x verify_repo_link.sh
+
+      - name: ✅ Verify repo link with OpenAI
+        id: verify
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: ./verify_repo_link.sh
+
+      - name: 🔔 Send alert if verification failed
+        if: failure()   # يشتغل فقط لو الخطوة السابقة فشلت
+        run: |
+          echo "⚠️ Health Check Failed! Sending alert..."
+          # GitHub يرسل إشعار إيميل تلقائيًا عند فشل الـ Workflow
+          # (تأكد أن إشعارات Actions مفعلة عندك في Settings → Notifications)
+
+          # مثال لإرسال Webhook (Slack/Discord) لو أضفت secret ALERT_WEBHOOK_URL
+          if [ -n "${{ secrets.ALERT_WEBHOOK_URL }}" ]; then
+            curl -X POST -H "Content-Type: application/json" \
+              -d "{\"content\":\"⚠️ Health Check Failed in GitHub Actions! Check verify_repo_link.sh logs.\"}" \
+              ${{ secrets.ALERT_WEBHOOK_URL }}
+          fi

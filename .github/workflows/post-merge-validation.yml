@@ -1,0 +1,43 @@
+name: Post-merge Validation (Readonly)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or tag to test (defaults to main)
+        required: false
+permissions: { contents: read }
+concurrency:
+  group: post-merge-${{ github.ref || 'manual' }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      CORE_URL: http://localhost:8080
+      OSINT_URL: http://localhost:8081
+      NEO4J_HTTP: http://localhost:7474
+      # أسرار اختيارية؛ إن لم تتوفر سيتجاوز السكربت Neo4j تلقائياً
+      NEO4J_USER: ${{ secrets.NEO4J_USER }}
+      NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
+      SAFE_MODE: "1"
+      DRY_RUN: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || 'main' }}
+      - name: Boot minimal stack (best-effort)
+        run: |
+          docker compose up -d || true
+          sleep 12 || true
+      - run: chmod +x scripts/safe_smoke.sh
+      - name: Readonly smoke
+        run: ./scripts/safe_smoke.sh | tee post_merge_smoke.log
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Post-merge health summary" >> $GITHUB_STEP_SUMMARY
+          tail -n 200 post_merge_smoke.log >> $GITHUB_STEP_SUMMARY || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: post-merge-smoke, path: post_merge_smoke.log, retention-days: 7 }

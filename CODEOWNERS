@@ -1,0 +1,16 @@
+# Global owners
+* @MOTEB1989
+
+# Core Gateway
+/core/ @MOTEB1989
+
+# OSINT Collectors
+/osint/ @MOTEB1989
+
+# Infrastructure
+docker-compose.yml @MOTEB1989
+*.yaml @MOTEB1989
+*.yml @MOTEB1989
+
+# CI/CD
+/.github/ @MOTEB1989
