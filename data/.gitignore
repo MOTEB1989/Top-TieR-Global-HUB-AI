@@ -1,0 +1,3 @@
+# Keep the data directory structure without committing generated files.
+*
+!.gitignore

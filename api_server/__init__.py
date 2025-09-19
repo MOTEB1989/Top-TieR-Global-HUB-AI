@@ -1,10 +1,11 @@
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from gpt_client import GPTClient, GPTRequest, GPTResponse
+from app.ingestion.cli import run_ingestion
 
 # Fallback if python-dotenv is not available
 try:
@@ -70,6 +71,31 @@ async def gpt_endpoint(request: GPTRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/sources/{source}/sync")
+async def sync_ingestion(
+    source: str, limit: Optional[int] = Query(default=None, ge=1, description="Limit processed items")
+) -> Dict[str, Any]:
+    normalized_source = source.lower()
+    try:
+        result = run_ingestion(normalized_source, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Missing dependency for ingestion: {exc}",
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {exc}") from exc
+
+    return {
+        "status": "ok",
+        "source": result["source"],
+        "count": result["count"],
+        "index_path": result["index_path"],
+    }
 
 
 if __name__ == "__main__":
