@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""
+test_gpt_connection.py
+
+Quick connectivity test to ensure GPT API is reachable and API key is valid.
+Run inside Codespaces after setting OPENAI_API_KEY.
+"""
+
+import os
+import sys
+import openai  # pip install openai
+
+def main():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("❌ OPENAI_API_KEY not found. Please set it in Codespaces Secrets.")
+        sys.exit(1)
+
+    openai.api_key = api_key
+
+    try:
+        print("🔎 Sending test request to GPT...")
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a connectivity tester."},
+                {"role": "user", "content": "Say 'Connection OK' in Arabic."}
+            ],
+            max_tokens=20,
+        )
+        msg = response.choices[0].message.content.strip()
+        print("✅ GPT replied:", msg)
+
+    except Exception as e:
+        print("❌ Connection failed:", str(e))
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
+python test_gpt_connection.py
+from openai import OpenAI
+import sys
+
+def main():
+    try:
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a test connection."},
+                {"role": "user", "content": "Hello GPT, are you alive?"}
+            ],
+            max_tokens=20
+        )
+        msg = response.choices[0].message.content
+        print("✅ GPT replied:", msg)
+    except Exception as e:
+        print("❌ Connection failed:", e)
+        sys.exit(2)
+
+if __name__ == "__main__":
+    main()
+echo $OPENAI_API_KEY | head -c 10
+rm .test_gpt_connection.py.swp
+
