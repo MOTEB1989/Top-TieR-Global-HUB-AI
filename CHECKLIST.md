@@ -39,6 +39,16 @@
 - [ ] التشفير أثناء النقل (HTTPS) وأثناء التخزين مفعّل.
 - [ ] Anti-blocking: VPN/Proxy/Tor مدمجة مع Health Checks.
 
+## 7) CI/CD (التحقق من الاستقرار)
+- [ ] مراجعة جميع الـ Workflows في `.github/workflows/`.
+- [ ] التأكد أن **Veritas Health Check** ينجح بعد إضافة الـ health endpoints.
+- [ ] التحقق أن **Immutable-Release.yml** يعمل (بناء + نشر Docker image).
+- [ ] اختبار Workflow الخاص بـ **close_github_items.py**:
+  - [ ] تشغيله على `dry-run`.
+  - [ ] تأكيد نتائج الإغلاق في Logs.
+- [ ] إضافة Badge في README يوضح حالة الـ CI/CD.
+- [ ] (اختياري) إضافة Workflow جديد لـ **Lint + Unit Tests** يعمل على كل PR.
+
 ---
 
 ### نتائج آخر فحص
