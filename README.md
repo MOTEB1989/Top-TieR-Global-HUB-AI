@@ -360,3 +360,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Note**: This is an educational OSINT platform. Please use responsibly and in compliance with applicable laws and regulations.
+
+---
+
+## CI/CD Test
+
+This line was added to test CI/CD workflow execution on the test-ci branch. ✅
