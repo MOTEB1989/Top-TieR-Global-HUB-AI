@@ -1,0 +1,57 @@
+name: Dev Run & Health Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  dev-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy env files
+        run: |
+          cp .env.example .env
+          cp .env.neo4j.example .env.neo4j
+
+      - name: Start services
+        run: docker compose up -d --build
+
+      - name: Wait for services to be ready
+        run: |
+          for i in {1..20}; do
+            core_ok=$(curl -sf http://localhost:8000/health || echo fail)
+            web_ok=$(curl -sf http://localhost:8080/health || echo fail)
+            if [[ "$core_ok" != "fail" && "$web_ok" != "fail" ]]; then
+              echo "✅ Both services are healthy."
+              exit 0
+            fi
+            echo "⏳ Waiting for services... ($i/20)"
+            sleep 5
+          done
+          echo "❌ ERROR: Services did not become healthy in time."
+          docker compose logs
+          exit 1
+
+      - name: Run health check script
+        run: bash scripts/veritas_health_check.sh | tee health.log
+
+      - name: Upload health log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-run-health-log
+          path: health.log
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose down
