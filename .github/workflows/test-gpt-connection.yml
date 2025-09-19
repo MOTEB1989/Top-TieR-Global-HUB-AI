@@ -1,0 +1,31 @@
+name: Test GPT Connection
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # كل يوم الساعة 8 صباح UTC
+  workflow_dispatch:        # تقدر تشغله يدوي من Actions
+
+jobs:
+  test-gpt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check API connectivity
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "❌ OPENAI_API_KEY not set in repository secrets"
+            exit 1
+          fi
+
+          echo "🔎 Testing connection to OpenAI API..."
+          curl -s -o /dev/null -w "%{http_code}" \
+            https://api.openai.com/v1/models \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" > status.txt
+
+          code=$(cat status.txt)
+          if [ "$code" -eq 200 ]; then
+            echo "✅ Connection successful"
+          else
+            echo "❌ Connection failed (HTTP $code)"
+            exit 1
+          fi
