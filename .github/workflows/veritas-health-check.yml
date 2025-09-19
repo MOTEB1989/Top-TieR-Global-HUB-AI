@@ -1,0 +1,147 @@
+---
+name: Veritas Health Check
+
+"on":
+  workflow_dispatch:
+    description: 'Manual trigger for Veritas Health Check'
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3:00 AM UTC
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          # Create basic .env file for the stack
+          cp .env.example .env
+
+          # Set up Neo4j credentials for CI
+          echo "NEO4J_USER=neo4j" >> .env
+          echo "NEO4J_PASSWORD=testpassword123" >> .env
+
+          # Create Neo4j env file in expected location
+          sudo mkdir -p /opt/veritas
+          sudo tee /opt/veritas/.env.neo4j > /dev/null << EOF
+          NEO4J_AUTH=neo4j/testpassword123
+          NEO4J_AUTH_USER=neo4j
+          NEO4J_AUTH_PASSWORD=testpassword123
+          NEO4J_DATABASE=neo4j
+          EOF
+
+      - name: Start Stack
+        run: |
+          echo "Starting Docker Compose stack..."
+          # Start all services including the web-ui service on port 3000
+          docker compose up -d api redis postgres neo4j web-ui
+          echo "Stack started successfully"
+
+          # Display started services
+          echo "=== Started Services ==="
+          docker compose ps
+
+      - name: Wait for Services
+        run: |
+          echo "Waiting for services to become healthy..."
+
+          # Service URLs to check
+          CORE_SERVICE="http://localhost:8000/health"
+          WEB_SERVICE="http://localhost:3000/health"
+
+          # Wait configuration
+          MAX_INTERVALS=20
+          INTERVAL_SECONDS=5
+
+          check_service() {
+            local service_name=$1
+            local service_url=$2
+
+            echo "Checking $service_name at $service_url..."
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$service_url" 2>/dev/null || echo "000")
+
+            if [ "$status" -eq 200 ]; then
+              echo "✅ $service_name is healthy (HTTP $status)"
+              return 0
+            else
+              echo "❌ $service_name not ready (HTTP $status)"
+              return 1
+            fi
+          }
+
+          # Wait loop
+          for i in $(seq 1 $MAX_INTERVALS); do
+            echo "=== Health Check Attempt $i/$MAX_INTERVALS ==="
+
+            core_healthy=false
+            web_healthy=false
+
+            # Check core service
+            if check_service "Core Service" "$CORE_SERVICE"; then
+              core_healthy=true
+            fi
+
+            # Check web service
+            if check_service "Web Service" "$WEB_SERVICE"; then
+              web_healthy=true
+            fi
+
+            # Check if both services are healthy
+            if [ "$core_healthy" = true ] && [ "$web_healthy" = true ]; then
+              echo "✅ All services are healthy!"
+              break
+            fi
+
+            # Exit with error if this is the last attempt
+            if [ $i -eq $MAX_INTERVALS ]; then
+              echo "❌ Services failed to become healthy within $(($MAX_INTERVALS * $INTERVAL_SECONDS)) seconds"
+              echo "=== Service Status Summary ==="
+              docker compose ps
+              echo "=== Service Logs ==="
+              docker compose logs --tail=50
+              exit 1
+            fi
+
+            echo "Waiting $INTERVAL_SECONDS seconds before next check..."
+            sleep $INTERVAL_SECONDS
+          done
+
+      - name: Run Health Check Script
+        run: |
+          echo "Making health check script executable..."
+          chmod +x scripts/veritas_health_check.sh
+
+          echo "Running Veritas health check script..."
+          bash scripts/veritas_health_check.sh 2>&1 | tee health.log
+        continue-on-error: false
+
+      - name: Upload Health Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-check-log
+          path: health.log
+          retention-days: 7
+
+      - name: Stop Stack
+        if: always()
+        run: |
+          echo "Stopping Docker Compose stack..."
+          docker compose down -v --remove-orphans
+          echo "Stack stopped and cleaned up"
+
+      - name: Report Results
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Veritas Health Check completed successfully!"
+            echo "All services are healthy and responding correctly."
+          else
+            echo "❌ Veritas Health Check failed!"
+            echo "Check the uploaded health-check-log artifact for details."
+            exit 1
+          fi
