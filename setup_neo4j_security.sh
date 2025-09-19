@@ -97,7 +97,11 @@ setup_neo4j_credentials() {
 # Neo4j authentication format: username/password
 NEO4J_AUTH=neo4j/$NEO4J_PASSWORD
 
-# Alternative format for separate variables (used by veritas-web service)
+# Separate variables for application services
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=$NEO4J_PASSWORD
+
+# Backward-compatible variable names
 NEO4J_AUTH_USER=neo4j
 NEO4J_AUTH_PASSWORD=$NEO4J_PASSWORD
 
