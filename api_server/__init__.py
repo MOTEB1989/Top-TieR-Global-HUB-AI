@@ -1,7 +1,7 @@
 import os
-from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from gpt_client import GPTClient, GPTRequest, GPTResponse
@@ -49,9 +49,9 @@ async def get_api():
 
 
 @app.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """Simple health check"""
-    return {"status": "ok", "version": "2.0.0"}
+async def health() -> JSONResponse:
+    """Health check endpoint used by container orchestration."""
+    return JSONResponse(content={"status": "ok", "service": "veritas-api"})
 
 
 @app.post("/gpt", response_model=GPTResponse)
