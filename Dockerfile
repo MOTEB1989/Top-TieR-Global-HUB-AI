@@ -22,7 +22,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY api_server/ ./api_server/
-COPY veritas_console.py ./ 2>/dev/null || echo "veritas_console.py not found, continuing..."
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash appuser && \
