@@ -17,12 +17,13 @@ import hashlib
 from typing import Any, Dict, List, Optional
 
 import psycopg2
+from psycopg2.extras import Json
 from fastapi import FastAPI, Query
 
 # ==========
 # إعداد الاتصال بقاعدة البيانات
 # ==========
-DB_URL = os.getenv("DB_URL", "postgresql://postgres:motebai@localhost:5432/motebai")
+DB_URL = os.getenv("DB_URL", "postgresql://postgres:motebai@postgres:5432/motebai")
 
 
 def db_conn():
@@ -109,6 +110,38 @@ def apply_rule(transaction: Dict[str, Any]) -> Dict[str, Any]:
 # 5) FastAPI endpoints
 # ==========
 app = FastAPI(title="Expert Committee Service")
+
+
+@app.post("/bootstrap")
+def bootstrap_example():
+    """Endpoint to insert a sample document with two chunks for bootstrap testing."""
+    with db_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO rag.documents (title, source_url, lang, meta)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+            """,
+            ("وثيقة تجريبية", "http://example.com/test", "ar", Json({"bootstrap": True})),
+        )
+        doc_id = cur.fetchone()[0]
+
+        chunks = [
+            (doc_id, 1, "هذا محتوى الفقرة الأولى.", {"note": "اختبار"}),
+            (doc_id, 2, "هذا محتوى الفقرة الثانية.", {"note": "اختبار"}),
+        ]
+        for chunk_doc_id, chunk_no, content, meta in chunks:
+            cur.execute(
+                """
+                INSERT INTO rag.chunks (document_id, chunk_no, content, meta)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (chunk_doc_id, chunk_no, content, Json(meta)),
+            )
+
+        conn.commit()
+
+    return {"message": "✅ تم إدخال وثيقة تجريبية مع قطعها", "document_id": doc_id}
 
 
 @app.post("/v1/ingest")
