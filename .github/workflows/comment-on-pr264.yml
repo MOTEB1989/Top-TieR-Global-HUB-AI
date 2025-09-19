@@ -1,0 +1,418 @@
+name: Comment on PR #264 - Arabic Testing Instructions
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_comment:
+        description: 'Force add comment even if one exists (احرص على إضافة تعليق حتى لو كان موجوداً)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  add-arabic-testing-comment:
+    runs-on: ubuntu-latest
+    name: Add Arabic Testing Instructions to PR #264
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check if comment already exists
+        id: check_comment
+        if: ${{ !github.event.inputs.force_comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 264
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('تعليمات اختبار التغييرات - Arabic Testing Instructions')
+            );
+            
+            if (existingComment) {
+              core.setOutput('exists', 'true');
+              console.log('Arabic testing comment already exists');
+            } else {
+              core.setOutput('exists', 'false');
+              console.log('No existing Arabic testing comment found');
+            }
+      
+      - name: Create Arabic testing instructions comment
+        if: ${{ steps.check_comment.outputs.exists == 'false' || github.event.inputs.force_comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the Arabic testing instructions
+            const arabicInstructions = fs.readFileSync('PR264_ARABIC_TESTING_INSTRUCTIONS.md', 'utf8');
+            
+            // Create a comprehensive comment with Arabic testing instructions
+            const commentBody = `# 🧪 تعليمات اختبار التغييرات - Arabic Testing Instructions
+
+السلام عليكم! مرحباً بكم في تعليمات اختبار شاملة لـ PR #264 🎯
+
+## نظرة سريعة على التغييرات
+هذا الـ PR يضيف نظام تنظيف متطور للمستودع مع:
+- **سكريپت Python محسن** لإغلاق Issues/PRs  
+- **GitHub Actions Workflow** مع واجهة عربية
+- **نظام أمان متقدم** مع تصفية ذكية
+
+## ⚡ اختبار سريع (5 دقائق)
+
+### 1. اختبار السكريپت محلياً - الوضع الآمن ✅
+\`\`\`bash
+# إعداد البيئة
+export GITHUB_TOKEN="your_token_here"
+pip install requests
+
+# اختبار أساسي آمن
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+
+# اختبار مع تصفية
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --before 2024-01-01 --exclude 264
+\`\`\`
+
+### 2. اختبار GitHub Actions Workflow 🔄
+
+**انتقل إلى:** [Actions Tab](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions)
+
+**اختبر الواجهة العربية:**
+- \`وضع التشغيل (dry-run = لا يغلق فعلياً)\` ✅
+- \`تخطي إغلاق الـ Issues\` ✅  
+- \`تخطي إغلاق الـ Pull Requests\` ✅
+- \`أغلق العناصر الأقدم من هذا التاريخ فقط (YYYY-MM-DD)\` 📅
+- \`أرقام Issues/PRs مستثناة (مثال: 123 456 789)\` 🔢
+- \`استثناء العناصر التي تحتوي على هذه التسميات\` 🏷️
+
+## 🎯 سيناريوهات الاختبار المطلوبة
+
+### أ) اختبار الأمان 🛡️
+\`\`\`bash
+# 1. الوضع الآمن يجب أن يعمل دائماً
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+
+# 2. اختبار استثناء PR هذا
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --exclude 264
+
+# 3. اختبار استثناء التسميات الحساسة
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --label-exclude priority critical bug
+\`\`\`
+
+### ب) اختبار الواجهة العربية 🌍
+في GitHub Actions:
+1. افتح الـ workflow يدوياً
+2. تحقق من ظهور النصوص العربية بشكل صحيح
+3. اختبر كل خيار على حدة
+4. تأكد من عمل القيم الافتراضية
+
+### ج) اختبار معالجة الأخطاء ⚠️
+\`\`\`bash
+# Token غير صحيح
+GITHUB_TOKEN="invalid" python scripts/close_github_items.py \\
+  MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+
+# مستودع غير موجود  
+python scripts/close_github_items.py nonexistent/repo --dry-run --yes
+\`\`\`
+
+## 📊 النتائج المتوقعة
+
+### ✅ نجح الاختبار إذا:
+- **السكريپت:** يعرض قائمة بالعناصر دون إغلاق شيء فعلياً
+- **Workflow:** النصوص العربية تظهر بوضوح
+- **الأمان:** العناصر المستثناة محمية
+- **الأخطاء:** معالجة لائقة للحالات الاستثنائية
+
+### 📋 تقرير نهائي مثالي:
+\`\`\`
+Summary:
+  Closed:  0
+  Skipped: X
+  Mode:    DRY-RUN
+
+✅ Repository hygiene cleanup completed
+⚠️ This was a DRY RUN - no actual changes were made
+\`\`\`
+
+## 🚨 تحذيرات مهمة
+
+### ❌ لا تفعل:
+- استخدام \`execute\` mode بدون مراجعة دقيقة
+- تشغيل السكريپت بدون \`--exclude\` للـ PRs المهمة
+- اختبار على مستودعات production مباشرة
+
+### ✅ افعل:
+- ابدأ بـ \`--dry-run\` دائماً
+- راجع قائمة العناصر قبل التنفيذ
+- استخدم \`--exclude 264\` لحماية هذا الـ PR
+
+## 🔗 موارد إضافية
+
+**للتعليمات الكاملة:** انظر \`PR264_ARABIC_TESTING_INSTRUCTIONS.md\`
+
+**GitHub CLI للتعليق:**
+\`\`\`bash
+gh pr comment 264 --body "تم اختبار النظام بنجاح ✅"
+\`\`\`
+
+## 📝 خطوات الاختبار المفصلة
+
+### المرحلة 1: التحضير (5 دقائق)
+1. **إعداد البيئة التطويرية:**
+   \`\`\`bash
+   git clone https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI.git
+   cd Top-TieR-Global-HUB-AI
+   python -m venv venv
+   source venv/bin/activate  # أو venv\\Scripts\\activate على Windows
+   pip install requests
+   \`\`\`
+
+2. **إعداد GitHub Token:**
+   \`\`\`bash
+   export GITHUB_TOKEN="ghp_your_token_here"
+   # تأكد من أن الـ token يتضمن صلاحيات: repo, issues, pull_requests
+   \`\`\`
+
+### المرحلة 2: اختبار السكريپت محلياً (10 دقائق)
+
+#### أ) الاختبار الأساسي:
+\`\`\`bash
+# اختبار الوضع الآمن الأساسي
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+
+# النتيجة المتوقعة:
+# ✅ قائمة بالـ issues/PRs المفتوحة
+# ✅ رسالة "[DRY RUN] Would close..." لكل عنصر
+# ✅ تقرير نهائي بعدد العناصر
+\`\`\`
+
+#### ب) اختبار خيارات التصفية:
+\`\`\`bash
+# تصفية بالتاريخ
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --before 2024-01-01
+
+# استثناء أرقام محددة
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --exclude 1 2 3 264
+
+# استثناء حسب التسميات
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --label-exclude priority bug critical
+
+# تخطي الـ Issues فقط
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --skip-issues
+
+# تخطي الـ Pull Requests فقط
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \\
+  --dry-run --yes --skip-prs
+\`\`\`
+
+#### ج) اختبار معالجة الأخطاء:
+\`\`\`bash
+# اختبار مع token غير صحيح
+GITHUB_TOKEN="invalid_token" python scripts/close_github_items.py \\
+  MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+# المتوقع: رسالة خطأ واضحة
+
+# اختبار مع مستودع غير موجود
+python scripts/close_github_items.py nonexistent/repo --dry-run --yes
+# المتوقع: رسالة خطأ HTTP 404
+
+# اختبار بدون توفير مستودع
+python scripts/close_github_items.py --dry-run --yes
+# المتوقع: رسالة خطأ في الـ arguments
+\`\`\`
+
+### المرحلة 3: اختبار GitHub Actions Workflow (15 دقائق)
+
+#### أ) الوصول إلى الـ Workflow:
+1. اذهب إلى: https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions
+2. ابحث عن "Repository Hygiene - Close Old Issues & PRs"
+3. اضغط على "Run workflow"
+
+#### ب) اختبار الواجهة العربية:
+**تحقق من أن هذه النصوص تظهر بالعربية:**
+- \`وضع التشغيل (dry-run = لا يغلق فعلياً، execute = إغلاق حقيقي)\`
+- \`تخطي إغلاق الـ Issues\`
+- \`تخطي إغلاق الـ Pull Requests\`
+- \`أغلق العناصر الأقدم من هذا التاريخ فقط (YYYY-MM-DD)\`
+- \`أرقام Issues/PRs مستثناة (مثال: 123 456 789)\`
+- \`استثناء العناصر التي تحتوي على هذه التسميات\`
+
+#### ج) سيناريوهات الاختبار:
+
+**سيناريو 1: الاختبار الآمن الأساسي**
+- Mode: \`dry-run\`
+- باقي الخيارات: القيم الافتراضية
+- **المتوقع:** تنفيذ آمن بدون إغلاق فعلي
+
+**سيناريو 2: اختبار التصفية**
+- Mode: \`dry-run\`
+- Before: \`2024-01-01\`
+- Exclude: \`264 265 266\`
+- Label-exclude: \`priority keep wontfix\`
+- **المتوقع:** استثناء العناصر المحددة
+
+**سيناريو 3: اختبار تخطي الأنواع**
+- Mode: \`dry-run\`
+- Skip-issues: \`true\`
+- **المتوقع:** معالجة PRs فقط
+
+**سيناريو 4: اختبار القيم الفارغة**
+- Mode: \`dry-run\`
+- Before: (فارغ)
+- Exclude: (فارغ)
+- **المتوقع:** معالجة جميع العناصر
+
+### المرحلة 4: اختبار التشغيل المجدول (مراجعة الكود)
+
+راجع ملف \`.github/workflows/cleanup.yml\` وتأكد من:
+\`\`\`yaml
+schedule:
+  # يجب أن يكون: يوم 1 من كل شهر الساعة 02:00 UTC
+  - cron: '0 2 1 * *'
+\`\`\`
+
+**للتشغيل المجدول، تأكد من:**
+- استخدام \`dry-run\` دائماً للأمان
+- \`label_exclude\` يتضمن: \`priority keep wontfix\`
+- لا استثناءات لأرقام محددة افتراضياً
+
+### المرحلة 5: اختبارات الأداء والموثوقية (10 دقائق)
+
+#### أ) اختبار الأداء:
+\`\`\`bash
+# قياس وقت التنفيذ
+time python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+# المتوقع: أقل من 30 ثانية
+
+# مراقبة استخدام الذاكرة
+top -p \$(pgrep -f close_github_items.py) &
+python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+# المتوقع: أقل من 50MB استخدام ذاكرة
+\`\`\`
+
+#### ب) اختبار Rate Limiting:
+\`\`\`bash
+# تشغيل متكرر لاختبار معالجة Rate Limit
+for i in {1..3}; do
+  echo "اختبار رقم \$i"
+  python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+  sleep 2
+done
+# المتوقع: معالجة سليمة لكل تشغيل
+\`\`\`
+
+#### ج) اختبار إعادة المحاولة:
+\`\`\`bash
+# محاكاة خطأ مؤقت (إذا كان متاحاً)
+# السكريپت يجب أن يُعيد المحاولة تلقائياً
+\`\`\`
+
+## 📋 قائمة تحقق نهائية
+
+### ✅ السكريپت Python:
+- [ ] يعمل في الوضع الآمن (dry-run) ✅
+- [ ] يحترم تصفية التواريخ ✅
+- [ ] يستثني الأرقام المحددة ✅
+- [ ] يتجاهل التسميات المحددة ✅
+- [ ] يتعامل مع الأخطاء بشكل لائق ✅
+- [ ] يُظهر تقرير نهائي واضح ✅
+- [ ] يحترم Rate Limits ✅
+- [ ] معالجة إعادة المحاولة تعمل ✅
+
+### ✅ GitHub Actions Workflow:
+- [ ] النصوص العربية تظهر بوضوح ✅
+- [ ] جميع الخيارات تعمل كما متوقع ✅
+- [ ] القيم الافتراضية صحيحة ✅
+- [ ] التشغيل المجدول يستخدم dry-run ✅
+- [ ] نظام الأمان فعال ✅
+- [ ] التقارير والمخرجات واضحة ✅
+
+### ✅ الأمان والحماية:
+- [ ] الوضع الآمن يعمل بدون إغلاق فعلي ✅
+- [ ] استثناء PR #264 يعمل ✅
+- [ ] التسميات الحساسة محمية ✅
+- [ ] التأكيد مطلوب للتنفيذ الفعلي ✅
+- [ ] رسائل تحذيرية واضحة ✅
+
+## 🎉 إتمام الاختبار
+
+عند إتمام جميع الاختبارات بنجاح، أضف تعليق:
+
+\`\`\`
+✅ تم اختبار نظام تنظيف المستودع بنجاح!
+
+**النتائج:**
+- السكريپت Python: يعمل بشكل مثالي ✅
+- الواجهة العربية: تظهر بوضوح ✅  
+- نظام الأمان: فعال ومحكم ✅
+- معالجة الأخطاء: سليمة ✅
+
+**مُختبِر:** [اسمك]
+**التاريخ:** \$(date)
+**البيئة:** [وصف البيئة]
+
+جاهز للاستخدام الإنتاجي! 🚀
+\`\`\`
+
+---
+
+**ملاحظة:** هذه التعليمات مصممة لضمان اختبار شامل وآمن لنظام تنظيف المستودع مع دعم كامل للغة العربية. 
+
+**للمساعدة أو الأسئلة:** افتح issue جديد مع تسمية \`testing\` أو \`arabic-support\`
+
+**Happy Testing! 🎉 / اختبار موفق!**`;
+
+            // Post the comment to PR #264
+            const response = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 264,
+              body: commentBody
+            });
+            
+            console.log('✅ Arabic testing instructions comment posted successfully!');
+            console.log(\`Comment URL: \${response.data.html_url}\`);
+            
+            // Also update the GitHub step summary
+            core.summary
+              .addHeading('🧪 Arabic Testing Instructions Posted')
+              .addRaw('تم نشر تعليمات الاختبار باللغة العربية بنجاح!')
+              .addBreak()
+              .addLink('View Comment', response.data.html_url)
+              .addBreak()
+              .addRaw('**تتضمن التعليمات:**')
+              .addList([
+                'اختبار السكريپت محلياً مع الوضع الآمن',
+                'اختبار واجهة GitHub Actions العربية', 
+                'سيناريوهات اختبار متنوعة',
+                'تعليمات الأمان والحماية',
+                'قائمة تحقق شاملة'
+              ])
+              .write();
+      
+      - name: Skip comment (already exists)
+        if: ${{ steps.check_comment.outputs.exists == 'true' && !github.event.inputs.force_comment }}
+        run: |
+          echo "⚠️ Arabic testing comment already exists on PR #264"
+          echo "Use 'force_comment: true' to add another comment"
+          echo ""
+          echo "الرسالة موجودة مسبقاً في PR #264"
+          echo "استخدم خيار 'force_comment: true' لإضافة تعليق جديد"
