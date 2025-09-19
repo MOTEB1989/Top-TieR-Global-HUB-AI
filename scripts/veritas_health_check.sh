@@ -23,11 +23,12 @@ check_service() {
   fi
 }
 
-# Core API على المنفذ 8000
-check_service "CORE_API" "http://localhost:8000/health"
+# Backend API service on port 8000
+check_service "BACKEND_API" "http://localhost:8000/health"
 
-# Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+# Core Veritas Web interface - use CORE_URL if set, fallback to localhost:8080
+CORE_URL="${CORE_URL:-http://localhost:8080}"
+check_service "CORE_WEB" "${CORE_URL}/health"
 
 echo "== Health check complete =="
 
