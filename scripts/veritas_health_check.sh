@@ -1,40 +1,43 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-echo "== Veritas Stack Health Check =="
-date
-
-# Initialize error counter
-ERROR_COUNT=0
+LOG_FILE="health.log"
+> "$LOG_FILE"
 
 check_service() {
   local name=$1
   local url=$2
 
-  echo "Checking $name at $url ..."
-  status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
-
-  if [ "$status" -eq 200 ]; then
-    echo "✅ $name is healthy ($status)"
+  echo "== Checking $name at $url ==" | tee -a "$LOG_FILE"
+  if curl -fsS "$url" > /dev/null; then
+    echo "✅ $name is healthy." | tee -a "$LOG_FILE"
     return 0
   else
-    echo "❌ $name health check failed (status: $status)"
-    ERROR_COUNT=$((ERROR_COUNT + 1))
+    echo "❌ $name health check failed." | tee -a "$LOG_FILE"
     return 1
   fi
 }
 
-# Core API على المنفذ 8000
-check_service "CORE_API" "http://localhost:8000/health"
+echo "== Veritas Stack Health Check ==" | tee -a "$LOG_FILE"
+date | tee -a "$LOG_FILE"
 
-# Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+errors=0
 
-echo "== Health check complete =="
+# فحص الـ Core API
+if ! check_service "CORE_API" "http://localhost:8000/health"; then
+  errors=$((errors+1))
+fi
 
-if [ $ERROR_COUNT -gt 0 ]; then
-  echo "❌ Health check failed with $ERROR_COUNT error(s)"
+# فحص الـ Veritas Web
+if ! check_service "VERITAS_WEB" "http://localhost:8080/health"; then
+  errors=$((errors+1))
+fi
+
+echo "== Health check complete ==" | tee -a "$LOG_FILE"
+
+if [ "$errors" -gt 0 ]; then
+  echo "❌ Health check failed with $errors error(s)." | tee -a "$LOG_FILE"
   exit 1
 else
-  echo "✅ All services are healthy"
-  exit 0
+  echo "✅ All services healthy." | tee -a "$LOG_FILE"
 fi
