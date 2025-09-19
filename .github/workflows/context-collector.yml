@@ -1,5 +1,17 @@
 name: Context Collector
 
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  DB_URL: ${{ secrets.DB_URL }}
+  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
+  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+  REDIS_URL: ${{ secrets.REDIS_URL }}
+  NEO4J_URI: ${{ secrets.NEO4J_URI }}
+  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}
+  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
+
 on:
   workflow_dispatch:
   push:
