@@ -36,21 +36,6 @@ spec:
           mountPath: /data
         - name: neo4j-logs
           mountPath: /logs
-        livenessProbe:
-          tcpSocket:
-            port: 7687
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 7474
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
         resources:
           requests:
             memory: "512Mi"

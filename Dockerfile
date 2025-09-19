@@ -29,9 +29,8 @@ RUN useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl --fail http://localhost:8000/health || exit 1
+# Health check disabled
+HEALTHCHECK NONE
 
 # Expose port
 EXPOSE 8000

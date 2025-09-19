@@ -15,23 +15,12 @@ services:
       - neo4j
     volumes:
       - .:/app
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   # Redis for caching
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # PostgreSQL for data storage
   postgres:
@@ -44,11 +33,6 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Neo4j graph database for OSINT data
   neo4j:
@@ -63,12 +47,6 @@ services:
       - NEO4J_AUTH=${NEO4J_USER}:${NEO4J_PASSWORD}
     volumes:
       - neo4j-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u \"$NEO4J_USER\" -p \"$NEO4J_PASSWORD\" 'RETURN 1' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
   # MinIO - S3-compatible object storage
   minio:
@@ -150,13 +128,7 @@ services:
       - NODE_ENV=production
     depends_on:
       neo4j:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+        condition: service_started
     profiles:
       - mini-web  # Optional profile - start with: docker compose --profile mini-web up
 
