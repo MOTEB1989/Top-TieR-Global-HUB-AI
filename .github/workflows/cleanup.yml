@@ -1,0 +1,148 @@
+name: Repository Hygiene - Close Old Issues & PRs
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Execution mode (dry-run = لا يغلق فعلياً، execute = إغلاق حقيقي)"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - execute
+      skip-issues:
+        description: "تخطي إغلاق الـ Issues"
+        required: false
+        type: boolean
+        default: false
+      skip-prs:
+        description: "تخطي إغلاق الـ Pull Requests"
+        required: false
+        type: boolean
+        default: false
+      before:
+        description: "أغلق العناصر الأقدم من هذا التاريخ فقط (YYYY-MM-DD)"
+        required: false
+        type: string
+        default: ""
+      exclude:
+        description: "أرقام Issues/PRs مفصولة بمسافات لاستثنائها (مثال: 123 456 789)"
+        required: false
+        type: string
+        default: ""
+      label-exclude:
+        description: "استثناء العناصر التي تحتوي على هذه التسميات (مفصولة بمسافات)"
+        required: false
+        type: string
+        default: "priority keep wontfix"
+  
+  schedule:
+    # Run monthly on the 1st at 02:00 UTC (dry-run only for safety)
+    - cron: '0 2 1 * *'
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Determine execution parameters
+        id: params
+        run: |
+          # For scheduled runs, always use dry-run mode for safety
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "mode=dry-run" >> $GITHUB_OUTPUT
+            echo "skip_issues=false" >> $GITHUB_OUTPUT
+            echo "skip_prs=false" >> $GITHUB_OUTPUT
+            echo "before=" >> $GITHUB_OUTPUT
+            echo "exclude=" >> $GITHUB_OUTPUT
+            echo "label_exclude=priority keep wontfix" >> $GITHUB_OUTPUT
+          else
+            # Manual dispatch - use input parameters
+            echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+            echo "skip_issues=${{ github.event.inputs.skip-issues }}" >> $GITHUB_OUTPUT
+            echo "skip_prs=${{ github.event.inputs.skip-prs }}" >> $GITHUB_OUTPUT
+            echo "before=${{ github.event.inputs.before }}" >> $GITHUB_OUTPUT
+            echo "exclude=${{ github.event.inputs.exclude }}" >> $GITHUB_OUTPUT
+            echo "label_exclude=${{ github.event.inputs.label-exclude }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Build command arguments
+        id: cmd
+        run: |
+          CMD="python scripts/close_github_items.py ${{ github.repository }} --yes"
+          
+          # Add dry-run flag if needed
+          if [ "${{ steps.params.outputs.mode }}" = "dry-run" ]; then
+            CMD="$CMD --dry-run"
+          fi
+          
+          # Add skip options
+          if [ "${{ steps.params.outputs.skip_issues }}" = "true" ]; then
+            CMD="$CMD --skip-issues"
+          fi
+          if [ "${{ steps.params.outputs.skip_prs }}" = "true" ]; then
+            CMD="$CMD --skip-prs"
+          fi
+          
+          # Add date filter
+          if [ -n "${{ steps.params.outputs.before }}" ]; then
+            CMD="$CMD --before '${{ steps.params.outputs.before }}'"
+          fi
+          
+          # Add exclusion lists
+          if [ -n "${{ steps.params.outputs.exclude }}" ]; then
+            for num in ${{ steps.params.outputs.exclude }}; do
+              CMD="$CMD --exclude $num"
+            done
+          fi
+          
+          if [ -n "${{ steps.params.outputs.label_exclude }}" ]; then
+            for label in ${{ steps.params.outputs.label_exclude }}; do
+              CMD="$CMD --label-exclude '$label'"
+            done
+          fi
+          
+          echo "command=$CMD" >> $GITHUB_OUTPUT
+          echo "Final command: $CMD"
+      
+      - name: Run cleanup script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🧹 Starting repository hygiene cleanup..."
+          echo "Repository: ${{ github.repository }}"
+          echo "Mode: ${{ steps.params.outputs.mode }}"
+          echo "Event: ${{ github.event_name }}"
+          
+          ${{ steps.cmd.outputs.command }}
+      
+      - name: Post-cleanup summary
+        if: always()
+        run: |
+          echo "✅ Repository hygiene cleanup completed"
+          echo "Mode: ${{ steps.params.outputs.mode }}"
+          echo "Repository: ${{ github.repository }}"
+          if [ "${{ steps.params.outputs.mode }}" = "dry-run" ]; then
+            echo "⚠️ This was a DRY RUN - no actual changes were made"
+          else
+            echo "✨ Cleanup executed - check the log above for results"
+          fi
