@@ -1,0 +1,79 @@
+name: External API Diagnosis
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # كل 6 ساعات (تقدر تعدل)
+  workflow_dispatch:          # تشغيل يدوي
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install requests openai
+
+      - name: Run diagnosis
+        id: run_diag
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/diagnose_external_apis.py > report.log
+
+      - name: Find or create persistent issue
+        id: issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          number=$(gh issue list \
+            --state open \
+            --limit 1 \
+            --search '"🌐 External API Diagnosis" in:title' \
+            --json number -q '.[0].number' || true)
+
+          if [ -z "$number" ]; then
+            body="🌐 Persistent External API Diagnosis Issue\n\nThis issue tracks connectivity to OpenAI + WHO + World Bank + Wikidata.\n\nLatest run: $(date -u)"
+            number=$(gh issue create \
+              --title "🌐 External API Diagnosis" \
+              --body "$body" \
+              --label "automation,api-diagnosis" \
+              --json number -q '.number')
+            echo "Created issue #$number"
+          fi
+          echo "number=$number" >> $GITHUB_OUTPUT
+
+      - name: Update issue body & comment
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          issue=${{ steps.issue.outputs.number }}
+          stamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          summary=$(cat report.log)
+
+          # Add comment
+          gh issue comment $issue \
+            --body "🕒 Run at $stamp (UTC)\n\n\`\`\`\n$summary\n\`\`\`"
+
+          # Update body with last run
+          current=$(gh api repos/${{ github.repository }}/issues/$issue --jq '.body')
+          updated="$current\n\n_Last run: $stamp UTC_"
+          gh issue edit $issue --body "$updated"
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-diagnosis-log
+          path: report.log
+          retention-days: 7
