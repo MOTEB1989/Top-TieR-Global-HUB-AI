@@ -1,7 +1,14 @@
 import os
 from typing import Optional, Dict, Any
 
-import openai
+# Make OpenAI import optional to avoid blocking health checks
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    openai = None
+
 from pydantic import BaseModel
 
 
@@ -30,11 +37,14 @@ class GPTClient:
             openai.api_key = self.api_key
         
     def is_available(self) -> bool:
-        """Check if GPT client is available (has API key)"""
-        return bool(self.api_key)
+        """Check if GPT client is available (has API key and OpenAI module)"""
+        return OPENAI_AVAILABLE and bool(self.api_key)
     
     async def generate_response(self, request: GPTRequest) -> GPTResponse:
         """Generate response using OpenAI GPT"""
+        if not OPENAI_AVAILABLE:
+            raise RuntimeError("OpenAI library not available. Install with: pip install openai")
+        
         if not self.is_available():
             raise ValueError("OpenAI API key not configured")
         
