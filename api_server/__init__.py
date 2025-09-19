@@ -4,7 +4,14 @@ from typing import Any, Dict
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from gpt_client import GPTClient, GPTRequest, GPTResponse
+try:
+    from gpt_client import GPTClient, GPTRequest, GPTResponse
+except ImportError:
+    # Try relative import for when running from api_server directory
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from gpt_client import GPTClient, GPTRequest, GPTResponse
 
 # Fallback if python-dotenv is not available
 try:
