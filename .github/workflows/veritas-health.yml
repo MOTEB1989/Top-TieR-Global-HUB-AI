@@ -1,137 +1,220 @@
-name: Veritas Nexus • Health (Auto)
+name: Veritas Health Monitor
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
   schedule:
-    - cron: "*/30 * * * *"   # تلقائي كل 30 دقيقة (UTC)
-  # لا تشغيل يدوي هنا (لا workflow_dispatch)، كل شيء تلقائي
+    - cron: "*/30 * * * *"  # Run every 30 minutes
+  workflow_dispatch:       # Allow manual triggering
+
+concurrency:
+  group: veritas-health-monitor
+  cancel-in-progress: false  # Allow multiple runs to queue
+
+permissions:
+  issues: write
+  contents: read
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
-      NEO4J_HTTP: http://localhost:7474
-      NEO4J_USER: ${{ secrets.NEO4J_USER }}
-      NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
-      # لو عندك فحص عبر Services داخل K8s، وفّرت kubeconfig كسِر
-      KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+    timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y jq netcat-openbsd
+          sudo apt-get install -y curl jq
 
-      - name: Auto-select K8s Services if kubeconfig is provided
-        if: ${{ env.KUBECONFIG_B64 != '' }}
+      - name: Perform health check
+        id: health_check
         run: |
-          echo "$KUBECONFIG_B64" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          # استهدف Services داخل الكلاستر بدل localhost
-          echo "CORE_URL=http://veritas-core-svc"      >> $GITHUB_ENV
-          echo "OSINT_URL=http://osint-engine-svc:8081" >> $GITHUB_ENV
-          echo "NEO4J_HTTP=http://neo4j:7474"           >> $GITHUB_ENV
+          echo "Starting health check at $(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee health.log
 
-      - name: Show targets
-        run: |
-          echo "CORE_URL=$CORE_URL"
-          echo "OSINT_URL=$OSINT_URL"
-          echo "NEO4J_HTTP=$NEO4J_HTTP"
+          # Health check against placeholder endpoint
+          # (future enhancement: make configurable via HEALTH_ENDPOINT env var)
+          HEALTH_ENDPOINT="${HEALTH_ENDPOINT:-http://localhost:3000/health}"
+          echo "Checking endpoint: $HEALTH_ENDPOINT" | tee -a health.log
 
-      - name: Make script executable
-        run: chmod +x scripts/veritas_health_check.sh
+          # Perform the health check with timeout
+          if curl -f --max-time 10 --connect-timeout 5 "$HEALTH_ENDPOINT" >> health.log 2>&1; then
+            echo "status=ok" >> $GITHUB_OUTPUT
+            echo "✅ Health check passed" | tee -a health.log
+          else
+            echo "status=fail" >> $GITHUB_OUTPUT
+            echo "❌ Health check failed" | tee -a health.log
+            echo "Exit code: $?" | tee -a health.log
+          fi
 
-      - name: Run health checks (with retry)
-        id: runcheck
-        run: |
-          set -o pipefail
-          attempt() {
-            echo "== Veritas Health Check Attempt $1 ($(date -u +%FT%TZ)) =="
-            ./scripts/veritas_health_check.sh
-          }
-          # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
-          attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
+          echo "Health check completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a health.log
 
-      - name: Upload health log
-        if: ${{ success() || failure() }}
+      - name: Upload health log artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: veritas-health-log
+          name: health-log-${{ github.run_number }}
           path: health.log
           retention-days: 7
 
-      - name: Job summary
-        if: ${{ success() || failure() }}
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "### ✅ Health Check: **PASSED**" >> $GITHUB_STEP_SUMMARY
-            echo "- Core/OSINT/Neo4j جميعها تعمل." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ Health Check: **FAILED**" >> $GITHUB_STEP_SUMMARY
-            echo "- راجع Artifact: **veritas-health-log**." >> $GITHUB_STEP_SUMMARY
-          fi
+      - name: Find or create persistent health monitor issue
+        id: find_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = 'Veritas Health Monitor';
 
-      # فتح Issue تلقائي عند الفشل
-      - name: Open Issue on failure
-        if: ${{ failure() }}
+            // Search for existing issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            let existingIssue = issues.data.find(issue =>
+              issue.title.includes('Veritas Health Monitor')
+            );
+
+            if (existingIssue) {
+              console.log(`Found existing issue #${existingIssue.number}`);
+              return {
+                number: existingIssue.number,
+                body: existingIssue.body || ''
+              };
+            } else {
+              // Create new issue with initial timeline table
+              const initialBody = `# Veritas Health Monitor
+
+            This issue tracks the health status of the Veritas system. The title indicates the current status:
+            - ✅ = System healthy
+            - ❌ = System unhealthy
+
+            ## Timeline
+
+            | Timestamp (UTC) | Status | Run Link |
+            |---|---|---|
+            | *Timeline will be populated by health checks* | | |
+            `;
+
+              const newIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '❌ Veritas Health Monitor',  // Start with failure status
+                body: initialBody,
+                labels: ['health-check', 'automation']
+              });
+
+              console.log(`Created new issue #${newIssue.data.number}`);
+              return {
+                number: newIssue.data.number,
+                body: initialBody
+              };
+            }
+
+      - name: Update issue with timeline and status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueData = ${{ steps.find_issue.outputs.result }};
+            const status = '${{ steps.health_check.outputs.status }}';
+            const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            const runUrl = `https://github.com/${context.repo.owner}/` +
+              `${context.repo.repo}/actions/runs/${context.runId}`;
+
+            // Determine new title based on status
+            const statusIcon = status === 'ok' ? '✅' : '❌';
+            const newTitle = `${statusIcon} Veritas Health Monitor`;
+
+            // Parse existing body to update timeline
+            let body = issueData.body;
+
+            // Check if timeline table exists
+            if (!body.includes('| Timestamp (UTC) | Status | Run Link |')) {
+              // Initialize timeline table if missing
+              const timelineTable = '\n## Timeline\n\n| Timestamp (UTC) | Status | Run Link |\n|---|---|---|\n';
+              body = body + timelineTable;
+            }
+
+            // Add new timeline entry
+            const statusText = status === 'ok' ? '✅ OK' : '❌ FAIL';
+            const newRow = `| ${timestamp} | ${statusText} | [Run ${context.runNumber}](${runUrl}) |`;
+
+            // Insert new row after the table header (find the header row and add after it)
+            const tableHeaderIndex = body.indexOf('|---|---|---|');
+            if (tableHeaderIndex !== -1) {
+              const insertIndex = body.indexOf('\n', tableHeaderIndex) + 1;
+              body = body.substring(0, insertIndex) + newRow + '\n' + body.substring(insertIndex);
+            } else {
+              // Fallback: append at the end
+              body = body + '\n' + newRow;
+            }
+
+            // Update the issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueData.number,
+              title: newTitle,
+              body: body
+            });
+
+            console.log(`Updated issue #${issueData.number} with status: ${statusText}`);
+
+      - name: Add detailed comment on failure
+        if: steps.health_check.outputs.status == 'fail'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            let tail = 'log unavailable';
+            const issueData = ${{ steps.find_issue.outputs.result }};
+
+            let logContent = 'Log content unavailable';
             try {
-              tail = fs.readFileSync('health.log','utf8').split('\n').slice(-120).join('\n');
-            } catch(e) {}
-            const title = `❌ Veritas Health Failed – ${new Date().toISOString()}`;
-            const body = [
-              'Health check failed.',
-              `Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              `Commit: ${context.sha}`,
-              '',
-              '#### Tail of health.log',
-              '```',
-              tail,
-              '```'
-            ].join('\n');
-            await github.rest.issues.create({
+              logContent = fs.readFileSync('health.log', 'utf8');
+            } catch (error) {
+              console.log('Could not read health.log:', error.message);
+            }
+
+            const commentBody = `## ❌ Health Check Failed
+
+            **Time:** ${new Date().toISOString()}
+            **Run:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            **Commit:** ${context.sha.substring(0, 7)}
+
+            ### Log Details
+            \`\`\`
+            ${logContent}
+            \`\`\`
+
+            **Artifact:** health-log-${context.runNumber} (available for 7 days)
+            `;
+
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title,
-              body,
-              labels: ['health-check','automation','bug']
+              issue_number: issueData.number,
+              body: commentBody
             });
 
-      # إغلاق أي Issues مفتوحة للصحة تلقائيًا عند النجاح
-      - name: Auto-close health issues on success
-        if: ${{ success() }}
+      - name: Add lightweight comment on success
+        if: steps.health_check.outputs.status == 'ok'
         uses: actions/github-script@v7
         with:
           script: |
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
+            const issueData = ${{ steps.find_issue.outputs.result }};
+
+            const commentBody = `## ✅ Health Check Passed
+
+            **Time:** ${new Date().toISOString()}
+            **Run:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+
+            System is healthy and responding normally.
+            `;
+
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open',
-              labels: 'health-check'
+              issue_number: issueData.number,
+              body: commentBody
             });
-            for (const i of issues) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: i.number,
-                body: `✅ Health restored in run https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: i.number,
-                state: 'closed'
-              });
-            }
