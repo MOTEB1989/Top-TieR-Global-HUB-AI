@@ -1,3 +1,0 @@
-echo $GITHUB_TOKEN | docker login ghcr.io -u <your-username> --password-stdin
-docker pull ghcr.io/<owner>/veritas-console:latest
-docker run -p 8000:8000 ghcr.io/<owner>/veritas-console:latest

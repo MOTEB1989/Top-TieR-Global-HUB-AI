@@ -1,0 +1,47 @@
+name: Veritas Health Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *" # تشغيل يومي الساعة 3 صباحًا بتوقيت UTC
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          for i in {1..20}; do
+            core_ok=$(curl -sf http://localhost:8000/health || echo fail)
+            web_ok=$(curl -sf http://localhost:8080/health || echo fail)
+            if [[ "$core_ok" != "fail" && "$web_ok" != "fail" ]]; then
+              echo "✅ Both services are healthy."
+              exit 0
+            fi
+            echo "⏳ Waiting for services... ($i/20)"
+            sleep 5
+          done
+          echo "❌ ERROR: Services did not become healthy in time."
+          docker compose logs
+          exit 1
+
+      - name: Run health check
+        run: bash scripts/veritas_health_check.sh
+
+      - name: Upload health log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-check-log
+          path: health.log
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down

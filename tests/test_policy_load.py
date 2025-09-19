@@ -7,7 +7,7 @@ def test_policy_load_and_domains():
     policy_path = Path("tests/policy/policy.yaml")
     assert policy_path.exists(), "❌ ملف policy.yaml غير موجود"
 
-    with open(policy_path, "r", encoding="utf-8") as f:
+    with open(policy_path, encoding="utf-8") as f:
         policy = yaml.safe_load(f)
 
     # تحقق من وجود المفاتيح الأساسية

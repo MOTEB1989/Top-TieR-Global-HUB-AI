@@ -44,6 +44,10 @@ dev = [
 [tool.ruff]
 line-length = 127
 target-version = "py311"
+extend-exclude = [
+    "veritas-mini-web",
+    "veritas-web",
+]
 
 [tool.ruff.lint]
 select = [
