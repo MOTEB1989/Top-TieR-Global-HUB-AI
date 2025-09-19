@@ -211,7 +211,9 @@ def process_issues(
 ) -> tuple[int, int]:
     url = f"{API_ROOT}/repos/{repo}/issues"
     closed = skipped = 0
-    for issue in client.paginate(url, params={"state": "open"}):
+    # Collect all open issues first so that closing them does not interfere with pagination.
+    all_open_issues = list(client.paginate(url, params={"state": "open"}))
+    for issue in all_open_issues:
         if "pull_request" in issue:
             continue
         number = issue["number"]
@@ -246,7 +248,9 @@ def process_prs(
 ) -> tuple[int, int]:
     url = f"{API_ROOT}/repos/{repo}/pulls"
     closed = skipped = 0
-    for pr in client.paginate(url, params={"state": "open"}):
+    # Collect all open pull requests before closing to avoid pagination side-effects.
+    all_open_prs = list(client.paginate(url, params={"state": "open"}))
+    for pr in all_open_prs:
         number = pr["number"]
         created_at = pr.get("created_at") or pr.get("createdAt")
         labels = {lbl["name"].lower() for lbl in pr.get("labels", [])}
