@@ -6,6 +6,19 @@ date
 # Initialize error counter
 ERROR_COUNT=0
 
+# Default URLs (can be overridden by environment variables)
+CORE_API_URL="${CORE_URL:-http://localhost:8000}"
+VERITAS_WEB_URL="${OSINT_URL:-http://localhost:8080}"
+
+# Add /health endpoint if not already present
+if [[ "$CORE_API_URL" != */health ]]; then
+  CORE_API_URL="$CORE_API_URL/health"
+fi
+
+if [[ "$VERITAS_WEB_URL" != */health ]]; then
+  VERITAS_WEB_URL="$VERITAS_WEB_URL/health"
+fi
+
 check_service() {
   local name=$1
   local url=$2
@@ -24,10 +37,10 @@ check_service() {
 }
 
 # Core API على المنفذ 8000
-check_service "CORE_API" "http://localhost:8000/health"
+check_service "CORE_API" "$CORE_API_URL"
 
 # Veritas Mini-Web على المنفذ 8080
-check_service "VERITAS_WEB" "http://localhost:8080/health"
+check_service "VERITAS_WEB" "$VERITAS_WEB_URL"
 
 echo "== Health check complete =="
 
