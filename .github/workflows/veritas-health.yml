@@ -46,6 +46,46 @@ jobs:
           echo "OSINT_URL=$OSINT_URL"
           echo "NEO4J_HTTP=$NEO4J_HTTP"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start core services for health checks
+        run: |
+          # Create basic .env file for docker-compose
+          cp .env.example .env
+          
+          # Set up Neo4j credentials for CI
+          echo "NEO4J_USER=neo4j" >> .env
+          echo "NEO4J_PASSWORD=testpassword123" >> .env
+          
+          # Create Neo4j env file for docker-compose
+          sudo mkdir -p /opt/veritas
+          sudo tee /opt/veritas/.env.neo4j > /dev/null << EOF
+          NEO4J_AUTH=neo4j/testpassword123
+          NEO4J_AUTH_USER=neo4j
+          NEO4J_AUTH_PASSWORD=testpassword123
+          NEO4J_DATABASE=neo4j
+          EOF
+          
+          # Start only essential services for health checks
+          echo "Starting core services..."
+          docker compose up -d redis postgres neo4j
+          
+          # Wait for core services
+          sleep 45
+          
+          # Start main API
+          docker compose up -d api || echo "API service failed to start"
+          
+          # Start veritas-web service (with profile)
+          docker compose --profile mini-web up -d veritas-web || echo "Veritas-web service failed to start"
+          
+          # Wait for API to stabilize
+          sleep 30
+          
+          echo "Service status:"
+          docker compose ps
+
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
 
@@ -135,3 +175,11 @@ jobs:
                 state: 'closed'
               });
             }
+
+      # Clean up Docker resources
+      - name: Clean up
+        if: always()
+        run: |
+          echo "Cleaning up Docker resources..."
+          docker compose down -v --remove-orphans || true
+          docker system prune -f --volumes || true
