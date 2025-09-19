@@ -1,9 +1,17 @@
-name: Health Check OpenAI
+---
+# DEPRECATED: This workflow has been superseded by veritas-health.yml
+# The new persistent health monitor (veritas-health.yml) provides:
+# - Continuous monitoring with a single rolling Issue for status tracking
+# - More efficient resource usage and better notification system
+# - Centralized health management without duplicate reporting
+#
+# This legacy workflow is preserved for manual, ad-hoc runs only.
+# For regular health monitoring, use the veritas-health.yml workflow.
 
-on:
-  schedule:
-    - cron: "0 6 * * *"   # ⏰ كل يوم الساعة 6 صباحاً UTC
-  workflow_dispatch:        # ✅ تشغيل يدوي من GitHub
+name: Legacy OpenAI Health Check (disabled)
+
+"on":
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,7 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      # غيّر هذا إلى رابط نقطة النهاية الخارجية لديك (إن لم يكن لديك نقطة نهاية، اتركه كما هو وسيُعتبر الفحص الخارجي فاشلاً/متجاوزاً)
+      # غيّر هذا إلى رابط نقطة النهاية الخارجية لديك
+      # (إن لم يكن لديك نقطة نهاية، اتركه كما هو وسيُعتبر الفحص الخارجي فاشلاً/متجاوزاً)
       EXTERNAL_URL: https://your-deployed-app-url/check-key
 
     steps:
@@ -78,5 +87,9 @@ jobs:
             echo "No ALERT_WEBHOOK_URL secret configured; skipping alert"
             exit 0
           fi
-          MESSAGE="⚠️ Health Check Failed! Internal: ${INTERNAL_FAILED:-false}, External: ${EXTERNAL_FAILED:-false} | Repo: $GITHUB_REPOSITORY | Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          curl -fsS -X POST -H "Content-Type: application/json" -d "{\"content\":\"$MESSAGE\"}" "$WEBHOOK_URL" || true
+          MESSAGE="⚠️ Health Check Failed! "
+          MESSAGE+="Internal: ${INTERNAL_FAILED:-false}, External: ${EXTERNAL_FAILED:-false} | "
+          MESSAGE+="Repo: $GITHUB_REPOSITORY | "
+          MESSAGE+="Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -fsS -X POST -H "Content-Type: application/json" \
+            -d "{\"content\":\"$MESSAGE\"}" "$WEBHOOK_URL" || true

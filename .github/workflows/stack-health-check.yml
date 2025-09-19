@@ -1,18 +1,17 @@
 ---
-name: Stack Health Check
+# DEPRECATED: This workflow has been superseded by veritas-health.yml
+# The new persistent health monitor (veritas-health.yml) provides:
+# - Continuous monitoring with a single rolling Issue for status tracking
+# - More efficient resource usage and better notification system
+# - Centralized health management without duplicate reporting
+#
+# This legacy workflow is preserved for manual, ad-hoc runs only.
+# For regular health monitoring, use the veritas-health.yml workflow.
+
+name: Legacy Stack Health Check (disabled)
 
 "on":
-  schedule:
-    # Run daily at midnight UTC
-    - cron: '0 0 * * *'
-  workflow_dispatch: true  # Allow manual triggers for testing
-  push:
-    branches: [main]
-    paths:
-      - '.env.example'
-      - 'docker-compose.yml'
-      - 'scripts/veritas_health_check.sh'
-      - '.github/workflows/stack-health-check.yml'
+  workflow_dispatch:
 
 jobs:
   stack-health-check:
