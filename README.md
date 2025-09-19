@@ -360,3 +360,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Note**: This is an educational OSINT platform. Please use responsibly and in compliance with applicable laws and regulations.
+
+## 🔑 Environment Setup
+
+1. Copy `.env.example` → `.env`
+2. Fill in real values (keys, URLs, passwords).
+3. Add them into GitHub Secrets with the same names.
+4. Docker Compose and GitHub Actions will automatically pick them up.
