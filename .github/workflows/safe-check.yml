@@ -1,0 +1,33 @@
+name: Safe Readonly Check
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+permissions:
+  contents: read
+concurrency:
+  group: safe-check-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      CORE_URL: http://localhost:8080
+      OSINT_URL: http://localhost:8081
+      NEO4J_HTTP: http://localhost:7474
+      NEO4J_USER: ${{ secrets.NEO4J_USER }}
+      NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
+      SAFE_MODE: "1"
+      DRY_RUN: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -y && sudo apt-get install -y jq
+      - run: chmod +x scripts/safe_smoke.sh
+      - name: Readonly smoke
+        run: ./scripts/safe_smoke.sh | tee safe_smoke.log
+      - uses: actions/upload-artifact@v4
+        if: ${{ success() || failure() }}
+        with:
+          name: safe-smoke
+          path: safe_smoke.log
+          retention-days: 7

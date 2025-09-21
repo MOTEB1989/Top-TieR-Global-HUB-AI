@@ -1,0 +1,18 @@
+services:
+  core-gateway-canary:
+    image: ${CORE_IMAGE:-your-core-image:tag}
+    container_name: core-canary
+    ports: ["8088:8080"]
+    environment:
+      SAFE_MODE: "1"
+      DRY_RUN: "1"
+      RATE_LIMIT_QPS: "0.5"
+      TIMEOUT_SECS: "5"
+  osint-canary:
+    image: ${OSINT_IMAGE:-your-osint-image:tag}
+    container_name: osint-canary
+    environment:
+      SAFE_MODE: "1"
+      DRY_RUN: "1"
+      RATE_LIMIT_QPS: "0.5"
+      TIMEOUT_SECS: "5"
