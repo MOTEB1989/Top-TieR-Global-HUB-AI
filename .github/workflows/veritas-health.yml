@@ -1,4 +1,4 @@
-name: Veritas Nexus • Health (Auto)
+name: Veritas Health Check
 
 env:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -13,137 +13,56 @@ env:
   CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
+  workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"   # تلقائي كل 30 دقيقة (UTC)
-  # لا تشغيل يدوي هنا (لا workflow_dispatch)، كل شيء تلقائي
+    - cron: "0 3 * * *" # تشغيل يومي الساعة 3 صباحاً UTC
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      # استهداف محلي (docker-compose) بشكل افتراضي
-      CORE_URL: http://localhost:8080
-      OSINT_URL: http://localhost:8081
-      NEO4J_HTTP: http://localhost:7474
-      NEO4J_USER: ${{ secrets.NEO4J_USER }}
-      NEO4J_PASS: ${{ secrets.NEO4J_PASS }}
-      # لو عندك فحص عبر Services داخل K8s، وفّرت kubeconfig كسِر
-      KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install deps
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq netcat-openbsd
+          echo "⏳ Waiting for CORE_API (8000) and VERITAS_WEB (8080)..."
+          for i in {1..60}; do
+            core=$(curl -sf http://localhost:8000/health || echo "fail")
+            web=$(curl -sf http://localhost:8080/health || echo "fail")
 
-      - name: Auto-select K8s Services if kubeconfig is provided
-        if: ${{ env.KUBECONFIG_B64 != '' }}
-        run: |
-          echo "$KUBECONFIG_B64" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          # استهدف Services داخل الكلاستر بدل localhost
-          echo "CORE_URL=http://veritas-core-svc"      >> $GITHUB_ENV
-          echo "OSINT_URL=http://osint-engine-svc:8081" >> $GITHUB_ENV
-          echo "NEO4J_HTTP=http://neo4j:7474"           >> $GITHUB_ENV
+            if [[ "$core" != "fail" && "$web" != "fail" ]]; then
+              echo "✅ Both services are healthy!"
+              exit 0
+            fi
 
-      - name: Show targets
-        run: |
-          echo "CORE_URL=$CORE_URL"
-          echo "OSINT_URL=$OSINT_URL"
-          echo "NEO4J_HTTP=$NEO4J_HTTP"
+            echo "Retry $i/60: services not ready yet..."
+            sleep 5
+          done
 
-      - name: Make script executable
-        run: chmod +x scripts/veritas_health_check.sh
+          echo "❌ ERROR: Services did not become healthy in time."
+          docker compose logs
+          exit 1
 
-      - name: Run health checks (with retry)
-        id: runcheck
+      - name: Run Veritas health check script
         run: |
           set -o pipefail
-          attempt() {
-            echo "== Veritas Health Check Attempt $1 ($(date -u +%FT%TZ)) =="
-            ./scripts/veritas_health_check.sh
-          }
-          # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
-          attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
+          bash scripts/veritas_health_check.sh 2>&1 | tee health.log
 
       - name: Upload health log
-        if: ${{ success() || failure() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: veritas-health-log
           path: health.log
-          retention-days: 7
 
-      - name: Job summary
-        if: ${{ success() || failure() }}
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "### ✅ Health Check: **PASSED**" >> $GITHUB_STEP_SUMMARY
-            echo "- Core/OSINT/Neo4j جميعها تعمل." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ Health Check: **FAILED**" >> $GITHUB_STEP_SUMMARY
-            echo "- راجع Artifact: **veritas-health-log**." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      # فتح Issue تلقائي عند الفشل
-      - name: Open Issue on failure
-        if: ${{ failure() }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let tail = 'log unavailable';
-            try {
-              tail = fs.readFileSync('health.log','utf8').split('\n').slice(-120).join('\n');
-            } catch(e) {}
-            const title = `❌ Veritas Health Failed – ${new Date().toISOString()}`;
-            const body = [
-              'Health check failed.',
-              `Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              `Commit: ${context.sha}`,
-              '',
-              '#### Tail of health.log',
-              '```',
-              tail,
-              '```'
-            ].join('\n');
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title,
-              body,
-              labels: ['health-check','automation','bug']
-            });
-
-      # إغلاق أي Issues مفتوحة للصحة تلقائيًا عند النجاح
-      - name: Auto-close health issues on success
-        if: ${{ success() }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: 'health-check'
-            });
-            for (const i of issues) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: i.number,
-                body: `✅ Health restored in run https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: i.number,
-                state: 'closed'
-              });
-            }
+      - name: Stop services
+        if: always()
+        run: docker compose down
