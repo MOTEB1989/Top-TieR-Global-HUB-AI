@@ -58,6 +58,38 @@ jobs:
           echo "OSINT_URL=$OSINT_URL"
           echo "NEO4J_HTTP=$NEO4J_HTTP"
 
+      - name: Install Python dependencies for health mocks
+        run: pip3 install fastapi uvicorn --quiet
+
+      - name: Start health mock servers
+        run: |
+          echo "Starting health mock servers for CI testing..."
+          python3 scripts/health_mock_servers.py &
+          MOCK_PID=$!
+          echo "MOCK_PID=$MOCK_PID" >> $GITHUB_ENV
+          echo "Started mock servers with PID: $MOCK_PID"
+          
+          # Wait for servers to start
+          sleep 3
+          
+          # Verify servers are responding
+          echo "Verifying mock servers are responding..."
+          if curl -sf http://localhost:8000/health > /dev/null; then
+            echo "✅ CORE_API mock server responding"
+          else
+            echo "❌ CORE_API mock server not responding"
+            exit 1
+          fi
+          
+          if curl -sf http://localhost:8080/health > /dev/null; then
+            echo "✅ VERITAS_WEB mock server responding"
+          else
+            echo "❌ VERITAS_WEB mock server not responding"
+            exit 1
+          fi
+          
+          echo "All mock servers started successfully"
+
       - name: Make script executable
         run: chmod +x scripts/veritas_health_check.sh
 
@@ -71,6 +103,22 @@ jobs:
           }
           # محاولتان تلقائيًا لتجاوز أي تعثر مؤقت
           attempt 1 2>&1 | tee health.log || (sleep 10 && attempt 2 2>&1 | tee -a health.log)
+
+      - name: Stop health mock servers
+        if: always()
+        run: |
+          echo "Cleaning up mock servers..."
+          if [ ! -z "$MOCK_PID" ]; then
+            echo "Stopping mock server with PID: $MOCK_PID"
+            kill $MOCK_PID 2>/dev/null || true
+            # Give process time to stop
+            sleep 2
+            # Force kill if still running
+            kill -9 $MOCK_PID 2>/dev/null || true
+            echo "Mock servers stopped"
+          else
+            echo "No mock server PID found"
+          fi
 
       - name: Upload health log
         if: ${{ success() || failure() }}
