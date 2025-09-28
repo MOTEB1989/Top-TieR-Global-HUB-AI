@@ -40,7 +40,7 @@ class Settings:
     
     # Server configuration
     HOST: str = os.getenv("MINI_WEB_HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("MINI_WEB_PORT", "8088"))
+    PORT: int = int(os.getenv("MINI_WEB_PORT", "8080"))
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     
     # Security
