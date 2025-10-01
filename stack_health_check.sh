@@ -52,7 +52,7 @@ log() {
         "ERROR")
             echo -e "${RED}[${timestamp}] ERROR:${NC} $message"
             OVERALL_STATUS="UNHEALTHY"
-            ((FAILED_CHECKS++))
+            FAILED_CHECKS=$((FAILED_CHECKS + 1))
             ;;
         "SUCCESS")
             echo -e "${GREEN}[${timestamp}] SUCCESS:${NC} $message"
@@ -67,7 +67,7 @@ log() {
 
 # Function to increment check counter
 check_start() {
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 }
 
 # Function to check if a command exists
@@ -382,13 +382,13 @@ main() {
     log "INFO" "Starting comprehensive health check..."
     
     # Run all health checks
-    check_dependencies
-    check_git_remote
-    check_ci_badge
-    check_core_health
-    check_json_response
-    check_neo4j_status
-    check_docker_services
+    check_dependencies || true
+    check_git_remote || true
+    check_ci_badge || true
+    check_core_health || true
+    check_json_response || true
+    check_neo4j_status || true
+    check_docker_services || true
     
     # Generate report
     generate_report "$contact_email"
