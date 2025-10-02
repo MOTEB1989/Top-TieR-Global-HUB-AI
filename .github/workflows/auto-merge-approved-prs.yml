@@ -1,0 +1,50 @@
+name: Auto Merge Approved PRs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Auto-merge PRs
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          merge-method: squash
+
+      - name: Merge all approved PRs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          script: |
+            const { data: prs } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open"
+            });
+
+            for (const pr of prs) {
+              const reviews = await github.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              const approved = reviews.data.some(r => r.state === "APPROVED");
+              if (approved) {
+                console.log(`Merging PR #${pr.number} - ${pr.title}`);
+                await github.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: "squash"
+                });
+              }
+            }
