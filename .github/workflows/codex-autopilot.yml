@@ -1,0 +1,39 @@
+name: Codex Autopilot
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  connect-and-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Bootstrap (auth + connect + status)
+        env:
+          LEXCODE_GITHUB_TOKEN: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          REPO_SLUG: MOTEB1989/Top-TieR-Global-HUB-AI
+        run: ./scripts/codex_bootstrap.sh
+
+      - name: Status only (store artifact)
+        env:
+          LEXCODE_GITHUB_TOKEN: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          REPO_SLUG: MOTEB1989/Top-TieR-Global-HUB-AI
+        run: ./scripts/codex_status.sh
+
+      - name: Upload status artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-status
+          path: codex_status.txt

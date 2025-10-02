@@ -1,0 +1,36 @@
+name: Knowledge Base Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-kb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build Vector KB
+        env:
+          REPO_ROOT: .
+          KB_COLLECTION: lexcode_kb
+          KB_PATH: .kb_store
+          EMB_MODEL: sentence-transformers/all-MiniLM-L6-v2
+        run: |
+          python knowledge/index_repo.py
+
+      - name: Upload KB store
+        uses: actions/upload-artifact@v4
+        with:
+          name: lexcode-kb
+          path: .kb_store
