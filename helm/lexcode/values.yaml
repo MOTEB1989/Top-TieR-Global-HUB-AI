@@ -1,0 +1,33 @@
+image:
+  gateway: myrepo/lexcode-gateway:latest
+  runner: myrepo/lexcode-runner:latest
+  kb: myrepo/lexcode-kb:latest
+  dashboard: myrepo/lexcode-dashboard:latest
+
+secrets:
+  openaiKey: "sk-xxxx"
+  hfKey: "hf_xxxx"
+  anthropicKey: "anth_xxxx"
+  dbUrl: "postgres://user:pass@db:5432/lexcode"
+
+ingress:
+  enabled: true
+  hosts:
+    api: api.lexcode.ai
+    hub: hub.lexcode.ai
+    grafana: grafana.lexcode.ai
+    kb: kb.lexcode.ai
+    runner: runner.lexcode.ai
+
+monitoring:
+  enabled: true
+  prometheus:
+    scrapeInterval: 15s
+  grafana:
+    adminUser: admin
+    adminPassword: admin
+    dashboards:
+      - name: "Gateway Overview"
+        file: dashboards/gateway.json
+      - name: "Runner Metrics"
+        file: dashboards/runner.json

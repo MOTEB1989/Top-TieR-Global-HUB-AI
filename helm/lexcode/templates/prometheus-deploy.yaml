@@ -1,0 +1,62 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.prometheus }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lexcode-prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: {{ default "30s" .Values.monitoring.prometheus.scrapeInterval }}
+    scrape_configs:
+      - job_name: "gateway"
+        static_configs:
+          - targets: ["lexcode-gateway:3000"]
+      - job_name: "runner"
+        static_configs:
+          - targets: ["lexcode-runner:4000"]
+      - job_name: "kb"
+        static_configs:
+          - targets: ["lexcode-kb:5000"]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexcode-prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lexcode-prometheus
+  template:
+    metadata:
+      labels:
+        app: lexcode-prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config
+          configMap:
+            name: lexcode-prometheus-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexcode-prometheus
+spec:
+  ports:
+    - port: 9090
+      targetPort: 9090
+  selector:
+    app: lexcode-prometheus
+{{- end }}
