@@ -76,6 +76,7 @@ Thumbs.db
 *.temp
 /tmp/
 temp/
+.kb_store/
 
 # Configuration
 .env.local
