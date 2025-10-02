@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runner
+  namespace: {{ include "lexcode.ns" . }}
+spec:
+  replicas: {{ .Values.replicaCount.runner }}
+  selector: { matchLabels: { app: runner } }
+  template:
+    metadata: { labels: { app: runner } }
+    spec:
+      containers:
+        - name: runner
+          image: {{ .Values.image.runner }}
+          ports: [{ containerPort: 8000 }]
+          envFrom: [{ secretRef: { name: lexcode-secrets } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: runner-svc
+  namespace: {{ include "lexcode.ns" . }}
+spec:
+  selector: { app: runner }
+  ports: [{ port: 8000, targetPort: 8000 }]

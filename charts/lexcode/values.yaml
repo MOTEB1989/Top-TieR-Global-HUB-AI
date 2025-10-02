@@ -1,0 +1,43 @@
+عدّل الدومينات والأسرار حسب بيئتك.
+
+namespace: lexcode
+
+image:
+  gateway: myorg/lexcode-gateway:latest
+  runner: myorg/lexcode-runner:latest
+  dashboard: myorg/lexcode-dashboard:latest
+
+replicaCount:
+  gateway: 2
+  runner: 1
+  dashboard: 2
+
+domain:
+  dashboard: hub.lexcode.ai
+  api: api.lexcode.ai
+  grafana: grafana.lexcode.ai   # نطاق Grafana
+
+secrets:
+  LEXCODE_OPENAI_KEY: "sk-xxxx"
+  LEXCODE_HF_KEY: "hf_xxxx"
+  LEXCODE_ANTHROPIC_KEY: "sk-ant-xxx"
+  LEXCODE_GITHUB_TOKEN: "ghp_xxx"
+  PG_HOST: "postgres-host"
+  PG_DB: "mydb"
+  PG_USER: "user"
+  PG_PASS: "pass"
+  OPENSEARCH_URL: "http://opensearch:9200"
+
+prometheus:
+  scrapeInterval: 5s
+  # غيّر هذه الخدمات حسب منافذك الفعلية
+  targets:
+    - name: gateway
+      target: "gateway-svc:5000"
+    - name: runner
+      target: "runner-svc:8000"
+
+grafana:
+  adminPassword: "admin"     # غيّرها فورًا في الإنتاج
+  datasourceName: "Prometheus"
+  prometheusURL: "http://prometheus:9090"
