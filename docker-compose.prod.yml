@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  gateway:
+    image: ghcr.io/OWNER/REPO/gateway:latest
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - LEXCODE_GITHUB_TOKEN=${LEXCODE_GITHUB_TOKEN}
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+
+  llm_api:
+    image: ghcr.io/OWNER/REPO/llm_api:latest
+    container_name: llm_api
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - HF_KEY=${HF_KEY}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+
+  dashboard:
+    image: ghcr.io/OWNER/REPO/dashboard:latest
+    container_name: dashboard
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - gateway
+      - llm_api
