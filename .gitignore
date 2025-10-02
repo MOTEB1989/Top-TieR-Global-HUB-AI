@@ -107,3 +107,5 @@ yarn-error.log*
 *.bak
 *.backup
 *.old
+# Next.js build output
+.dashboard/.next/
