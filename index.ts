@@ -12,6 +12,14 @@ app.use(express.json());
 const PORT = Number(process.env.API_PORT || 3000);
 const CORE_URL = process.env.CORE_URL || 'http://localhost:8080';
 
+// Debug route: expose KEY and KEY2 status (for testing secrets)
+app.get('/v1/debug/keys', (_req, res) => {
+  res.json({
+    KEY: process.env.KEY ? '✅ موجود' : '❌ غير موجود',
+    KEY2: process.env.KEY2 ? '✅ موجود' : '❌ غير موجود',
+  });
+});
+
 app.get('/v1/health', async (_req, res) => {
   try {
     const r = await axios.get(`${CORE_URL}/health`);
