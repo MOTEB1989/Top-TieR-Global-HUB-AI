@@ -7,6 +7,8 @@ requests==2.32.4
 beautifulsoup4>=4.12.2
 PyMuPDF>=1.23.8
 python-dotenv>=1.0.0
+prometheus-client>=0.20.0
+opensearch-py>=2.5.0
 openai==0.27.10
 
 # Development/testing dependencies

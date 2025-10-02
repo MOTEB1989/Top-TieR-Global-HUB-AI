@@ -18,7 +18,8 @@ from typing import Any, Dict, List, Optional
 
 import psycopg2
 from psycopg2.extras import Json
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 # ==========
 # إعداد الاتصال بقاعدة البيانات
@@ -110,6 +111,20 @@ def apply_rule(transaction: Dict[str, Any]) -> Dict[str, Any]:
 # 5) FastAPI endpoints
 # ==========
 app = FastAPI(title="Expert Committee Service")
+
+requests_total = Counter("committee_requests_total", "Committee service requests", ["route", "method", "status"])
+
+
+@app.middleware("http")
+async def count_requests(request: Request, call_next):
+    response = await call_next(request)
+    requests_total.labels(request.url.path, request.method, str(response.status_code)).inc()
+    return response
+
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.post("/bootstrap")
