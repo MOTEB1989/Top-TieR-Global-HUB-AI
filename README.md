@@ -109,6 +109,30 @@ Services included in Docker Compose:
    - Interactive API Docs: http://localhost:8000/docs
    - Health Check: http://localhost:8000/health
 
+## Repository Embedding with Weaviate
+
+The project includes a helper script that encodes repository files with SentenceTransformers and uploads them to a Weaviate collection. This is useful for building semantic search or retrieval-augmented generation workflows on top of the codebase.
+
+1. **Ensure dependencies are installed** (the script relies on `sentence-transformers` and `weaviate-client`):
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Start Weaviate** (Docker example):
+   ```bash
+   docker run -p 8080:8080 -e QUERY_DEFAULTS_LIMIT=100 -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true semitechnologies/weaviate:latest
+   ```
+
+3. **Run the ingestion script:**
+   ```bash
+   python scripts/index_repo_in_weaviate.py \
+     --host http://localhost:8080 \
+     --class-name RepoFile \
+     --model sentence-transformers/all-MiniLM-L6-v2
+   ```
+
+   The script scans the repository for `.py`, `.md`, `.yml`, and `.yaml` files, creates the `RepoFile` class if needed, and uploads each file's contents and embedding in configurable batches. Use `--dry-run` to preview the files that would be processed without performing any uploads.
+
 ## OSINT Query Scripts
 
 The repository includes powerful command-line tools for OSINT data collection and analysis:
