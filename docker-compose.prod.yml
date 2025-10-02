@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  gateway:
+    image: myorg/lexcode-gateway:latest
+    container_name: lexcode_gateway
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - LEXCODE_HF_KEY=${LEXCODE_HF_KEY}
+      - LEXCODE_ANTHROPIC_KEY=${LEXCODE_ANTHROPIC_KEY}
+      - LEXCODE_GITHUB_TOKEN=${LEXCODE_GITHUB_TOKEN}
+      - GATEWAY_URL=http://gateway:5000
+    networks:
+      - lexcode_net
+
+  runner:
+    image: myorg/lexcode-runner:latest
+    container_name: lexcode_runner
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - LEXCODE_GITHUB_TOKEN=${LEXCODE_GITHUB_TOKEN}
+      - PG_HOST=${PG_HOST}
+      - PG_DB=${PG_DB}
+      - PG_USER=${PG_USER}
+      - PG_PASS=${PG_PASS}
+      - OPENSEARCH_URL=${OPENSEARCH_URL}
+    networks:
+      - lexcode_net
+
+  dashboard:
+    image: myorg/lexcode-dashboard:latest
+    container_name: lexcode_dashboard
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://gateway:5000
+    networks:
+      - lexcode_net
+
+networks:
+  lexcode_net:
+    driver: bridge
