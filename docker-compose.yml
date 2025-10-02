@@ -1,50 +1,13 @@
 services:
-  core_api:
-    build: ./api_server
-    command: uvicorn api_server:app --host 0.0.0.0 --port 8000
-    env_file:
-      - .env
-      - /opt/veritas/.env.neo4j
-    volumes:
-      - ./api_server:/app
-    ports:
-      - "8000:8000"
+  core:
+    build: ./core
+    ports: ["8080:8080"]
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      DB_URL: ${DB_URL:-}
-
-  veritas_web:
-    build: ./veritas-web
-    command: uvicorn app:app --host 0.0.0.0 --port 8080
-    env_file:
-      - .env
-      - /opt/veritas/.env.neo4j
-    volumes:
-      - ./veritas-web:/app
-    ports:
-      - "8080:8080"
-
-  neo4j:
-    image: neo4j:5
-    env_file:
-      - /opt/veritas/.env.neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+      RUST_LOG: info
+  api:
+    build: ./services/api
+    ports: ["3000:3000"]
+    env_file: .env
+    depends_on: [core]
     environment:
-      # يتم تحميل بيانات الاعتماد من ملف env_file الآمن
-      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/neo4j}
-    volumes:
-      - neo4j-data:/data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - >-
-          cypher-shell -u "$${NEO4J_USER:-neo4j}" -p "$${NEO4J_PASSWORD:-neo4j}" 'RETURN 1;'
-          || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  neo4j-data:
+      CORE_URL: ${CORE_URL:-http://core:8080}
