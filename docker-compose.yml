@@ -11,3 +11,15 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: dashboard
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - gateway
+      - llm_api
