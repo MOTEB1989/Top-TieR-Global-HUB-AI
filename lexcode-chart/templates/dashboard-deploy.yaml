@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexcode-dashboard
+spec:
+  replicas: {{ .Values.replicaCount.dashboard }}
+  selector:
+    matchLabels:
+      app: lexcode-dashboard
+  template:
+    metadata:
+      labels:
+        app: lexcode-dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: {{ .Values.image.dashboard }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.dashboard.port }}
+          env:
+            - name: LEXCODE_OPENAI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: openaiKey
+            - name: LEXCODE_HF_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: hfKey
+            - name: LEXCODE_ANTHROPIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: anthropicKey
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: dbUrl
+          {{- with .Values.resources.dashboard }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexcode-dashboard
+spec:
+  selector:
+    app: lexcode-dashboard
+  ports:
+    - name: http
+      port: {{ .Values.service.dashboard.port }}
+      targetPort: {{ .Values.service.dashboard.port }}
+      protocol: TCP
