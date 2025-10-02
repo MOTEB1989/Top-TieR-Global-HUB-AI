@@ -1,0 +1,29 @@
+lexcode_version: 0.1
+project: Top-TieR Global HUB AI
+description: Sample automation workflow for the LexCode runner prototype.
+
+tasks:
+  - id: 1
+    name: List repository files
+    steps:
+      - fetch:
+          source: github.repo
+          path: ""
+      - render:
+          type: web.list
+          options:
+            title: Repository files snapshot
+
+  - id: 2
+    name: Generate embeddings for summary
+    steps:
+      - fetch:
+          source: github.repo
+          path: README.md
+      - process:
+          model: huggingface/sentence-transformers/all-MiniLM-L6-v2
+          operation: embeddings
+      - render:
+          type: db.store
+          options:
+            database: sqlite
