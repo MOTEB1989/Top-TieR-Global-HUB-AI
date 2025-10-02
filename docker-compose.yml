@@ -9,5 +9,9 @@ services:
     ports: ["3000:3000"]
     env_file: .env
     depends_on: [core]
+    volumes:
+      - ./.kb_store:/app/.kb_store
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+      KB_PATH: /app/.kb_store
+      KB_COLLECTION: lexcode_kb
