@@ -25,3 +25,36 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```bash
 curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
 ```
+
+## Runner Service (FastAPI)
+يوفّر مجلّد `runner_service/` غلافًا بسيطًا حول `LexCodeRunner` عبر FastAPI.
+
+### بناء وتشغيل الحاوية
+```bash
+docker build -t myorg/lexcode-runner ./runner_service
+docker run -d -p 8000:8000 --name runner myorg/lexcode-runner
+```
+
+### نقاط النهاية
+- `GET /health` — فحص الصحة.
+- `POST /run` — تشغيل وصفة YAML مباشرة من الطلب.
+
+مثال استخدام:
+```bash
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipe": {
+      "project": "demo",
+      "tasks": [
+        {
+          "id": "t1",
+          "name": "Hello World",
+          "steps": [
+            {"process": {"model": "gpt-3.5-turbo", "prompt": "اكتب حكمة قصيرة"}}
+          ]
+        }
+      ]
+    }
+  }'
+```

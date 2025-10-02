@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pyyaml
+openai
+psycopg2-binary
+redis
+neo4j
+sentence-transformers
+torch
