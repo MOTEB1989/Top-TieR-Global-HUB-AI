@@ -1,0 +1,49 @@
+namespace: lexcode
+
+image:
+  gateway: myorg/lexcode-gateway:latest
+  runner: myorg/lexcode-runner:latest
+  dashboard: myorg/lexcode-dashboard:latest
+
+replicaCount:
+  gateway: 2
+  runner: 1
+  dashboard: 2
+
+domain:
+  dashboard: hub.lexcode.ai
+  api: api.lexcode.ai
+  grafana: grafana.lexcode.ai
+
+secrets:
+  LEXCODE_OPENAI_KEY: "sk-xxxx"
+  LEXCODE_HF_KEY: "hf_xxxx"
+  LEXCODE_ANTHROPIC_KEY: "sk-ant-xxx"
+  LEXCODE_GITHUB_TOKEN: "ghp_xxx"
+  PG_HOST: "postgres-host"
+  PG_DB: "mydb"
+  PG_USER: "user"
+  PG_PASS: "pass"
+  OPENSEARCH_URL: "http://opensearch:9200"
+  REDIS_URL: "redis://redis:6379/0"
+  NEO4J_URI: "bolt://neo4j:7687"
+  NEO4J_USER: "neo4j"
+  NEO4J_PASS: "neo4j"
+
+prometheus:
+  scrapeInterval: 5s
+  targets:
+    - name: gateway
+      target: "gateway-svc:5000"
+    - name: runner
+      target: "runner-svc:8000"
+
+grafana:
+  adminPassword: "admin"
+  datasourceName: "Prometheus"
+  prometheusURL: "http://prometheus:9090"
+
+resources:
+  runner:
+    limits: { cpu: "500m", memory: "1Gi" }
+    requests: { cpu: "200m", memory: "512Mi" }
