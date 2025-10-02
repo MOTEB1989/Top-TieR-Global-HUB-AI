@@ -1,0 +1,67 @@
+{
+  "title": "LexCode Runner Observability",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Runs",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "runner_requests_total" }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Errors",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "runner_errors_total" }]
+    },
+    {
+      "type": "graph",
+      "title": "Runs per Minute",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "targets": [{ "expr": "rate(runner_requests_total[1m])" }]
+    },
+    {
+      "type": "graph",
+      "title": "Error Rate",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "targets": [{
+        "expr": "rate(runner_errors_total[5m]) / rate(runner_requests_total[5m])"
+      }]
+    },
+    {
+      "type": "heatmap",
+      "title": "Run Duration (95th Percentile)",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(runner_duration_seconds_bucket[5m]))"
+      }]
+    },
+    {
+      "type": "logs",
+      "title": "Runner Logs (Loki)",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 10 },
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{app=\"runner\"}",
+          "datasource": { "type": "loki", "uid": "loki-ds" }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prom-ds" },
+        "query": "label_values(kube_pod_info, namespace)"
+      }
+    ]
+  }
+}
