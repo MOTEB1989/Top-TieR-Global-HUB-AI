@@ -1,0 +1,143 @@
+name: CI / CD
+
+on:
+  push:
+    branches: ["main", "master", "develop", "dev"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  services:
+    name: "${{ matrix.service }} pipeline"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, llm-api, runner, dashboard]
+    env:
+      PYTHON_VERSION: "3.11"
+      NODE_VERSION: "20"
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: matrix.service == 'gateway' || matrix.service == 'dashboard'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        if: matrix.service == 'gateway'
+        run: npm ci
+
+      - name: Build Gateway service
+        if: matrix.service == 'gateway'
+        run: npm run build
+
+      - name: Install Dashboard dependencies
+        if: matrix.service == 'dashboard'
+        working-directory: veritas-web
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Dashboard application
+        if: matrix.service == 'dashboard'
+        working-directory: veritas-web
+        run: python -m compileall .
+
+      - name: Set up Python
+        if: matrix.service == 'llm-api'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install LLM API dependencies
+        if: matrix.service == 'llm-api'
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Run API unit tests
+        if: matrix.service == 'llm-api'
+        run: pytest -m "not e2e"
+
+      - name: Set up Runner environment
+        if: matrix.service == 'runner'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Runner dependencies
+        if: matrix.service == 'runner'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r veritas-mini-web/requirements.txt
+
+      - name: Validate Runner service
+        if: matrix.service == 'runner'
+        working-directory: veritas-mini-web
+        run: python -m compileall .
+
+      - name: Deploy Dashboard to Vercel
+        if: matrix.service == 'dashboard' && github.ref == 'refs/heads/main' && env.VERCEL_TOKEN != ''
+        run: |
+          npm install --global vercel@latest
+          vercel deploy --prebuilt --prod \
+            --token "$VERCEL_TOKEN" \
+            --project "$VERCEL_PROJECT_ID" \
+            --org "$VERCEL_ORG_ID"
+
+      - name: Build Docker image
+        if: matrix.service != 'dashboard'
+        run: |
+          IMAGE_NAME="${{ matrix.service }}"
+          docker build -f Dockerfile . -t "$IMAGE_NAME"
+
+      - name: Login to container registry
+        if: matrix.service != 'dashboard' && env.CONTAINER_REGISTRY != ''
+        run: echo "$REGISTRY_PASSWORD" | docker login "$CONTAINER_REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin
+
+      - name: Push container image
+        if: matrix.service != 'dashboard' && env.CONTAINER_REGISTRY != ''
+        run: |
+          IMAGE_NAME="${{ matrix.service }}"
+          docker tag "$IMAGE_NAME" "$CONTAINER_REGISTRY/$IMAGE_NAME:latest"
+          docker push "$CONTAINER_REGISTRY/$IMAGE_NAME:latest"
+
+      - name: Skipped deployment notice
+        if: matrix.service == 'dashboard' && (env.VERCEL_TOKEN == '' || github.ref != 'refs/heads/main')
+        run: echo "Dashboard deployment skipped. Configure VERCEL_* secrets and push to main to enable."
+
+      - name: Skipped image publish notice
+        if: matrix.service != 'dashboard' && env.CONTAINER_REGISTRY == ''
+        run: echo "Container registry credentials missing; skipping image publish."
+
+  integration-tests:
+    name: "Integration / E2E"
+    runs-on: ubuntu-latest
+    needs: services
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+      - name: Run integration test suite
+        run: pytest -m "integration or e2e"
+      - name: Report missing test markers
+        if: always()
+        run: echo "Ensure integration/e2e tests are marked appropriately."
