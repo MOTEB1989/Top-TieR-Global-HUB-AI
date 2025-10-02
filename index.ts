@@ -12,6 +12,7 @@ app.use(express.json());
 const PORT = Number(process.env.API_PORT || 3000);
 const CORE_URL = process.env.CORE_URL || 'http://localhost:8080';
 
+/* ---------------- Health Check ---------------- */
 app.get('/v1/health', async (_req, res) => {
   try {
     const r = await axios.get(`${CORE_URL}/health`);
@@ -21,6 +22,7 @@ app.get('/v1/health', async (_req, res) => {
   }
 });
 
+/* ---------------- Embedding ---------------- */
 const EmbedSchema = z.object({ text: z.string().min(1) });
 
 app.post('/v1/embed', async (req, res) => {
@@ -34,12 +36,7 @@ app.post('/v1/embed', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`LexCode API on http://localhost:${PORT}`);
-});
-
-
-/** ---------------- AI Inference ---------------- */
+/* ---------------- AI Inference (OpenAI) ---------------- */
 import type { ChatMessage } from './providers/ai';
 import { OpenAIProvider } from './providers/openai';
 
@@ -55,5 +52,25 @@ app.post('/v1/ai/infer', async (req, res) => {
     res.json({ provider: 'openai', ...out });
   } catch (e: any) {
     res.status(500).json({ error: e?.message || 'inference_failed' });
+  }
+});
+
+/* ---------------- Debug Keys (KEY + KEY2) ---------------- */
+app.get('/v1/debug/keys', (_req, res) => {
+  res.json({
+    KEY: process.env.KEY ? '✅ موجود' : '❌ غير موجود',
+    KEY2: process.env.KEY2 ? '✅ موجود' : '❌ غير موجود',
+  });
+});
+
+/* ---------------- Start Server ---------------- */
+app.listen(PORT, () => {
+  console.log(`LexCode API on http://localhost:${PORT}`);
+
+  if (!process.env.KEY) {
+    console.warn('⚠️ تحذير: المتغيّر KEY غير موجود في البيئة!');
+  }
+  if (!process.env.KEY2) {
+    console.warn('⚠️ تحذير: المتغيّر KEY2 غير موجود في البيئة!');
   }
 });
