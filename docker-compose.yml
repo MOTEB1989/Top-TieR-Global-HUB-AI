@@ -11,3 +11,10 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  nginx:
+    image: nginx:latest
+    container_name: lexcode_nginx
+    ports: ["80:80"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [gateway, dashboard, grafana, kb, runner]
