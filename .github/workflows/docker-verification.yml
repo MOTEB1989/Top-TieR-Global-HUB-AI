@@ -1,0 +1,62 @@
+name: Verify Docker Services
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # تثبيت Docker Buildx (داعم لـ compose)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # تحميل الـ secrets من GitHub
+      - name: Export secrets to env
+        run: |
+          echo "LEXCODE_GITHUB_TOKEN=${{ secrets.LEXCODE_GITHUB_TOKEN }}" >> $GITHUB_ENV
+          echo "LEXCODE_OPENAI_KEY=${{ secrets.LEXCODE_OPENAI_KEY }}" >> $GITHUB_ENV
+
+      # التحقق من وجود الأسرار
+      - name: Check secrets
+        run: |
+          if [ -z "$LEXCODE_GITHUB_TOKEN" ]; then
+            echo "❌ Missing LEXCODE_GITHUB_TOKEN"
+            exit 1
+          fi
+          if [ -z "$LEXCODE_OPENAI_KEY" ]; then
+            echo "❌ Missing LEXCODE_OPENAI_KEY"
+            exit 1
+          fi
+          echo "✅ Secrets available"
+
+      # تشغيل docker compose للتحقق من الخدمات
+      - name: Build and start services
+        run: |
+          docker compose up --build -d
+          sleep 15
+          docker compose ps
+
+      # التحقق من أن Gateway يستجيب
+      - name: Test Gateway health
+        run: |
+          curl -f http://localhost:3000/health || exit 1
+
+      # التحقق من أن llm_api يستجيب
+      - name: Test LLM API
+        run: |
+          curl -X POST http://localhost:5000/chat \
+            -H "Content-Type: application/json" \
+            -d '{"message":"ping","provider":"openai"}' || exit 1
+
+      # إيقاف الحاويات بعد الاختبار
+      - name: Shutdown Docker services
+        if: always()
+        run: docker compose down
