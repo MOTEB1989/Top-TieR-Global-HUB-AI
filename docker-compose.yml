@@ -11,3 +11,12 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  kb_api:
+    build: ./services/kb_api
+    ports: ["5100:5100"]
+    environment:
+      - KB_PATH=.kb_store
+      - KB_COLLECTION=lexcode_kb
+      - EMB_MODEL=sentence-transformers/all-MiniLM-L6-v2
+    volumes:
+      - ./.kb_store:/app/.kb_store
