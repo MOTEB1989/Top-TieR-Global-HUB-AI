@@ -1,0 +1,52 @@
+{
+  "title": "LexCode Runner Metrics",
+  "schemaVersion": 27,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Runs",
+      "targets": [
+        {
+          "expr": "runner_requests_total"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Errors",
+      "targets": [
+        {
+          "expr": "runner_errors_total"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Runs per Minute",
+      "targets": [
+        {
+          "expr": "rate(runner_requests_total[1m])"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Error Rate",
+      "targets": [
+        {
+          "expr": "rate(runner_errors_total[5m]) / rate(runner_requests_total[5m])"
+        }
+      ]
+    },
+    {
+      "type": "heatmap",
+      "title": "Run Duration (95th Percentile)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(runner_duration_seconds_bucket[5m]))"
+        }
+      ]
+    }
+  ]
+}

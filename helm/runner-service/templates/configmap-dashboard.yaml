@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: runner-grafana-dashboard
+  labels:
+    grafana_dashboard: "1"
+    {{- include "runner-service.labels" . | nindent 4 }}
+data:
+  grafana-dashboard-runner.json: |
+{{ .Files.Get "files/grafana-dashboard-runner.json" | indent 6 }}

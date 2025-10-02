@@ -3,11 +3,13 @@ uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
 python-multipart>=0.0.6
 psycopg2-binary>=2.9
+PyYAML>=6.0.1
 requests==2.32.4
 beautifulsoup4>=4.12.2
 PyMuPDF>=1.23.8
 python-dotenv>=1.0.0
 openai==0.27.10
+prometheus-client>=0.20.0
 
 # Development/testing dependencies
 pytest>=8.0.0
