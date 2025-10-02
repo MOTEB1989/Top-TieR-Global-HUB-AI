@@ -1,0 +1,19 @@
+name: Codex Autopilot
+
+on:
+  push:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  autopilot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Codex
+        run: |
+          codex auth github --token ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          codex connect github --repo MOTEB1989/Top-TieR-Global-HUB-AI
+          codex status github --repo MOTEB1989/Top-TieR-Global-HUB-AI
