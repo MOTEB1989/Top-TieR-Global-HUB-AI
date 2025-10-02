@@ -1,0 +1,15 @@
+{
+  "count": 2,
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/v1/ai/infer",
+      "layer": "internal"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/ai/external",
+      "layer": "external"
+    }
+  ]
+}
