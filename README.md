@@ -13,6 +13,8 @@ docker compose up --build
 - Rust Core على `http://localhost:8080`
 - API Gateway على `http://localhost:3000`
 
+للحصول على إرشادات مفصلة حول دورة التطوير باستخدام Docker (بما في ذلك التحقق من نقاط الصحة واختبار مسار الاستدلال) راجع ملف [docs/docker-dev-workflow.md](docs/docker-dev-workflow.md).
+
 
 ## استخدام /v1/ai/infer (OpenAI)
 ضع مفتاحك في `.env`:
