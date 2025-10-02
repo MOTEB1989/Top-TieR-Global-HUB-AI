@@ -24,13 +24,7 @@ echo "Service will be available at: http://localhost:8088"
 echo "API Documentation: http://localhost:8088/docs (when DEBUG=true)"
 
 echo ""
-echo "3. Stack Health Check"
-echo "----------------------"
-echo "To run comprehensive health checks, run:"
-echo "./stack_health_check.sh \"your-email@example.com\""
-
-echo ""
-echo "4. Manual Testing Commands"
+echo "3. Manual Testing Commands"
 echo "---------------------------"
 
 echo ""
@@ -68,6 +62,5 @@ echo "==========================================================================
 echo "- All services are optional and can be enabled individually"
 echo "- Change the API_TOKEN in production environments"  
 echo "- Neo4j script creates constraints and indexes safely"
-echo "- Health check script works with or without running services"
 echo "- CodeQL workflow will run automatically on pushes to main"
 echo "============================================================================"

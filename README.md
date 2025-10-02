@@ -2,9 +2,10 @@
 
 
 [![CI](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/CI.yml/badge.svg)](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/CI.yml)
-[![Daily Readonly Health](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/daily-readonly-check.yml/badge.svg)](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions/workflows/daily-readonly-check.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-modern-green.svg)](https://fastapi.tiangolo.com)
+
+> **Note:** Automated health check workflows have been removed from this repository. Run any environment validation manually when needed.
 
 ## Project Objectives
 

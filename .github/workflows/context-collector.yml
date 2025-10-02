@@ -32,10 +32,10 @@ jobs:
           sudo apt-get install -y jq
 
       - name: Make script executable
-        run: chmod +x collect_context_for_claude.sh
+        run: chmod +x scripts/collect_context_for_claude.sh
 
       - name: Run context collector
-        run: ./collect_context_for_claude.sh
+        run: ./scripts/collect_context_for_claude.sh
 
       - name: Upload generated files
         uses: actions/upload-artifact@v4
