@@ -22,6 +22,7 @@ app.get('/v1/health', async (_req, res) => {
 });
 
 const EmbedSchema = z.object({ text: z.string().min(1) });
+const ExternalSchema = z.object({ message: z.string().min(1) });
 
 app.post('/v1/embed', async (req, res) => {
   const parsed = EmbedSchema.safeParse(req.body);
@@ -31,6 +32,35 @@ app.post('/v1/embed', async (req, res) => {
     res.json(r.data);
   } catch (e: any) {
     res.status(500).json({ error: e?.message });
+  }
+});
+
+app.post('/v1/ai/external', async (req, res) => {
+  const parsed = ExternalSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.format());
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'OPENAI_API_KEY is not configured' });
+  }
+
+  try {
+    const r = await axios.post(
+      'https://api.lexcode.ai/chat',
+      {
+        provider: 'openai',
+        message: parsed.data.message,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }
+    );
+    res.json(r.data);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Failed to connect to LexCode API', details: e?.message });
   }
 });
 

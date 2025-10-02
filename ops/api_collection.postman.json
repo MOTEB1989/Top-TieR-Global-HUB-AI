@@ -1,0 +1,48 @@
+{
+  "info": {
+    "name": "Top-TieR-Global-HUB-AI",
+    "_postman_id": "lexcode-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Infer (Rust internal)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/v1/ai/infer",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "ai", "infer"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"اختبار بسيط\"\n}"
+        }
+      }
+    },
+    {
+      "name": "External (LexCode API)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/v1/ai/external",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "ai", "external"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"مرحبا، كيف حالك؟\"\n}"
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" }
+  ]
+}
