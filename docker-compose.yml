@@ -1,13 +1,67 @@
+version: "3.9"
+
 services:
-  core:
-    build: ./core
-    ports: ["8080:8080"]
-    environment:
-      RUST_LOG: info
-  api:
+  gateway:
     build: ./services/api
-    ports: ["3000:3000"]
-    env_file: .env
-    depends_on: [core]
+    container_name: lexcode_gateway
+    ports:
+      - "3000:3000"
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - LEXCODE_HF_KEY=${LEXCODE_HF_KEY}
+      - LEXCODE_ANTHROPIC_KEY=${LEXCODE_ANTHROPIC_KEY}
+    depends_on:
+      - runner
+      - kb
+
+  runner:
+    build: ./services/runner
+    container_name: lexcode_runner
+    ports:
+      - "4000:4000"
+    environment:
+      - DB_URL=${DB_URL}
+      - OPENAI_API_KEY=${LEXCODE_OPENAI_KEY}
+
+  kb:
+    build: ./knowledge
+    container_name: lexcode_kb
+    ports:
+      - "5000:5000"
+    environment:
+      - KB_PATH=/data/kb
+    volumes:
+      - kb_data:/data
+
+  dashboard:
+    build: ./dashboard
+    container_name: lexcode_dashboard
+    ports:
+      - "8080:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=https://api.lexcode.ai
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lexcode_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lexcode_grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  kb_data:
+  grafana_data:
