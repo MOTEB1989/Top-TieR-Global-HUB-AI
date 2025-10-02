@@ -1,0 +1,11 @@
+monitoring:
+  grafana:
+    dashboards:
+      - name: "Gateway Overview"
+        file: dashboards/gateway.json
+      - name: "Runner Metrics"
+        file: dashboards/runner.json
+      - name: "Knowledge Base Metrics"
+        file: dashboards/kb.json
+      - name: "Security Dashboard"
+        file: dashboards/security.json
