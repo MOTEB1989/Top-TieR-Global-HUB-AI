@@ -1,0 +1,78 @@
+name: Runner Alerts
+
+on:
+  repository_dispatch:
+    types: [runner_alert]
+
+jobs:
+  handle-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Prepare alert content
+        id: prep
+        run: |
+          mkdir -p log
+          FILE="log/alert-$(date +'%Y%m%d-%H%M%S').md"
+          echo "# ⚠️ Runner Alert" > $FILE
+          echo "" >> $FILE
+          echo "**Summary:** ${{ github.event.client_payload.summary }}" >> $FILE
+          echo "" >> $FILE
+          echo "**Description:**" >> $FILE
+          echo "${{ github.event.client_payload.desc }}" >> $FILE
+          echo "" >> $FILE
+          echo "**Triggered at:** $(date -u)" >> $FILE
+          echo "file=$FILE" >> $GITHUB_OUTPUT
+
+      - name: Create Issue
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "⚠️ [Runner Alert] ${{ github.event.client_payload.summary }}"
+          content-filepath: ${{ steps.prep.outputs.file }}
+          labels: |
+            alert
+            runner
+
+      - name: Open PR
+        id: create-pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "📝 Add runner alert log"
+          branch: alert-log-${{ github.run_id }}
+          title: "📝 Alert log PR: ${{ github.event.client_payload.summary }}"
+          body: |
+            هذا PR يحتوي على ملف Log جديد للتنبيه:
+            - **Summary:** ${{ github.event.client_payload.summary }}
+            - **Description:** ${{ github.event.client_payload.desc }}
+          labels: |
+            alert
+            runner
+          add-paths: |
+            log/**
+
+      - name: Create alert status check
+        if: steps.create-pr.outputs.pull-request-head-sha != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const summary = context.payload.client_payload.summary || 'Runner Alert';
+            const description = context.payload.client_payload.desc || 'No description provided.';
+            const headSha = '${{ steps.create-pr.outputs.pull-request-head-sha }}';
+            const detailsUrl = '${{ steps.create-pr.outputs.pull-request-url }}';
+
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Runner Alert Status',
+              head_sha: headSha,
+              status: 'completed',
+              conclusion: 'action_required',
+              details_url: detailsUrl || undefined,
+              output: {
+                title: `Runner alert: ${summary}`,
+                summary: description
+              }
+            });
