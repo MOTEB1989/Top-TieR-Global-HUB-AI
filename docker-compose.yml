@@ -11,3 +11,17 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  llm_api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.llm_api
+    container_name: llm_api
+    ports:
+      - "5000:5000"
+    environment:
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - LEXCODE_HF_KEY=${LEXCODE_HF_KEY}
+      - LEXCODE_ANTHROPIC_KEY=${LEXCODE_ANTHROPIC_KEY}
+      - GATEWAY_URL=http://gateway:3000
+    depends_on:
+      - gateway

@@ -4,6 +4,7 @@ pydantic>=2.5.0
 python-multipart>=0.0.6
 psycopg2-binary>=2.9
 requests==2.32.4
+anthropic
 beautifulsoup4>=4.12.2
 PyMuPDF>=1.23.8
 python-dotenv>=1.0.0
