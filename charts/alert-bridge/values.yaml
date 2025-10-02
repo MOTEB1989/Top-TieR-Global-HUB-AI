@@ -1,0 +1,16 @@
+namespace: lexcode
+
+image:
+  repository: myorg/alert-bridge
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 5000
+
+secrets:
+  LEXCODE_GITHUB_TOKEN: "ghp_xxx"  # عدلها إلى الـ GitHub token الصحيح
+  GITHUB_REPO: "MOTEB1989/Top-TieR-Global-HUB-AI"

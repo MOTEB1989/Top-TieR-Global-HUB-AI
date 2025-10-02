@@ -1,0 +1,6 @@
+apiVersion: v2
+name: alert-bridge
+description: "Bridge to forward Prometheus Alertmanager webhooks to GitHub repository_dispatch"
+type: application
+version: 0.1.0
+appVersion: "1.0"
