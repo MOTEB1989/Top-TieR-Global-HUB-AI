@@ -1,0 +1,53 @@
+name: LexCode Runner
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  run-lexcode:
+    runs-on: ubuntu-latest
+    env:
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_DB: ${{ secrets.PG_DB }}
+      PG_USER: ${{ secrets.PG_USER }}
+      PG_PASS: ${{ secrets.PG_PASS }}
+      LEXCODE_GITHUB_TOKEN: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+      LEXCODE_OPENAI_KEY: ${{ secrets.LEXCODE_OPENAI_KEY }}
+      GITHUB_REPO: MOTEB1989/Top-TieR-Global-HUB-AI
+      OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        working-directory: lexcode_runner
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run LexCode Runner
+        working-directory: lexcode_runner
+        run: |
+          python runner.py
+
+      - name: Collect logs
+        if: always()
+        run: |
+          mkdir -p artifacts
+          cp -R lexcode_runner/*.log artifacts/ || true
+
+      - name: Upload logs (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lexcode-runner-logs
+          path: artifacts

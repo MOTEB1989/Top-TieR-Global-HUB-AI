@@ -11,3 +11,22 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  lexcode-runner:
+    build:
+      context: ./lexcode_runner
+      dockerfile: Dockerfile
+    container_name: lexcode_runner
+    environment:
+      - PG_HOST=${PG_HOST}
+      - PG_DB=${PG_DB}
+      - PG_USER=${PG_USER}
+      - PG_PASS=${PG_PASS}
+      - LEXCODE_GITHUB_TOKEN=${LEXCODE_GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO:-MOTEB1989/Top-TieR-Global-HUB-AI}
+      - LEXCODE_OPENAI_KEY=${LEXCODE_OPENAI_KEY}
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://opensearch:9200}
+    volumes:
+      - ./lexcode_runner/lexcode.yaml:/app/lexcode.yaml:ro
+    depends_on:
+      - gateway
+      # - opensearch  # إن فعّلت خدمة OpenSearch في compose

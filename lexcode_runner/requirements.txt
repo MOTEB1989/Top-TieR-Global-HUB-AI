@@ -1,0 +1,6 @@
+pyyaml
+psycopg2
+requests
+openai
+sentence-transformers
+tqdm

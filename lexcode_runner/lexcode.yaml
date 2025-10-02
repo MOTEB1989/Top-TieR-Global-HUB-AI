@@ -1,0 +1,28 @@
+version: "1.0"
+tasks:
+  - name: sample-github-listing
+    fetch:
+      source: github.repo
+      path: ""
+    process:
+      model: gpt-4o-mini
+      operation: chat
+      prompt: |
+        Summarize the fetched repository contents and highlight noteworthy files.
+        Respond in Markdown with sections for directories and files when possible.
+    render:
+      type: web.list
+      options:
+        title: "Repository Summary"
+
+  - name: sample-postgres-query
+    fetch:
+      source: postgres
+      query: "SELECT NOW() as timestamp"
+    process:
+      model: huggingface/all-MiniLM-L6-v2
+      operation: embeddings
+    render:
+      type: db.store
+      options:
+        database: sqlite
