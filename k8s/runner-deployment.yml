@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runner
+  namespace: lexcode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: runner
+  template:
+    metadata:
+      labels:
+        app: runner
+    spec:
+      containers:
+        - name: runner
+          image: myorg/lexcode-runner:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: lexcode-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: runner-svc
+  namespace: lexcode
+spec:
+  type: ClusterIP
+  selector:
+    app: runner
+  ports:
+    - port: 8000
+      targetPort: 8000
