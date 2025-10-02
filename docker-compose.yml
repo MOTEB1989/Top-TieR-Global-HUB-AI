@@ -1,13 +1,42 @@
+version: "3.9"
 services:
   core:
     build: ./core
     ports: ["8080:8080"]
-    environment:
-      RUST_LOG: info
+
   api:
     build: ./services/api
     ports: ["3000:3000"]
-    env_file: .env
     depends_on: [core]
+
+  db_sqlite:
+    build: ./adapters/python/db_sqlite
+    ports: ["5001:5001"]
+
+  db_postgres:
+    build: ./adapters/python/db_postgres
+    ports: ["5002:5002"]
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/lexcode
+    depends_on: [postgres]
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lexcode
+    ports: ["5432:5432"]
+
+  db_mongo:
+    build: ./adapters/python/db_mongo
+    ports: ["5003:5003"]
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+    depends_on: [mongo]
+
+  mongo:
+    image: mongo:6
+    restart: always
+    ports: ["27017:27017"]
