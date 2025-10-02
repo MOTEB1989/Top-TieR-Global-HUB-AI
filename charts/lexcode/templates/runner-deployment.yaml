@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runner
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount.runner }}
+  selector:
+    matchLabels: { app: runner }
+  template:
+    metadata:
+      labels: { app: runner }
+    spec:
+      containers:
+        - name: runner
+          image: {{ .Values.image.runner }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef: { name: lexcode-secrets }
+          # The container image is expected to launch uvicorn for runner_service.py on port 8000.
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+{{- with .Values.resources.runner }}
+          resources:
+{{ toYaml . | nindent 12 }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: runner-svc
+  namespace: {{ .Values.namespace }}
+spec:
+  selector: { app: runner }
+  ports:
+    - port: 8000
+      targetPort: 8000
