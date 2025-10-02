@@ -1,0 +1,94 @@
+name: CodeX Autopilot GPT Web
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autopilot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup GPT Web App
+        run: |
+          mkdir -p app/static
+          # Backend
+          cat <<'PY' > app/main.py
+          from fastapi import FastAPI
+          from pydantic import BaseModel
+          import openai, os
+
+          openai.api_key = os.getenv("OPENAI_API_KEY")
+          app = FastAPI()
+
+          class ChatRequest(BaseModel):
+              message: str
+
+          @app.post("/chat")
+          async def chat(req: ChatRequest):
+              response = openai.ChatCompletion.create(
+                  model="gpt-3.5-turbo",
+                  messages=[{"role": "user", "content": req.message}]
+              )
+              return {"reply": response.choices[0].message["content"]}
+          PY
+
+          # Frontend
+          cat <<'HTML' > app/static/index.html
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8"/>
+            <title>LexCode GPT Chat</title>
+          </head>
+          <body>
+            <h1>🤖 LexCode GPT Chat</h1>
+            <div id="chat"></div>
+            <input id="msg" type="text" placeholder="اكتب رسالتك..."/>
+            <button onclick="send()">إرسال</button>
+            <script>
+              async function send() {
+                let text = document.getElementById("msg").value;
+                let res = await fetch("/chat", {
+                  method: "POST",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({message: text})
+                });
+                let data = await res.json();
+                document.getElementById("chat").innerHTML += `<p><b>أنت:</b> ${text}</p>`;
+                document.getElementById("chat").innerHTML += `<p><b>GPT:</b> ${data.reply}</p>`;
+              }
+            </script>
+          </body>
+          </html>
+          HTML
+
+          # Dockerfile
+          cat <<'DOCKER' > Dockerfile
+          FROM python:3.11-slim
+          WORKDIR /app
+          COPY app/ /app/
+          RUN pip install fastapi uvicorn openai
+          CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+          DOCKER
+
+      - name: Commit generated files
+        run: |
+          git config --global user.name "CodeX Autopilot"
+          git config --global user.email "codex@autopilot"
+          git add .
+          git commit -m "🤖 Auto-generate GPT Web App by CodeX" || echo "No changes"
+          git push
+
+      - name: Deploy GPT Web in Docker
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          docker build -t gpt-web .
+          docker run -d -p 8000:8000 -e OPENAI_API_KEY=$OPENAI_API_KEY gpt-web
