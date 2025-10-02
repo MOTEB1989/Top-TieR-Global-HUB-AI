@@ -1,0 +1,56 @@
+image:
+  gateway: myrepo/lexcode-gateway:latest
+  runner: myrepo/lexcode-runner:latest
+  kb: myrepo/lexcode-kb:latest
+  dashboard: myrepo/lexcode-dashboard:latest
+  grafana: grafana/grafana:latest
+  prometheus: prom/prometheus:latest
+
+resources:
+  gateway: {}
+  runner: {}
+  kb: {}
+  dashboard: {}
+  grafana: {}
+  prometheus: {}
+
+secrets:
+  openaiKey: "sk-xxxx"
+  hfKey: "hf_xxxx"
+  anthropicKey: "anth_xxxx"
+  dbUrl: "postgres://user:pass@db:5432/lexcode"
+
+service:
+  gateway:
+    port: 3000
+  runner:
+    port: 4000
+  kb:
+    port: 5000
+  dashboard:
+    port: 3000
+  grafana:
+    port: 3000
+  prometheus:
+    port: 9090
+
+replicaCount:
+  gateway: 2
+  runner: 1
+  kb: 1
+  dashboard: 1
+  grafana: 1
+  prometheus: 1
+
+ingress:
+  enabled: true
+  hosts:
+    api: api.lexcode.ai
+    hub: hub.lexcode.ai
+    grafana: grafana.lexcode.ai
+    kb: kb.lexcode.ai
+    runner: runner.lexcode.ai
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

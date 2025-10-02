@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexcode-gateway
+spec:
+  replicas: {{ .Values.replicaCount.gateway }}
+  selector:
+    matchLabels:
+      app: lexcode-gateway
+  template:
+    metadata:
+      labels:
+        app: lexcode-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: {{ .Values.image.gateway }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.gateway.port }}
+          env:
+            - name: LEXCODE_OPENAI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: openaiKey
+            - name: LEXCODE_HF_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: hfKey
+            - name: LEXCODE_ANTHROPIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: anthropicKey
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: dbUrl
+          {{- with .Values.resources.gateway }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexcode-gateway
+spec:
+  selector:
+    app: lexcode-gateway
+  ports:
+    - name: http
+      port: {{ .Values.service.gateway.port }}
+      targetPort: {{ .Values.service.gateway.port }}
+      protocol: TCP

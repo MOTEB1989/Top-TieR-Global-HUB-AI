@@ -1,0 +1,69 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lexcode-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hosts.api }}
+        - {{ .Values.ingress.hosts.hub }}
+        - {{ .Values.ingress.hosts.grafana }}
+        - {{ .Values.ingress.hosts.kb }}
+        - {{ .Values.ingress.hosts.runner }}
+      secretName: lexcode-tls
+  rules:
+    - host: {{ .Values.ingress.hosts.api }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lexcode-gateway
+                port:
+                  number: {{ .Values.service.gateway.port }}
+    - host: {{ .Values.ingress.hosts.hub }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lexcode-dashboard
+                port:
+                  number: {{ .Values.service.dashboard.port }}
+    - host: {{ .Values.ingress.hosts.grafana }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: {{ .Values.service.grafana.port }}
+    - host: {{ .Values.ingress.hosts.kb }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lexcode-kb
+                port:
+                  number: {{ .Values.service.kb.port }}
+    - host: {{ .Values.ingress.hosts.runner }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lexcode-runner
+                port:
+                  number: {{ .Values.service.runner.port }}
+{{- end }}

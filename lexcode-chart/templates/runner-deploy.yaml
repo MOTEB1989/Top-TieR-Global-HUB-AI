@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexcode-runner
+spec:
+  replicas: {{ .Values.replicaCount.runner }}
+  selector:
+    matchLabels:
+      app: lexcode-runner
+  template:
+    metadata:
+      labels:
+        app: lexcode-runner
+    spec:
+      containers:
+        - name: runner
+          image: {{ .Values.image.runner }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.runner.port }}
+          env:
+            - name: LEXCODE_OPENAI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: openaiKey
+            - name: LEXCODE_HF_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: hfKey
+            - name: LEXCODE_ANTHROPIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: anthropicKey
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: dbUrl
+          {{- with .Values.resources.runner }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexcode-runner
+spec:
+  selector:
+    app: lexcode-runner
+  ports:
+    - name: http
+      port: {{ .Values.service.runner.port }}
+      targetPort: {{ .Values.service.runner.port }}
+      protocol: TCP

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexcode-kb
+spec:
+  replicas: {{ .Values.replicaCount.kb }}
+  selector:
+    matchLabels:
+      app: lexcode-kb
+  template:
+    metadata:
+      labels:
+        app: lexcode-kb
+    spec:
+      containers:
+        - name: kb
+          image: {{ .Values.image.kb }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.kb.port }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lexcode-secrets
+                  key: dbUrl
+          {{- with .Values.resources.kb }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexcode-kb
+spec:
+  selector:
+    app: lexcode-kb
+  ports:
+    - name: http
+      port: {{ .Values.service.kb.port }}
+      targetPort: {{ .Values.service.kb.port }}
+      protocol: TCP
