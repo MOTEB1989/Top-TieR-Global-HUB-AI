@@ -1,0 +1,143 @@
+{
+  "info": {
+    "name": "LexCode API Collection",
+    "_postman_id": "lexcode-auto",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /v1/health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:3000/v1/health",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1:3000"
+          ],
+          "path": [
+            "v1",
+            "health"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"hello\"\n}"
+        }
+      }
+    },
+    {
+      "name": "POST /v1/embed",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:3000/v1/embed",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1:3000"
+          ],
+          "path": [
+            "v1",
+            "embed"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"hello\"\n}"
+        }
+      }
+    },
+    {
+      "name": "POST /v1/ai/infer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:3000/v1/ai/infer",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1:3000"
+          ],
+          "path": [
+            "v1",
+            "ai",
+            "infer"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"hello\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:3000/health",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1:3000"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"hello\"\n}"
+        }
+      }
+    },
+    {
+      "name": "POST /embed",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:3000/embed",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1:3000"
+          ],
+          "path": [
+            "embed"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"hello\"\n}"
+        }
+      }
+    }
+  ]
+}

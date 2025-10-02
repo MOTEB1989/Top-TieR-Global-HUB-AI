@@ -1,0 +1,40 @@
+{
+  "count": 5,
+  "routes": [
+    {
+      "file": "index.ts",
+      "method": "GET",
+      "path": "/v1/health",
+      "lang": "js",
+      "layer": "unknown"
+    },
+    {
+      "file": "index.ts",
+      "method": "POST",
+      "path": "/v1/embed",
+      "lang": "js",
+      "layer": "unknown"
+    },
+    {
+      "file": "index.ts",
+      "method": "POST",
+      "path": "/v1/ai/infer",
+      "lang": "js",
+      "layer": "unknown"
+    },
+    {
+      "file": "main.rs",
+      "method": "GET",
+      "path": "/health",
+      "lang": "rs",
+      "layer": "internal"
+    },
+    {
+      "file": "main.rs",
+      "method": "POST",
+      "path": "/embed",
+      "lang": "rs",
+      "layer": "internal"
+    }
+  ]
+}
