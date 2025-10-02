@@ -22,7 +22,7 @@ import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Depends, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from cryptography.fernet import Fernet
 import uvicorn
@@ -60,6 +60,87 @@ class Settings:
     ENABLE_ENCRYPTION: bool = os.getenv("ENABLE_ENCRYPTION", "false").lower() == "true"
 
 settings = Settings()
+
+API_DOCS_TEMPLATE = """
+<!DOCTYPE html>
+<html lang=\"en\">
+  <head>
+    <meta charset=\"utf-8\" />
+    <title>Top-TieR Platform API Docs</title>
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 2rem auto; max-width: 960px; line-height: 1.6; color: #0f172a; }
+      code { background: #f1f5f9; padding: 0.15rem 0.35rem; border-radius: 4px; }
+      pre { background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+      h1, h2, h3 { color: #0f172a; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .endpoint { border-left: 4px solid #2563eb; padding-left: 1rem; margin: 1.5rem 0; }
+      .tag { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.8rem; margin-right: 0.4rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Platform API Consumption Guide</h1>
+    <p>
+      Use this guide to integrate the dashboard with the gateway, LLM API, and runner services.
+      Secure every request with the <code>X-API-KEY</code> header mapped through the central RBAC configuration.
+    </p>
+
+    <section class=\"endpoint\">
+      <h2><span class=\"tag\">Gateway</span> Graph Routing</h2>
+      <p>Proxy entry point for orchestrating LLM requests.</p>
+      <pre><code>POST https://your-domain.com:3000/chat
+Headers:
+  X-API-KEY: &lt;dev-or-admin-key&gt;
+Body:
+  {"message": "Ping"}</code></pre>
+    </section>
+
+    <section class=\"endpoint\">
+      <h2><span class=\"tag\">LLM API</span> Direct Chat</h2>
+      <p>Interact directly with the language model service.</p>
+      <pre><code>POST https://your-domain.com:5000/chat
+Headers:
+  Content-Type: application/json
+  X-API-KEY: &lt;dev-or-admin-key&gt;
+Body:
+  {
+    "prompt": "Summarise the last intelligence report",
+    "model": "gpt-3.5-turbo",
+    "temperature": 0.3
+  }</code></pre>
+    </section>
+
+    <section class=\"endpoint\">
+      <h2><span class=\"tag\">Runner</span> Execute Playbook</h2>
+      <p>Trigger YAML automation workflows via the runner service.</p>
+      <pre><code>POST https://your-domain.com:8000/runner/run
+Headers:
+  Content-Type: application/json
+  X-API-KEY: &lt;admin-key&gt;
+Body:
+  {
+    "workflow": "operations/osint-basic.yml",
+    "inputs": {"query": "threat actor foo"}
+  }</code></pre>
+    </section>
+
+    <section class=\"endpoint\">
+      <h2><span class=\"tag\">Health</span> Dashboards</h2>
+      <p>Quick status checks for uptime monitors.</p>
+      <ul>
+        <li><code>GET https://your-domain.com:3000/health</code> – Gateway</li>
+        <li><code>GET https://your-domain.com:5000/health</code> – LLM API</li>
+        <li><code>GET https://your-domain.com:8000/health</code> – Runner</li>
+        <li><code>GET https://your-dashboard.vercel.app/api/health</code> – Dashboard</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Need access? Request a role assignment from the platform administrator.</p>
+    </footer>
+  </body>
+</html>
+"""
 
 # Pydantic models
 class HealthResponse(BaseModel):
@@ -273,7 +354,7 @@ async def health_check():
     
     # Check Neo4j (placeholder - would need neo4j driver)
     dependencies["neo4j"] = "not_implemented"
-    
+
     return HealthResponse(
         status="healthy",
         timestamp=datetime.now(timezone.utc),
@@ -281,6 +362,13 @@ async def health_check():
         uptime=uptime,
         dependencies=dependencies
     )
+
+
+@app.get("/docs/api", response_class=HTMLResponse)
+async def render_api_docs() -> HTMLResponse:
+    """Render a lightweight dashboard documentation page."""
+
+    return HTMLResponse(content=API_DOCS_TEMPLATE)
 
 @app.post("/query", response_model=QueryResponse, dependencies=[Depends(verify_token)])
 async def private_query(

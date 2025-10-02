@@ -7,6 +7,10 @@ requests==2.32.4
 beautifulsoup4>=4.12.2
 PyMuPDF>=1.23.8
 python-dotenv>=1.0.0
+fastapi-limiter>=0.1.6
+redis>=5.0.4
+prometheus-fastapi-instrumentator>=6.1.0
+hvac>=1.2.3
 openai==0.27.10
 
 # Development/testing dependencies

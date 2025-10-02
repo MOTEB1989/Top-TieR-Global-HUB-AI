@@ -1,15 +1,19 @@
+import json
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from api_server import app
+os.environ.setdefault("RBAC_API_KEYS", json.dumps({"test-admin": "admin", "test-viewer": "viewer"}))
+
+from api_server import Role, app
 from gpt_client import GPTClient, GPTRequest, GPTResponse
 
 
 client = TestClient(app)
+client.headers.update({"X-API-KEY": "test-admin"})
 
 
 class TestGPTClient:
@@ -76,17 +80,17 @@ class TestGPTEndpoint:
     def test_gpt_endpoint_no_api_key(self):
         """Test /gpt endpoint without API key configured"""
         with patch.dict(os.environ, {}, clear=True):
-            # Reinitialize the gpt_client in the module
-            with patch('api_server.gpt_client') as mock_client:
-                mock_client.is_available.return_value = False
-                
-                response = client.post(
-                    "/gpt",
-                    json={"prompt": "Hello, world!"}
-                )
-                
-                assert response.status_code == 503
-                assert "GPT service unavailable" in response.json()["detail"]
+            with patch('api_server.rbac_manager.get_role', return_value=Role.ADMIN):
+                with patch('api_server.gpt_client') as mock_client:
+                    mock_client.is_available.return_value = False
+
+                    response = client.post(
+                        "/gpt",
+                        json={"prompt": "Hello, world!"}
+                    )
+
+                    assert response.status_code == 503
+                    assert "GPT service unavailable" in response.json()["detail"]
     
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
@@ -94,14 +98,15 @@ class TestGPTEndpoint:
     )
     def test_gpt_endpoint_live(self):
         """Live test with actual OpenAI API (skips without key)"""
-        response = client.post(
-            "/gpt",
-            json={
-                "prompt": "Say 'Hello, world!' in one word",
-                "max_tokens": 5,
-                "temperature": 0.1
-            }
-        )
+        with patch('api_server.rbac_manager.get_role', return_value=Role.ADMIN):
+            response = client.post(
+                "/gpt",
+                json={
+                    "prompt": "Say 'Hello, world!' in one word",
+                    "max_tokens": 5,
+                    "temperature": 0.1
+                }
+            )
         
         assert response.status_code == 200
         data = response.json()
@@ -128,10 +133,11 @@ class TestGPTEndpoint:
             return mock_response
         mock_client.generate_response = mock_generate_response
         
-        response = client.post(
-            "/gpt",
-            json={"prompt": "Hello, world!", "max_tokens": 50}
-        )
+        with patch('api_server.rbac_manager.get_role', return_value=Role.ADMIN):
+            response = client.post(
+                "/gpt",
+                json={"prompt": "Hello, world!", "max_tokens": 50}
+            )
         
         assert response.status_code == 200
         data = response.json()
@@ -149,10 +155,11 @@ class TestGPTEndpoint:
             raise ValueError("Invalid request")
         mock_client.generate_response = mock_generate_response
         
-        response = client.post(
-            "/gpt",
-            json={"prompt": "Hello, world!"}
-        )
+        with patch('api_server.rbac_manager.get_role', return_value=Role.ADMIN):
+            response = client.post(
+                "/gpt",
+                json={"prompt": "Hello, world!"}
+            )
         
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid request"
@@ -167,10 +174,11 @@ class TestGPTEndpoint:
             raise RuntimeError("API Error")
         mock_client.generate_response = mock_generate_response
         
-        response = client.post(
-            "/gpt",
-            json={"prompt": "Hello, world!"}
-        )
+        with patch('api_server.rbac_manager.get_role', return_value=Role.ADMIN):
+            response = client.post(
+                "/gpt",
+                json={"prompt": "Hello, world!"}
+            )
         
         assert response.status_code == 500
         assert response.json()["detail"] == "API Error"
