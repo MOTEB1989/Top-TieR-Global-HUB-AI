@@ -1,0 +1,27 @@
+name: CodeX Full System Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  system-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run CodeX Full Check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DB_URL: ${{ secrets.DB_URL }}
+          OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+          MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          NEO4J_URI: ${{ secrets.NEO4J_URI }}
+          NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}
+          CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
+        run: bash .github/scripts/codex-full-check.sh
