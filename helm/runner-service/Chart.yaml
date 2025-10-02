@@ -1,0 +1,5 @@
+apiVersion: v2
+name: runner-service
+description: Helm chart for the LexCode runner service
+version: 0.1.0
+appVersion: "1.0.0"
