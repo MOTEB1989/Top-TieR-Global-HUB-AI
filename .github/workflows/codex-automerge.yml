@@ -1,0 +1,20 @@
+name: CodeX Auto-Merge
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # يشتغل كل ساعة
+  workflow_dispatch:       # تشغيل يدوي عند الطلب
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install jq and GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gh
+      - name: Run CodeX Auto-Merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/codex-automerge.sh
