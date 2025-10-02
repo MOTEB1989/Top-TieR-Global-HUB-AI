@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import client from 'prom-client';
 import { z } from 'zod';
 
 dotenv.config();
@@ -11,6 +12,33 @@ app.use(express.json());
 
 const PORT = Number(process.env.API_PORT || 3000);
 const CORE_URL = process.env.CORE_URL || 'http://localhost:8080';
+let embedder: unknown = null;
+
+const registry = new client.Registry();
+client.collectDefaultMetrics({ register: registry });
+
+const httpReqs = new client.Counter({
+  name: 'gw_http_requests_total',
+  help: 'HTTP requests',
+  labelNames: ['route', 'method', 'status'],
+});
+
+registry.registerMetric(httpReqs);
+
+app.use((req, res, next) => {
+  const originalEnd = res.end;
+  res.end = function (...args: any[]) {
+    httpReqs.inc({ route: req.path, method: req.method, status: String(res.statusCode) });
+    // @ts-ignore - express typings don't like rest args passthrough
+    return originalEnd.apply(this, args);
+  } as typeof res.end;
+  next();
+});
+
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', registry.contentType);
+  res.end(await registry.metrics());
+});
 
 app.get('/v1/health', async (_req, res) => {
   try {
@@ -34,14 +62,35 @@ app.post('/v1/embed', async (req, res) => {
   }
 });
 
+app.post('/v1/kb/reload', (_req, res) => {
+  embedder = null;
+  res.json({ ok: true, reloaded: true });
+});
+
+app.post('/v1/kb/search_os', async (req, res) => {
+  const query = typeof req.body?.query === 'string' ? req.body.query.trim() : '';
+  if (!query) {
+    return res.status(400).json({ error: 'query is required' });
+  }
+  try {
+    const response = await axios.post('http://opensearch:9200/lexcode_kb/_search', {
+      query: { match: { text: query } },
+      size: 5,
+    });
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(502).json({ error: error?.message || 'opensearch_error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`LexCode API on http://localhost:${PORT}`);
 });
 
 
 /** ---------------- AI Inference ---------------- */
-import type { ChatMessage } from './providers/ai';
-import { OpenAIProvider } from './providers/openai';
+import type { ChatMessage } from './ai';
+import { OpenAIProvider } from './openai';
 
 const provider = new OpenAIProvider();
 

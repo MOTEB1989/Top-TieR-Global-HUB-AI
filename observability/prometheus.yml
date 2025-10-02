@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: gateway
+    static_configs:
+      - targets: ['api:3000']
+
+  - job_name: llm_api
+    static_configs:
+      - targets: ['llm_api:5000']
+
+  - job_name: python_db_services
+    static_configs:
+      - targets: ['db_sqlite:5001','db_postgres:5002','db_mongo:5003','db_mysql:5004','db_redis:5005','db_neo4j:5006','db_clickhouse:5007']

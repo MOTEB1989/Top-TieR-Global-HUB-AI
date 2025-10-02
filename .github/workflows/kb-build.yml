@@ -1,0 +1,42 @@
+name: Build Knowledge Base
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'knowledge/**'
+      - '.github/workflows/kb-build.yml'
+
+jobs:
+  build-kb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Build Vector KB
+        env:
+          REPO_ROOT: .
+          KB_COLLECTION: lexcode_kb
+          KB_PATH: .kb_store
+          EMB_MODEL: sentence-transformers/all-MiniLM-L6-v2
+        run: python knowledge/index_repo.py
+      - name: Notify Gateway to reload KB (optional)
+        if: always()
+        env:
+          GATEWAY_RELOAD_URL: ${{ secrets.GATEWAY_RELOAD_URL }}
+          GATEWAY_ADMIN_TOKEN: ${{ secrets.GATEWAY_ADMIN_TOKEN }}
+        run: |
+          if [ -n "${GATEWAY_RELOAD_URL}" ] && [ -n "${GATEWAY_ADMIN_TOKEN}" ]; then
+            curl -X POST "$GATEWAY_RELOAD_URL" \
+              -H "Authorization: Bearer ${GATEWAY_ADMIN_TOKEN}" \
+              -d '{}' || true
+          fi

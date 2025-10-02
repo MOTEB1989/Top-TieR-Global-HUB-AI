@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-policies
+data:
+  policy.rego: |
+    package gateway.authz
+
+    default allow = false
+
+    allow {
+      input.request.headers["x-api-key"] == input.secrets.gateway_key
+    }
