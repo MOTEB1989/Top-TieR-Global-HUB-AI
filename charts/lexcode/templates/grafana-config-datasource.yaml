@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: {{ include "lexcode.ns" . }}
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: {{ .Values.grafana.datasourceName }}
+        type: prometheus
+        access: proxy
+        url: {{ .Values.grafana.prometheusURL }}
+        isDefault: true
