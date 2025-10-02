@@ -1,0 +1,79 @@
+namespace: lexcode
+
+loki:
+  enabled: true
+  image: grafana/loki:2.9.0
+  servicePort: 3100
+  config:
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9096
+    ingester:
+      lifecycler:
+        address: 127.0.0.1
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+        final_sleep: 0s
+      chunk_idle_period: 5m
+      chunk_retain_period: 30s
+      max_transfer_retries: 0
+    schema_config:
+      configs:
+        - from: 2020-10-15
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /loki/index
+        cache_location: /loki/cache
+        shared_store: filesystem
+      filesystem:
+        directory: /loki/chunks
+    compactor:
+      working_directory: /loki/compactor
+      shared_store: filesystem
+    limits_config:
+      retention_period: 168h
+    chunk_store_config:
+      max_look_back_period: 0s
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 168h
+
+promtail:
+  enabled: true
+  image: grafana/promtail:2.9.0
+  config:
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+    positions:
+      filename: /tmp/positions.yaml
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+    scrape_configs:
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+grafana:
+  datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+    - name: Loki
+      type: loki
+      url: http://loki:3100
