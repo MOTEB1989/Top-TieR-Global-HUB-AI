@@ -42,17 +42,30 @@ app.listen(PORT, () => {
 /** ---------------- AI Inference ---------------- */
 import type { ChatMessage } from './providers/ai';
 import { OpenAIProvider } from './providers/openai';
+import { AnthropicProvider } from './providers/anthropic';
+import { HuggingFaceProvider } from './providers/huggingface';
 
-const provider = new OpenAIProvider();
+const openai = new OpenAIProvider();
+const anthropic = new AnthropicProvider();
+const huggingface = new HuggingFaceProvider();
 
 app.post('/v1/ai/infer', async (req, res) => {
   try {
-    const body = req.body as { messages: ChatMessage[]; model?: string; temperature?: number };
+    const body = req.body as { messages: ChatMessage[]; model?: string; temperature?: number; provider?: string };
     if (!body?.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
       return res.status(400).json({ error: 'messages: ChatMessage[] is required' });
     }
-    const out = await provider.infer(body.messages, { model: body.model, temperature: body.temperature });
-    res.json({ provider: 'openai', ...out });
+    let out;
+    if (body.provider === 'anthropic') {
+      out = await anthropic.infer(body.messages, { model: body.model, temperature: body.temperature });
+      res.json({ provider: 'anthropic', ...out });
+    } else if (body.provider === 'huggingface') {
+      out = await huggingface.infer(body.messages, { model: body.model, temperature: body.temperature });
+      res.json({ provider: 'huggingface', ...out });
+    } else {
+      out = await openai.infer(body.messages, { model: body.model, temperature: body.temperature });
+      res.json({ provider: 'openai', ...out });
+    }
   } catch (e: any) {
     res.status(500).json({ error: e?.message || 'inference_failed' });
   }
