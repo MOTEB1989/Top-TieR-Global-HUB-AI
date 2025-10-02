@@ -25,3 +25,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```bash
 curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
 ```
+
+## التحقق من ربط Codex ومساحات المعرفة
+
+للتأكد من أن نماذج Codex الخاصة بك تستخدم مساحات المعرفة الصحيحة (مثل `saudi_banks/` و`saudi_nexus/` و`mohsen_gj/`)، راجع الدليل التفصيلي في [`docs/knowledge-base-namespaces.md`](docs/knowledge-base-namespaces.md).
