@@ -34,6 +34,51 @@ app.post('/v1/embed', async (req, res) => {
   }
 });
 
+/* ---------------- Unified DB Query ---------------- */
+app.post('/v1/db/query', async (req, res) => {
+  try {
+    const body = req.body as {
+      db: string;          // "sqlite" | "postgres" | "mongo" | "mysql" | "redis" | "neo4j" | "clickhouse"
+      action?: string;     // نوع العملية (مثل health, get, set, query)
+      payload?: any;       // البيانات المطلوب تمريرها
+    };
+
+    if (!body.db) return res.status(400).json({ error: "db field required" });
+
+    const map: Record<string, string> = {
+      sqlite: "http://db_sqlite:5001",
+      postgres: "http://db_postgres:5002",
+      mongo: "http://db_mongo:5003",
+      mysql: "http://db_mysql:5004",
+      redis: "http://db_redis:5005",
+      neo4j: "http://db_neo4j:5006",
+      clickhouse: "http://db_clickhouse:5007"
+    };
+
+    const baseUrl = map[body.db];
+    if (!baseUrl) return res.status(400).json({ error: `Unsupported db: ${body.db}` });
+
+    // افتراضي: health
+    const action = body.action || "health";
+
+    // نقرر URL حسب نوع الـ action
+    let url = `${baseUrl}/${action}`;
+    let method = "get";
+    let data: any = undefined;
+
+    if (["set", "add", "documents", "query"].includes(action)) {
+      method = "post";
+      data = body.payload || {};
+    }
+
+    const r = await axios({ method, url, data });
+    res.json({ db: body.db, response: r.data });
+
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || "db_query_failed" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`LexCode API on http://localhost:${PORT}`);
 });
