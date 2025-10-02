@@ -1,0 +1,10 @@
+{{- if .Values.promtail.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+data:
+  config.yaml: |
+{{- toYaml .Values.promtail.config | nindent 4 }}
+{{- end }}
