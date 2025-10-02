@@ -11,3 +11,9 @@ services:
     depends_on: [core]
     environment:
       CORE_URL: ${CORE_URL:-http://core:8080}
+  dashboard:
+    build: ./dashboard
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=${GATEWAY_URL:-http://api:3000}
+    ports: ["3100:3100"]
+    depends_on: [api]

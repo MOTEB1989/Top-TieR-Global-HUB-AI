@@ -79,6 +79,7 @@ temp/
 
 # Configuration
 .env.local
+!dashboard/.env.local
 .env.development
 .env.staging
 .env.production
@@ -93,6 +94,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dashboard/.next/
 
 # Jupyter Notebook
 .ipynb_checkpoints
