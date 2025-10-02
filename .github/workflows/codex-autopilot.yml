@@ -1,0 +1,44 @@
+name: Codex Autopilot
+
+on:
+  push:
+    branches:
+      - "*"
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  autopilot:
+    name: Authenticate and capture Codex status
+    runs-on: ubuntu-latest
+
+    env:
+      LEXCODE_GITHUB_TOKEN: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Codex CLI
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install lexcode-codex
+
+      - name: Bootstrap Codex integration
+        run: scripts/codex_bootstrap.sh
+
+      - name: Capture Codex status report
+        run: scripts/codex_status.sh
+
+      - name: Upload Codex status artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-status-report
+          path: codex_status.txt
+          if-no-files-found: warn
