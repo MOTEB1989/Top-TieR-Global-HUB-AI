@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>💬 مستودعك الذكي</title>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background: #f2f2f2;
+      padding: 2em;
+      direction: rtl;
+      text-align: right;
+    }
+    h2 {
+      color: #222;
+    }
+    textarea, input, select, button {
+      width: 100%;
+      padding: 1em;
+      margin-top: 1em;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      background: white;
+      padding: 1em;
+      margin-top: 2em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🤖 واجهة محادثة مع مستودعك</h2>
+
+  <label for="task">🧠 نوع المهمة:</label>
+  <select id="task">
+    <option value="audit">🔍 تحليل الحوكمة (Saudi Nexus)</option>
+    <option value="explain">📘 شرح ملف كود (محسن جي جي)</option>
+    <option value="finance-check">💰 تحليل مالي (Saudi Banks)</option>
+  </select>
+
+  <label for="filePath">📁 مسار الملف (اختياري):</label>
+  <input type="text" id="filePath" placeholder="مثال: ai_agents/mohsen_jj/explainer.py" />
+
+  <button onclick="runTask()">🚀 تشغيل</button>
+
+  <div class="result" id="output">⬅️ النتائج ستظهر هنا...</div>
+
+  <script>
+    async function runTask() {
+      const task = document.getElementById("task").value;
+      const filePath = document.getElementById("filePath").value;
+      const output = document.getElementById("output");
+
+      output.textContent = "⏳ جاري التشغيل...";
+
+      try {
+        const response = await fetch("https://your-deployed-gateway.com/v1/lex/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            task,
+            file_path: filePath || undefined
+          })
+        });
+
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = "❌ حدث خطأ أثناء الاتصال: " + err.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
