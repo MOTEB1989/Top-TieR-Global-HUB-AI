@@ -1,0 +1,31 @@
+name: Codex Compliance Runner
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  run_codex_compliance:
+    name: Run Codex API – Compliance Scenario
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Call Codex Gateway API
+        run: |
+          curl -X POST https://api.lexcode.ai/v1/lex/run \
+          -H "Content-Type: application/json" \
+          -d '{
+            "git_url": "https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI.git",
+            "token": "${{ secrets.GIT_TOKEN }}",
+            "task": "finance-check",
+            "entrypoint": "ai_agents/saudi_banks/bank_compliance.py",
+            "inputs": {
+              "test_case": "aml_intl_transfer_500k_no_kyc"
+            }
+          }'
+
