@@ -1,0 +1,26 @@
+name: saudi_banks
+description: |
+  نموذج امتثال وتحليل مالي ذكي للبنوك السعودية، متصل بمنصة lexcode.ai ويحلل الملفات التنظيمية تلقائيًا.
+type: code-analysis
+
+tools:
+  - name: CodexRepoFeeder
+    url: https://api.lexcode.ai/v1/lex/run
+    method: POST
+    description: |
+      تحليلات مالية وقانونية مباشرة من مستودعات Git.
+    schema:
+      type: object
+      properties:
+        task:
+          type: string
+          enum: [finance-check, audit, explain]
+        file_path:
+          type: string
+
+routes:
+  - name: تحليل امتثال مالي
+    task: finance-check
+    tool: CodexRepoFeeder
+
+default_route: تحليل امتثال مالي

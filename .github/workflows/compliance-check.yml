@@ -1,0 +1,31 @@
+
+name: Bank Compliance Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  run-compliance-check:
+    runs-on: ubuntu-latest
+
+    env:
+      GIT_REPO_URL: https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI.git
+      GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install GitPython
+        run: pip install GitPython
+
+      - name: Run Compliance Script
+        run: python bank_compliance_git_secure.py
