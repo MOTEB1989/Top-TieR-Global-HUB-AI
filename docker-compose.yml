@@ -1,13 +1,56 @@
+version: "3.9"
+
 services:
   core:
-    build: ./core
-    ports: ["8080:8080"]
+    build:
+      context: .
+      dockerfile: core/Dockerfile
+    container_name: core
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: orchestrator
+    ports:
+      - "3100:3100"
+    env_file:
+      - .env
+    depends_on:
+      - core
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - core
+      - orchestrator
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: db
     environment:
-      RUST_LOG: info
-  api:
-    build: ./services/api
-    ports: ["3000:3000"]
-    env_file: .env
-    depends_on: [core]
-    environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-hub_ai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db_data:
