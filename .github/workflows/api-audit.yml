@@ -1,0 +1,32 @@
+name: API Audit to Codex
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run audit and send to Codex
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+        run: |
+          python codex_api_audit.py --repo-path . --send-to-codex --output api_audit_report.json
