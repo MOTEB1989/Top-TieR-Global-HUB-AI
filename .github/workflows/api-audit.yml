@@ -1,0 +1,32 @@
+name: API Audit
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  run-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧠 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🚨 Run codex_api_audit.py
+        run: |
+          python codex_api_audit.py --repo-path . --output api_audit_report.json
+
+      - name: 🤖 Submit to GPT via gpt_client.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python gpt_client.py --report api_audit_report.json
