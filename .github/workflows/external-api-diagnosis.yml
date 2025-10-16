@@ -48,6 +48,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "Debugging: Searching for existing issues titled '🌐 External API Diagnosis'"
+          gh issue list \
+            --state open \
+            --limit 1 \
+            --search '"🌐 External API Diagnosis" in:title' \
+            --json number || true
+
           number=$(gh issue list \
             --state open \
             --limit 1 \
@@ -62,6 +69,8 @@ jobs:
               --label "automation,api-diagnosis" \
               --json number -q '.number')
             echo "Created issue #$number"
+          else
+            echo "Found existing issue #$number"
           fi
           echo "number=$number" >> $GITHUB_OUTPUT
 
