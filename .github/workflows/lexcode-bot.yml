@@ -1,0 +1,29 @@
+name: LexCode Bot Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run LexCode Bot (Open Source Model)
+        env:
+          API_KEY1: ${{ secrets.Open_API_KEY }}
+          API_KEY2: ${{ secrets.KEY2 }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python .github/workflows/review_open_source.py
