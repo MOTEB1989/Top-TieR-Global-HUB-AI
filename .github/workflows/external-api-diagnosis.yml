@@ -84,7 +84,7 @@ jobs:
           gh issue edit $issue --body "$updated"
 
       - name: Upload report artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: api-diagnosis-log
           path: report.log

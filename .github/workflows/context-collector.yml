@@ -38,7 +38,7 @@ jobs:
         run: ./scripts/collect_context_for_claude.sh
 
       - name: Upload generated files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: context-files
           path: |
