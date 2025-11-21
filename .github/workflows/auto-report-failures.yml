@@ -1,0 +1,46 @@
+name: Auto Report Workflow Failures
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - AI Gateway Reviewer
+      - AI Bot Feedback Collector
+    types:
+      - completed
+
+jobs:
+  report-failures:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Auto Report & Hybrid Fix Helper
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_WORKFLOW: ${{ github.event.workflow_run.name }}
+          GITHUB_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          python scripts/auto_report_and_fix.py
