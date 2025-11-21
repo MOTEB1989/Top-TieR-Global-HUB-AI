@@ -1,0 +1,58 @@
+name: AI Gateway Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  gateway-review:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      PROVIDER: ${{ secrets.AI_REVIEW_PROVIDER }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changes
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }} > changed_files.txt
+          cat changed_files.txt
+
+      - name: Validate readable files
+        run: |
+          while IFS= read -r file; do
+            if [ ! -f "$file" ]; then
+              echo "⚠️ Cannot read: $file"
+            fi
+          done < changed_files.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install requests PyPDF2 python-docx
+
+      - name: Run AI Gateway on changed files
+        timeout-minutes: 15
+        run: |
+          mkdir -p ai_review_output
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "=== Analyzing: $file ==="
+              python gateway.py --task auto --file "$file" >> ai_review_output/review.md 2>&1 || true
+              echo -e "\n\n---\n\n" >> ai_review_output/review.md
+            fi
+          done < changed_files.txt
+
+      - name: Upload AI Review Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-gateway-review
+          path: ai_review_output/review.md
