@@ -1,39 +1,52 @@
-# Use Python 3.11 slim image for optimal size and security
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
 
-# Set working directory
+# Builder stage: install Python dependencies
+FROM python:3.11-slim AS builder
 WORKDIR /app
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PYTHONUNBUFFERED=1
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl \
-        && rm -rf /var/lib/apt/lists/*
+# Install build dependencies and clean up apt cache
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Create virtual environment for isolated dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Install Python requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application source
 COPY app.py .
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash miniuser && \
-    chown -R miniuser:miniuser /app
-USER miniuser
+# Runtime stage: lightweight image with only runtime needs
+FROM python:3.11-slim AS runtime
+WORKDIR /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl --fail http://localhost:8088/health || exit 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Expose port
+# Install runtime utilities for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+
+# Copy virtual environment and app code from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+COPY --from=builder /app/app.py ./
+
+# Expose application port (as defined in app.py)
 EXPOSE 8088
 
-# Default command
+# Health check to verify the service is responding
+HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
+    CMD curl -f http://localhost:8088/health || exit 1
+
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8088"]

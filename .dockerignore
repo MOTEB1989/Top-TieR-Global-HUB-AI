@@ -143,3 +143,27 @@ node_modules/
 tests/
 test_*.py
 *_test.py
+
+# Documentation and git metadata
+README.md
+README_COMMENT_TASK.md
+CONTRIBUTING.md
+SECURITY*.md
+LICENSE
+lexcode-manifesto.md
+LEXCODE_MANIFESTO.md
+
+# Docker and compose artifacts not needed in image
+Dockerfile
+docker-compose.yml
+k8s/
+
+# Archives and vendor bundles
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Node build outputs
+npm-debug.log*
+.pnp*
