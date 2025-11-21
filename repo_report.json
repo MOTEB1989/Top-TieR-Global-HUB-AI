@@ -1,0 +1,1079 @@
+{
+  "root": "/workspace/Top-TieR-Global-HUB-AI",
+  "total_files": 148,
+  "languages_detected": [
+    "",
+    ".save",
+    ".json",
+    ".md",
+    ".yaml",
+    ".rev",
+    ".sample",
+    ".sh",
+    ".pack",
+    ".rs",
+    ".cql",
+    ".ts",
+    ".txt",
+    ".py",
+    ".zip",
+    ".toml",
+    ".idx",
+    ".example",
+    ".yml"
+  ],
+  "files": [
+    {
+      "path": "Cargo.toml",
+      "size_bytes": 408,
+      "extension": ".toml",
+      "hash": "ee9f5cc91f1911857f408b246fa23aefcbdf0c12d67e1e454d5252e2800b4bf2"
+    },
+    {
+      "path": "__init__.py",
+      "size_bytes": 166,
+      "extension": ".py",
+      "hash": "6eed1d4ae880b7ede61ce921a265ab0746001072c10a4abcd27a2d4dac539ed0"
+    },
+    {
+      "path": "upgrade_veritas.sh",
+      "size_bytes": 1411,
+      "extension": ".sh",
+      "hash": "4f95d72194e4b33ce990da124dc8cc214ade6dc31905e04de0fed28354959e52"
+    },
+    {
+      "path": "harden_repo.sh",
+      "size_bytes": 803,
+      "extension": ".sh",
+      "hash": "e28647211b3e8d8000fe089435578c1c3281598473d46f9d90f3a23d73e06961"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 993,
+      "extension": ".md",
+      "hash": "a154c643acf0b63b33bf194f483bce9bb734873ea3a014574034b3432b9914f1"
+    },
+    {
+      "path": "repo_inspector.py",
+      "size_bytes": 4191,
+      "extension": ".py",
+      "hash": "0539d7829773df0585265642a89c73fe070fca02580ba5eb2a7ce36938e71ff4"
+    },
+    {
+      "path": "openai.ts",
+      "size_bytes": 999,
+      "extension": ".ts",
+      "hash": "fcacd9ed9e0426e32f1468310b2a6e7229fa726c85609d14ebc2d526b51a3364"
+    },
+    {
+      "path": "committee_service.py",
+      "size_bytes": 5079,
+      "extension": ".py",
+      "hash": "c4e536eac4de5fb064591c1def7bb516eca0769cf8da28d89998cb3b906af524"
+    },
+    {
+      "path": "Dockerfile",
+      "size_bytes": 184,
+      "extension": "",
+      "hash": "516396308befea43bb9d1cf52ed78c9a1c3f56d047c774573cb695bb582b6c9b"
+    },
+    {
+      "path": ".gitignore",
+      "size_bytes": 1069,
+      "extension": "",
+      "hash": "6736cc39dd2332a37144156c5842eb9b92bb460974a79589c3cefa4b38f6dcd1"
+    },
+    {
+      "path": "issues_plan.md",
+      "size_bytes": 13545,
+      "extension": ".md",
+      "hash": "429fd11a751c4b9bffde1d64824ef2c58cb42ce0283e8ea3cfb90ed876725b6e"
+    },
+    {
+      "path": "veritas_workflows_addon",
+      "size_bytes": 191,
+      "extension": "",
+      "hash": "68de8b3d844bedd712d13494147abb6fed161fe9dd01f6ea9ea78a11d75d2b39"
+    },
+    {
+      "path": "bluetooth-open-diagnostics.zip",
+      "size_bytes": 7743,
+      "extension": ".zip",
+      "hash": "084f5365689b303c33d8e45f4a818fd5159ec2544e171c49548091a8d35c7be9"
+    },
+    {
+      "path": ".yamllint.yml",
+      "size_bytes": 156,
+      "extension": ".yml",
+      "hash": "e5abe722632a6b90b16c8c57fe2e208138350f2a6becafb876b0b4ff8c3be748"
+    },
+    {
+      "path": "topTireAI-quality-pack.zip",
+      "size_bytes": 281,
+      "extension": ".zip",
+      "hash": "cf3e192db846fecab253bf610280639f7fbad3a4e2296da9cc45e2faa261ec5a"
+    },
+    {
+      "path": "bluetooth-open-diagnostics2.zip",
+      "size_bytes": 397,
+      "extension": ".zip",
+      "hash": "eb6f97706067816554bc42e5ef117925cd52037d8e8e48a95bbec1e20fecee85"
+    },
+    {
+      "path": "veritas-nexus-v2.zip",
+      "size_bytes": 3029,
+      "extension": ".zip",
+      "hash": "d4a9ec69a47c67b51d5c784b5ff582a6fb3e2410bf879d740185532e0812536e"
+    },
+    {
+      "path": "run_codex_full.sh",
+      "size_bytes": 2003,
+      "extension": ".sh",
+      "hash": "2261eb771da6a3da87f4489d4f6b526c59fb6fd67fed8a3a4b27ebba7d7e323d"
+    },
+    {
+      "path": "gpt_client.py",
+      "size_bytes": 3066,
+      "extension": ".py",
+      "hash": "17692b4e1a02d73c65f1ec215966b0dcce6bde21ba27e62962b996e26871cbd5"
+    },
+    {
+      "path": "docker-compose.yml",
+      "size_bytes": 262,
+      "extension": ".yml",
+      "hash": "5cbcc4eeee08db478bd594e22caec74959b8d11bc2a18769cea3e84e98d05fff"
+    },
+    {
+      "path": "TopTireAI",
+      "size_bytes": 6716,
+      "extension": "",
+      "hash": "e1709a788ba971df80d7cf632d82b5560e83fac2f1a2b573b2d9a291db9bd490"
+    },
+    {
+      "path": "SECURITY_GOVERNANCE.md",
+      "size_bytes": 8134,
+      "extension": ".md",
+      "hash": "e9323250aaea4408c731fec7f1d152374dccfb8dc742f6f62eb992dfdb6de9fc"
+    },
+    {
+      "path": "README_COMMENT_TASK.md",
+      "size_bytes": 2530,
+      "extension": ".md",
+      "hash": "33192b052c69fac20159e038efec68229a65e88400d6f5cb1c28f9ccbd3fa887"
+    },
+    {
+      "path": "providers.py",
+      "size_bytes": 577,
+      "extension": ".py",
+      "hash": "fa6d7a4fdb8137c9f9022463e1f21e86499cfd30e37c409dc306fc01b39b4d16"
+    },
+    {
+      "path": "Owner",
+      "size_bytes": 23924,
+      "extension": "",
+      "hash": "5410d5d558d74a91ae0f72fd1f8bf2e016056db0d9314902712dd15ff5c10917"
+    },
+    {
+      "path": "tsconfig.json",
+      "size_bytes": 236,
+      "extension": ".json",
+      "hash": "66243086f90a0488bd249fb419a7d1f6af3132d34068f36cddf50c944b09d7d7"
+    },
+    {
+      "path": "pyproject.toml",
+      "size_bytes": 2132,
+      "extension": ".toml",
+      "hash": "4a9bb43c31ecf9895729f6667cb947c5e558bdf6aafe0cd466637f8b61215d41"
+    },
+    {
+      "path": "package.json",
+      "size_bytes": 432,
+      "extension": ".json",
+      "hash": "aae5b1c35f888397dce0652ae473d2fd916a7c182e494454dc76dfdd1faa3c59"
+    },
+    {
+      "path": "do_all_now.sh",
+      "size_bytes": 369,
+      "extension": ".sh",
+      "hash": "94c3d658cf589da6ce410a743c9a5199a0153bffe18ebb6c89571d346523f0be"
+    },
+    {
+      "path": "PR6_COMMENT.md",
+      "size_bytes": 1571,
+      "extension": ".md",
+      "hash": "2c4fb032249e554cbd55178ba58b44c1d434ed7354e3e2dc63008ed5176a6eb1"
+    },
+    {
+      "path": "setup_veritas.sh",
+      "size_bytes": 18511,
+      "extension": ".sh",
+      "hash": "ab75645d8f9d0992af099681339cb014d5a234a9f8c592923c55ea7ab07140e6"
+    },
+    {
+      "path": "LEXCODE_MANIFESTO.md",
+      "size_bytes": 363,
+      "extension": ".md",
+      "hash": "f329084385b90573d224314ecd255e3657274b62e8fc646e57c218045e01149f"
+    },
+    {
+      "path": "SECURITY.md",
+      "size_bytes": 4454,
+      "extension": ".md",
+      "hash": "cc1db7ec57e0c181ade4c97dcdca4c34a5b8a0ef965dd25a93638ec7d997e1a3"
+    },
+    {
+      "path": "test_gpt_connection.py",
+      "size_bytes": 1070,
+      "extension": ".py",
+      "hash": "f5d096c78f73640ae82ca888c32b5d772a3512187e420c9c0acde889120f76ff"
+    },
+    {
+      "path": "package-lock.json",
+      "size_bytes": 101,
+      "extension": ".json",
+      "hash": "258c1694ac92325545338fc5462e21056af9dd03f34ba6d177f2a272fefb672d"
+    },
+    {
+      "path": "demo_features.sh",
+      "size_bytes": 2563,
+      "extension": ".sh",
+      "hash": "623f43d25b1556c0b864b6df0661067b5e52bdf0f3f06d2f44af7fef533dbee1"
+    },
+    {
+      "path": "example.py",
+      "size_bytes": 182,
+      "extension": ".py",
+      "hash": "5ece4aa8bfdfbb674c64062a8b8452a855da790364353c2735a2ba9709ead658"
+    },
+    {
+      "path": "index.ts",
+      "size_bytes": 1877,
+      "extension": ".ts",
+      "hash": "6b7df09f19909f0bd82a8b66aa5f86f0c347afb56d604b3c91f5f6078e0800b6"
+    },
+    {
+      "path": "FAST",
+      "size_bytes": 3731,
+      "extension": "",
+      "hash": "5680c910bb7e3da1d0ccf98fabe570127ba413ae14d366788b9fc52850c8649b"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "size_bytes": 1594,
+      "extension": ".md",
+      "hash": "a17536187fce6814e7ee6aaee14bd70750f186b01a95811adbf7d43482411b5a"
+    },
+    {
+      "path": "requirements.txt",
+      "size_bytes": 269,
+      "extension": ".txt",
+      "hash": "fb14be015f9d8f6ead61a9b128f4e17ae56fde56b9640a807ad04d456bd0af40"
+    },
+    {
+      "path": ".env.example",
+      "size_bytes": 327,
+      "extension": ".example",
+      "hash": "273aebb7be8b25b420eff57417e5ccdb074ec2a6963121af0f6676e96abce387"
+    },
+    {
+      "path": "repo_report.json",
+      "size_bytes": 0,
+      "extension": ".json",
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test_gpt_connection.py.save",
+      "size_bytes": 1772,
+      "extension": ".save",
+      "hash": "ddb9bcdf43449936326c71f158f11f3ffa8abf45e9957ec417ccdc3fc4678f19"
+    },
+    {
+      "path": "top-tier-base-files.zip",
+      "size_bytes": 1895,
+      "extension": ".zip",
+      "hash": "4a9e183d654c24a31b656f7e8927d8ea99c871189fcdca086b608784890317cb"
+    },
+    {
+      "path": "main.rs",
+      "size_bytes": 1312,
+      "extension": ".rs",
+      "hash": "8c1ce90619a0b5ba200f27b580ab8af296104bc855a2d03ee78d234499f88445"
+    },
+    {
+      "path": ".env.neo4j.example",
+      "size_bytes": 708,
+      "extension": ".example",
+      "hash": "37c03df5b6fb4217ec09e736f78bbdd8e00d81d0372626f298cf8cf1be3f6628"
+    },
+    {
+      "path": "ai.ts",
+      "size_bytes": 232,
+      "extension": ".ts",
+      "hash": "66c5815caf326f8fec403d2c04825e3fdbe5e332bc4af9e3bd7151ce8875768c"
+    },
+    {
+      "path": "LexCode-Hybrid-Starter-AI-Infer.zip",
+      "size_bytes": 7651,
+      "extension": ".zip",
+      "hash": "b8210a023192c60aa1a3b40ce2e732661659048918f63ba20cfa5952b1e5651a"
+    },
+    {
+      "path": "CHECKLIST.md",
+      "size_bytes": 3056,
+      "extension": ".md",
+      "hash": "16af39053ed427fb3173e691c743eca9d4b0ec9286a4ed0a862ab8636d7a0c8f"
+    },
+    {
+      "path": "setup_neo4j_security.sh",
+      "size_bytes": 4789,
+      "extension": ".sh",
+      "hash": "66c5affb6db88a006ba7b25253fc1634ebea89c75fea7ff8e4cc26b15b8c63c9"
+    },
+    {
+      "path": "verify_repo_link.sh",
+      "size_bytes": 2309,
+      "extension": ".sh",
+      "hash": "9c2b187f482fa4a02a2d9bbfdb5b06be9e39853017f129f42e371663ab97522b"
+    },
+    {
+      "path": "REVIEWER_TEST.md",
+      "size_bytes": 558,
+      "extension": ".md",
+      "hash": "1c78cbe618d3800c9ae9d55b3f70787a44003aa09b871aa4dd78e90ac1039cec"
+    },
+    {
+      "path": "validate_security_improvements.sh",
+      "size_bytes": 4815,
+      "extension": ".sh",
+      "hash": "ae8120cdcd843705e8a8e9aa0d9595dc0a471b904385ab3c6d75e1a352077355"
+    },
+    {
+      "path": ".dockerignore",
+      "size_bytes": 1401,
+      "extension": "",
+      "hash": "74ffe4c12965af3fc68d8b78b029f1b2cdee9d81109aad670517cb35cc598f1a"
+    },
+    {
+      "path": "utils/ai_trace.py",
+      "size_bytes": 1050,
+      "extension": ".py",
+      "hash": "78bcf039e3831324f46267acba92da174db89b3b7f648a3e2a6f634e0c077889"
+    },
+    {
+      "path": "utils/graph_ingestor.py",
+      "size_bytes": 1,
+      "extension": ".py",
+      "hash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "db/neo4j/init_graph.cql",
+      "size_bytes": 9965,
+      "extension": ".cql",
+      "hash": "b8fb58edec1271b0068c0a56dc85a2af7c20e14a07c47ec2a22b58bb4f5863d8"
+    },
+    {
+      "path": "tests/test_gpt_client.py",
+      "size_bytes": 6706,
+      "extension": ".py",
+      "hash": "477aed73637ad6ef0882157d44ec791dd369c4facc51a09893e1d70574e090d7"
+    },
+    {
+      "path": "tests/test_policy_load.py",
+      "size_bytes": 1091,
+      "extension": ".py",
+      "hash": "26a9db4bf290e4ec25535e0c5ae5998b94a1f2d31ad36d789b7606c5adf4b338"
+    },
+    {
+      "path": "tests/policy/policy.yaml",
+      "size_bytes": 2139,
+      "extension": ".yaml",
+      "hash": "fbae5c816e703f180449657ead07b517391d16bee4104915d04abc6a35ce26c5"
+    },
+    {
+      "path": "app/__init__.py",
+      "size_bytes": 88,
+      "extension": ".py",
+      "hash": "3f27584238042a55b150d16137c6b3fc67b986ab3028fc76ad68212caedecd78"
+    },
+    {
+      "path": "app/ingestion/__init__.py",
+      "size_bytes": 110,
+      "extension": ".py",
+      "hash": "3fe4cca28a0011d7a26bada39e83855850570c424012a40c30dd63cc40b631aa"
+    },
+    {
+      "path": "app/ingestion/cli.py",
+      "size_bytes": 1926,
+      "extension": ".py",
+      "hash": "be585de7acfe8178838311171821db2bcca27ca796ddcef29dcb5c29b8b27738"
+    },
+    {
+      "path": "app/ingestion/registry.py",
+      "size_bytes": 622,
+      "extension": ".py",
+      "hash": "d1546724d5130f457b3b637f5dc767c532c7ee7659882511743424e4c6077c46"
+    },
+    {
+      "path": "app/ingestion/utils.py",
+      "size_bytes": 1655,
+      "extension": ".py",
+      "hash": "11d00534a4d647a45dd564f43c6f82297041495819c100ae6b46aee06c1e4ebf"
+    },
+    {
+      "path": "app/ingestion/base.py",
+      "size_bytes": 1237,
+      "extension": ".py",
+      "hash": "041d085fbe68267af17d5ada005137e7f5df4e2a7ac10147a888c67a5e508b5a"
+    },
+    {
+      "path": "app/ingestion/sources/__init__.py",
+      "size_bytes": 110,
+      "extension": ".py",
+      "hash": "7c1d3cdf79abd06d870b511ba76a3075a77006370ebf275968582e72f3096d25"
+    },
+    {
+      "path": "app/ingestion/sources/sama.py",
+      "size_bytes": 3910,
+      "extension": ".py",
+      "hash": "9681fab7155de27484d9933fac0f0e1e92bc7eb10f5287147a374bf9ea152d81"
+    },
+    {
+      "path": "feature/llm-failover",
+      "size_bytes": 13188,
+      "extension": "",
+      "hash": "e82a67f564f5c19f2bdabe2fbd545e58fe6706454bcd8bd8b26e73da49fc62dc"
+    },
+    {
+      "path": "veritas-mini-web/Dockerfile",
+      "size_bytes": 995,
+      "extension": "",
+      "hash": "67ee9cf191ef56adbc05bdbf23ae1485750e2faba292c4941fc03315f71d3c3d"
+    },
+    {
+      "path": "veritas-mini-web/app.py",
+      "size_bytes": 15411,
+      "extension": ".py",
+      "hash": "7952239e8e28d1b69ba234c5386bc44912c5766003f3167debe195aba378302f"
+    },
+    {
+      "path": "veritas-mini-web/requirements.txt",
+      "size_bytes": 199,
+      "extension": ".txt",
+      "hash": "b8cbbde3e092268c75cea01ce7d6cd8ec2545a56364a74015919bbdb3df92366"
+    },
+    {
+      "path": "scripts/housekeeping_prs.sh",
+      "size_bytes": 907,
+      "extension": ".sh",
+      "hash": "4b4036c2403f182b801884157948c87e3a48da977a77f452a39da56c4f9d8472"
+    },
+    {
+      "path": "scripts/close_github_items.py",
+      "size_bytes": 10760,
+      "extension": ".py",
+      "hash": "87077f4336623368c61b2627c28e1e503c69f4f40d498f2fd33aee7eb6646f87"
+    },
+    {
+      "path": "scripts/comment-on-pr6.sh",
+      "size_bytes": 4292,
+      "extension": ".sh",
+      "hash": "2369f3bf415d46a7b7ab8160a059a2c5c3eafadf00dc80c458dd003208a59c8d"
+    },
+    {
+      "path": "scripts/snap_osint_query.sh",
+      "size_bytes": 8369,
+      "extension": ".sh",
+      "hash": "7ace6a470d2be14fe762b416a3ed29f7b03b89be83c15bf76489100df34e64be"
+    },
+    {
+      "path": "scripts/generate_env_and_patch_workflows.py",
+      "size_bytes": 2409,
+      "extension": ".py",
+      "hash": "3e99699216f6a3debc4c85882d468beedbf170a9753249647e115631fc995b0a"
+    },
+    {
+      "path": "scripts/collect_context_for_claude.sh",
+      "size_bytes": 2782,
+      "extension": ".sh",
+      "hash": "de66917480a344ff233821a588302d0cf00c6305bf2700af57ab69b0349f3b47"
+    },
+    {
+      "path": "scripts/generate_repo_summary.sh",
+      "size_bytes": 1245,
+      "extension": ".sh",
+      "hash": "0f7bb6c0ce8758bc534267a378ff3c3dcee153cdd3880856373ddac7861b210b"
+    },
+    {
+      "path": "scripts/convert_thread_messages.py",
+      "size_bytes": 2026,
+      "extension": ".py",
+      "hash": "85705370580e4b59c18a55e47b9d106b58cdc79eed63aebc1250fa94a06a9e54"
+    },
+    {
+      "path": "scripts/diagnose_external_apis.py",
+      "size_bytes": 2627,
+      "extension": ".py",
+      "hash": "0c450927848b0067798ce7f7731e58ba9b5ffa076cdc9fc41de4d99ae1ec735f"
+    },
+    {
+      "path": "scripts/status/collect_status.sh",
+      "size_bytes": 3897,
+      "extension": ".sh",
+      "hash": "b1a2343656894c329ed0d63173df508b31f98a9085b0fa61a164e65ea9cb96f7"
+    },
+    {
+      "path": "scripts/connectors/add_connectors.sh",
+      "size_bytes": 1219,
+      "extension": ".sh",
+      "hash": "a01ab90e5b4d58aa37dba6412d89bc6e4985edcd86d2fc62ead8eabdf008b7ec"
+    },
+    {
+      "path": "scripts/ci/disable_health_auto.sh",
+      "size_bytes": 5048,
+      "extension": ".sh",
+      "hash": "c8ffb3def55ba78e55f464ea29d0ed4d56855d0b4052bca9e377594cc11a9c07"
+    },
+    {
+      "path": "docs/safety-belt-post-merge.md",
+      "size_bytes": 1516,
+      "extension": ".md",
+      "hash": "203d57df384eb65d1d48bbb14f22f9be5918d31b9331de472beb3bec20677667"
+    },
+    {
+      "path": "docs/banking_README.md",
+      "size_bytes": 569,
+      "extension": ".md",
+      "hash": "f110cd2fe4042edb9c8aead39a64176437bdc43cb06caa9ae275548c3773135a"
+    },
+    {
+      "path": "docs/architecture/data-foundation.md",
+      "size_bytes": 9963,
+      "extension": ".md",
+      "hash": "32a164ee77da8b9cf64480eb975854cba0999635c11f196ca7f01c97934a68c4"
+    },
+    {
+      "path": "policies/guardrails.yaml",
+      "size_bytes": 654,
+      "extension": ".yaml",
+      "hash": "c073dd5b8da238df20d15ab4a529fd50d5eb721e72c661444d8490c9a169eb38"
+    },
+    {
+      "path": ".git/COMMIT_EDITMSG",
+      "size_bytes": 205,
+      "extension": "",
+      "hash": "b90a769135af1c9428b190f27096f22759ff91169859ce9f3caeb4359d9b7886"
+    },
+    {
+      "path": ".git/config",
+      "size_bytes": 92,
+      "extension": "",
+      "hash": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe"
+    },
+    {
+      "path": ".git/description",
+      "size_bytes": 73,
+      "extension": "",
+      "hash": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee"
+    },
+    {
+      "path": ".git/packed-refs",
+      "size_bytes": 46,
+      "extension": "",
+      "hash": "6110899c7adc374885f9552bddfb76fa28a7f7ca3c05fb8b74471a457e1e57c8"
+    },
+    {
+      "path": ".git/index",
+      "size_bytes": 11052,
+      "extension": "",
+      "hash": "87699b393ddde3aebd1220ce9926a994bf88f016785af5f53cd755577057fbba"
+    },
+    {
+      "path": ".git/HEAD",
+      "size_bytes": 21,
+      "extension": "",
+      "hash": "b20849f2b0dd22bf5e88c7faebcf4ae9c5273276f91e58fa9213421581cd8482"
+    },
+    {
+      "path": ".git/FETCH_HEAD",
+      "size_bytes": 140,
+      "extension": "",
+      "hash": "4e58269519f470b9ec946b9878f4b55508d1e16450f99a1d497642534d0c6e34"
+    },
+    {
+      "path": ".git/info/exclude",
+      "size_bytes": 240,
+      "extension": "",
+      "hash": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1"
+    },
+    {
+      "path": ".git/logs/HEAD",
+      "size_bytes": 879,
+      "extension": "",
+      "hash": "ecdd19dab608d311572a15e407aba64226cfc3acf4567f242744f13a9c03659b"
+    },
+    {
+      "path": ".git/logs/refs/heads/work",
+      "size_bytes": 320,
+      "extension": "",
+      "hash": "30547539ed1a04082f0ea7ccb6438ec390054d678cffb5877cbba8bf9e73955e"
+    },
+    {
+      "path": ".git/hooks/push-to-checkout.sample",
+      "size_bytes": 2783,
+      "extension": ".sample",
+      "hash": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f"
+    },
+    {
+      "path": ".git/hooks/fsmonitor-watchman.sample",
+      "size_bytes": 4726,
+      "extension": ".sample",
+      "hash": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0"
+    },
+    {
+      "path": ".git/hooks/pre-rebase.sample",
+      "size_bytes": 4898,
+      "extension": ".sample",
+      "hash": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3"
+    },
+    {
+      "path": ".git/hooks/post-update.sample",
+      "size_bytes": 189,
+      "extension": ".sample",
+      "hash": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5"
+    },
+    {
+      "path": ".git/hooks/pre-commit.sample",
+      "size_bytes": 1643,
+      "extension": ".sample",
+      "hash": "f9af7d95eb1231ecf2eba9770fedfa8d4797a12b02d7240e98d568201251244a"
+    },
+    {
+      "path": ".git/hooks/prepare-commit-msg.sample",
+      "size_bytes": 1492,
+      "extension": ".sample",
+      "hash": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619"
+    },
+    {
+      "path": ".git/hooks/pre-push.sample",
+      "size_bytes": 1374,
+      "extension": ".sample",
+      "hash": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a"
+    },
+    {
+      "path": ".git/hooks/update.sample",
+      "size_bytes": 3650,
+      "extension": ".sample",
+      "hash": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106"
+    },
+    {
+      "path": ".git/hooks/pre-receive.sample",
+      "size_bytes": 544,
+      "extension": ".sample",
+      "hash": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989"
+    },
+    {
+      "path": ".git/hooks/sendemail-validate.sample",
+      "size_bytes": 2308,
+      "extension": ".sample",
+      "hash": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92"
+    },
+    {
+      "path": ".git/hooks/applypatch-msg.sample",
+      "size_bytes": 478,
+      "extension": ".sample",
+      "hash": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7"
+    },
+    {
+      "path": ".git/hooks/commit-msg.sample",
+      "size_bytes": 896,
+      "extension": ".sample",
+      "hash": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437"
+    },
+    {
+      "path": ".git/hooks/pre-merge-commit.sample",
+      "size_bytes": 416,
+      "extension": ".sample",
+      "hash": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53"
+    },
+    {
+      "path": ".git/hooks/pre-applypatch.sample",
+      "size_bytes": 424,
+      "extension": ".sample",
+      "hash": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475"
+    },
+    {
+      "path": ".git/objects/13/cd3724d4744576b9247a4eba2b1fc7a96ff2c1",
+      "size_bytes": 2257,
+      "extension": "",
+      "hash": "105ef3774bb641a962d3a24c0a0752c1ca5ec1ce54ddb554098401f7f433b405"
+    },
+    {
+      "path": ".git/objects/ee/7052b5da494f4f93773dcc02917e9725fdc412",
+      "size_bytes": 1593,
+      "extension": "",
+      "hash": "d00235cbcf2b22038a0866203ee5566123758bb90f47e79c1a7128b09a51692b"
+    },
+    {
+      "path": ".git/objects/pack/pack-664b4df89f85c6eb1ad69c307ead06690a9ee28a.pack",
+      "size_bytes": 273996,
+      "extension": ".pack",
+      "hash": "ccec0f87f7a3d4a627808e854243995e6da989ed025f22a7c72d1f3ccc82af95"
+    },
+    {
+      "path": ".git/objects/pack/pack-664b4df89f85c6eb1ad69c307ead06690a9ee28a.idx",
+      "size_bytes": 18180,
+      "extension": ".idx",
+      "hash": "beebc7c44232246f7af71a883e2fd7a5f2ba9567b0ff3ed93353a4a0f2523664"
+    },
+    {
+      "path": ".git/objects/pack/pack-664b4df89f85c6eb1ad69c307ead06690a9ee28a.rev",
+      "size_bytes": 2496,
+      "extension": ".rev",
+      "hash": "5161fae2abd3d6832810a9a957b655247b6ae5d2aa6d6cfdddd71aeabd0e2d2e"
+    },
+    {
+      "path": ".git/objects/95/f420e7e87cab2615f08de0bad76b28141dd479",
+      "size_bytes": 274,
+      "extension": "",
+      "hash": "e6a6396064a4a610926a8b071c4f305403ea9c7861eb4855f31df9ba7438dc9a"
+    },
+    {
+      "path": ".git/refs/heads/work",
+      "size_bytes": 41,
+      "extension": "",
+      "hash": "96c16cbe21c34fd9be8e0c903ec773add9b95c0a2408a36aa29521cc34439580"
+    },
+    {
+      "path": "k8s/core-deployment.yaml",
+      "size_bytes": 2016,
+      "extension": ".yaml",
+      "hash": "ecae5cdd5f0c581190a74353681481bbcbe88c1daad7949058da000161e7510c"
+    },
+    {
+      "path": "k8s/README.md",
+      "size_bytes": 3116,
+      "extension": ".md",
+      "hash": "573d654257d52fda67fa604912615b8781e466f85b6079063d7ef198df766627"
+    },
+    {
+      "path": "k8s/pdb.yaml",
+      "size_bytes": 328,
+      "extension": ".yaml",
+      "hash": "4ec508a94a1d3d3f11ff355d512cf52bbebdcedc7e45914f5bb529b2d56e778b"
+    },
+    {
+      "path": "k8s/neo4j.yaml",
+      "size_bytes": 2090,
+      "extension": ".yaml",
+      "hash": "e89d86937fcccd142e992c940db5e284a9ed58c5a7a95e20cab34071b9aa067b"
+    },
+    {
+      "path": "k8s/osint-deployment.yaml",
+      "size_bytes": 2079,
+      "extension": ".yaml",
+      "hash": "47922961fba887100f7e4685508164889903c169aae77661480abeab52028309"
+    },
+    {
+      "path": "k8s/secrets.yaml.example",
+      "size_bytes": 739,
+      "extension": ".example",
+      "hash": "f51e1be49cd9e09789e4ea0130cd2b58c7fa485cb048e1f2b7108a61ff9577ff"
+    },
+    {
+      "path": "veritas-web/Dockerfile",
+      "size_bytes": 995,
+      "extension": "",
+      "hash": "67ee9cf191ef56adbc05bdbf23ae1485750e2faba292c4941fc03315f71d3c3d"
+    },
+    {
+      "path": "veritas-web/app.py",
+      "size_bytes": 15411,
+      "extension": ".py",
+      "hash": "7952239e8e28d1b69ba234c5386bc44912c5766003f3167debe195aba378302f"
+    },
+    {
+      "path": "veritas-web/requirements.txt",
+      "size_bytes": 199,
+      "extension": ".txt",
+      "hash": "b8cbbde3e092268c75cea01ce7d6cd8ec2545a56364a74015919bbdb3df92366"
+    },
+    {
+      "path": "data/.gitignore",
+      "size_bytes": 86,
+      "extension": "",
+      "hash": "60ea21982c259f405eddf7cd6803d47412e0d8f3db7875290df91fbe5f73fbdc"
+    },
+    {
+      "path": "api_server/__init__.py",
+      "size_bytes": 3528,
+      "extension": ".py",
+      "hash": "47e768d488c31aa3e129ac09851e10ff8ecff155c1cabc5b9c23df3f6ba72c1b"
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "size_bytes": 886,
+      "extension": ".md",
+      "hash": "8af7b90bb01066e1b7b9e7d1ef5ee8d869bf231789ded43f0992fe7b80cb93ac"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "size_bytes": 2131,
+      "extension": ".yml",
+      "hash": "efe344de3f402ce36194fc52e990b2940195b63e7b5e5b5f78b92e7bf7fed44a"
+    },
+    {
+      "path": ".github/labels.yml",
+      "size_bytes": 1669,
+      "extension": ".yml",
+      "hash": "c1f1c1f0d17f32836e97dfca982d0bdbe1855ad237235cd0b113d0104782f787"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "size_bytes": 7504,
+      "extension": ".md",
+      "hash": "bf406047b2d9003349572197b7fdc7b8b19504ea831b9e48fdf3e486a28e0cf3"
+    },
+    {
+      "path": ".github/CODEOWNERS",
+      "size_bytes": 475,
+      "extension": "",
+      "hash": "503f0263346b3c11aad6a8ec0ca912d4149201aadb90d4aea3aab5aac9de018c"
+    },
+    {
+      "path": ".github/auto-assign.yml",
+      "size_bytes": 84,
+      "extension": ".yml",
+      "hash": "4f77e1fe89b23c6dba40a87c45bba4bb06673538ba9c091608f432a3a37c8430"
+    },
+    {
+      "path": ".github/workflows/codeql.yml",
+      "size_bytes": 2407,
+      "extension": ".yml",
+      "hash": "4eee4711e58235d572badbfc81d24a0fee238a722cf7f12d415bd07a8c42e681"
+    },
+    {
+      "path": ".github/workflows/post_merge_validation.yml",
+      "size_bytes": 1557,
+      "extension": ".yml",
+      "hash": "1cedbfe989fb3018dc8c5264fd64119adb64e3bbd1fa9fea9da5fec6696701b3"
+    },
+    {
+      "path": ".github/workflows/auto-assign-reviewer.yml",
+      "size_bytes": 1667,
+      "extension": ".yml",
+      "hash": "9df575dbef1f4f69dc7291c58307bcd0d410b256d601456d076a3d613b9ee7f1"
+    },
+    {
+      "path": ".github/workflows/CI.yml",
+      "size_bytes": 4303,
+      "extension": ".yml",
+      "hash": "06f4433c6b288624878cb863918792cf00cde64981e7658365d3b4f7136092f9"
+    },
+    {
+      "path": ".github/workflows/context-collector.yml",
+      "size_bytes": 1180,
+      "extension": ".yml",
+      "hash": "0eeb00430a7bf302713be302847c2baf9f46a1af192c0f5d80201873bee0719d"
+    },
+    {
+      "path": ".github/workflows/sync-labels.yml",
+      "size_bytes": 976,
+      "extension": ".yml",
+      "hash": "95a6fd32752556578a78eed0bb96898c0f413cb8efd0738ac02ad7cdd5096771"
+    },
+    {
+      "path": ".github/workflows/generate-repo-summary.yml",
+      "size_bytes": 1085,
+      "extension": ".yml",
+      "hash": "3524ba36ce52c8b9bb0ba0ef623520f2d43d1d994c0e544f396faf60ff6d8569"
+    },
+    {
+      "path": ".github/workflows/Immutable-Release.yml",
+      "size_bytes": 2515,
+      "extension": ".yml",
+      "hash": "5f741f5d044fbbaadc190c202065ee295aa1632d2b1fca5bf66c3558a293ec96"
+    },
+    {
+      "path": ".github/workflows/external-api-diagnosis.yml",
+      "size_bytes": 2862,
+      "extension": ".yml",
+      "hash": "7051f2967bb3585dfa173f4064f881c7d7fbe00b89fa3765446c4ba9fdee5257"
+    },
+    {
+      "path": ".github/workflows/cleanup.yml",
+      "size_bytes": 5628,
+      "extension": ".yml",
+      "hash": "253984ac34c60d010653952e830a0e1112ab500bc611de23ddf6fc9edd626454"
+    },
+    {
+      "path": ".github/workflows/comment-on-pr6.yml",
+      "size_bytes": 4506,
+      "extension": ".yml",
+      "hash": "1d803b4e0f2a50b2ae8ce4a8cc7636110e239029a23e58d77944165a8ab67cf6"
+    }
+  ],
+  "largest_files": [
+    {
+      "path": ".git/objects/pack/pack-664b4df89f85c6eb1ad69c307ead06690a9ee28a.pack",
+      "size_bytes": 273996,
+      "extension": ".pack",
+      "hash": "ccec0f87f7a3d4a627808e854243995e6da989ed025f22a7c72d1f3ccc82af95"
+    },
+    {
+      "path": "Owner",
+      "size_bytes": 23924,
+      "extension": "",
+      "hash": "5410d5d558d74a91ae0f72fd1f8bf2e016056db0d9314902712dd15ff5c10917"
+    },
+    {
+      "path": "setup_veritas.sh",
+      "size_bytes": 18511,
+      "extension": ".sh",
+      "hash": "ab75645d8f9d0992af099681339cb014d5a234a9f8c592923c55ea7ab07140e6"
+    },
+    {
+      "path": ".git/objects/pack/pack-664b4df89f85c6eb1ad69c307ead06690a9ee28a.idx",
+      "size_bytes": 18180,
+      "extension": ".idx",
+      "hash": "beebc7c44232246f7af71a883e2fd7a5f2ba9567b0ff3ed93353a4a0f2523664"
+    },
+    {
+      "path": "veritas-mini-web/app.py",
+      "size_bytes": 15411,
+      "extension": ".py",
+      "hash": "7952239e8e28d1b69ba234c5386bc44912c5766003f3167debe195aba378302f"
+    },
+    {
+      "path": "veritas-web/app.py",
+      "size_bytes": 15411,
+      "extension": ".py",
+      "hash": "7952239e8e28d1b69ba234c5386bc44912c5766003f3167debe195aba378302f"
+    },
+    {
+      "path": "issues_plan.md",
+      "size_bytes": 13545,
+      "extension": ".md",
+      "hash": "429fd11a751c4b9bffde1d64824ef2c58cb42ce0283e8ea3cfb90ed876725b6e"
+    },
+    {
+      "path": "feature/llm-failover",
+      "size_bytes": 13188,
+      "extension": "",
+      "hash": "e82a67f564f5c19f2bdabe2fbd545e58fe6706454bcd8bd8b26e73da49fc62dc"
+    },
+    {
+      "path": ".git/index",
+      "size_bytes": 11052,
+      "extension": "",
+      "hash": "87699b393ddde3aebd1220ce9926a994bf88f016785af5f53cd755577057fbba"
+    },
+    {
+      "path": "scripts/close_github_items.py",
+      "size_bytes": 10760,
+      "extension": ".py",
+      "hash": "87077f4336623368c61b2627c28e1e503c69f4f40d498f2fd33aee7eb6646f87"
+    },
+    {
+      "path": "db/neo4j/init_graph.cql",
+      "size_bytes": 9965,
+      "extension": ".cql",
+      "hash": "b8fb58edec1271b0068c0a56dc85a2af7c20e14a07c47ec2a22b58bb4f5863d8"
+    },
+    {
+      "path": "docs/architecture/data-foundation.md",
+      "size_bytes": 9963,
+      "extension": ".md",
+      "hash": "32a164ee77da8b9cf64480eb975854cba0999635c11f196ca7f01c97934a68c4"
+    },
+    {
+      "path": "scripts/snap_osint_query.sh",
+      "size_bytes": 8369,
+      "extension": ".sh",
+      "hash": "7ace6a470d2be14fe762b416a3ed29f7b03b89be83c15bf76489100df34e64be"
+    },
+    {
+      "path": "SECURITY_GOVERNANCE.md",
+      "size_bytes": 8134,
+      "extension": ".md",
+      "hash": "e9323250aaea4408c731fec7f1d152374dccfb8dc742f6f62eb992dfdb6de9fc"
+    },
+    {
+      "path": "bluetooth-open-diagnostics.zip",
+      "size_bytes": 7743,
+      "extension": ".zip",
+      "hash": "084f5365689b303c33d8e45f4a818fd5159ec2544e171c49548091a8d35c7be9"
+    },
+    {
+      "path": "LexCode-Hybrid-Starter-AI-Infer.zip",
+      "size_bytes": 7651,
+      "extension": ".zip",
+      "hash": "b8210a023192c60aa1a3b40ce2e732661659048918f63ba20cfa5952b1e5651a"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "size_bytes": 7504,
+      "extension": ".md",
+      "hash": "bf406047b2d9003349572197b7fdc7b8b19504ea831b9e48fdf3e486a28e0cf3"
+    },
+    {
+      "path": "TopTireAI",
+      "size_bytes": 6716,
+      "extension": "",
+      "hash": "e1709a788ba971df80d7cf632d82b5560e83fac2f1a2b573b2d9a291db9bd490"
+    },
+    {
+      "path": "tests/test_gpt_client.py",
+      "size_bytes": 6706,
+      "extension": ".py",
+      "hash": "477aed73637ad6ef0882157d44ec791dd369c4facc51a09893e1d70574e090d7"
+    },
+    {
+      "path": ".github/workflows/cleanup.yml",
+      "size_bytes": 5628,
+      "extension": ".yml",
+      "hash": "253984ac34c60d010653952e830a0e1112ab500bc611de23ddf6fc9edd626454"
+    }
+  ],
+  "sensitive_files": [
+    "/workspace/Top-TieR-Global-HUB-AI/tsconfig.json",
+    "/workspace/Top-TieR-Global-HUB-AI/.git/config",
+    "/workspace/Top-TieR-Global-HUB-AI/k8s/secrets.yaml.example"
+  ],
+  "docker": {
+    "dockerfiles": [
+      "/workspace/Top-TieR-Global-HUB-AI/Dockerfile",
+      "/workspace/Top-TieR-Global-HUB-AI/veritas-mini-web/Dockerfile",
+      "/workspace/Top-TieR-Global-HUB-AI/veritas-web/Dockerfile"
+    ],
+    "compose": [
+      "/workspace/Top-TieR-Global-HUB-AI/docker-compose.yml"
+    ],
+    "dockerfile_samples": {
+      "/workspace/Top-TieR-Global-HUB-AI/Dockerfile": "FROM node:20-alpine\nWORKDIR /app\nCOPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./\nRUN npm install || true\nCOPY . .\nRUN npm run build\nEXPOSE 3000\nCMD [\"npm\", \"start\"]\n",
+      "/workspace/Top-TieR-Global-HUB-AI/veritas-mini-web/Dockerfile": "# Use Python 3.11 slim image for optimal size and security\nFROM python:3.11-slim\n\n# Set working directory\nWORKDIR /app\n\n# Set environment variables\nENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1 \\\n    PIP_NO_CACHE_DIR=1 \\\n    PIP_DISABLE_PIP_VERSION_CHECK=1\n\n# Install system dependencies\nRUN apt-get update && \\\n    apt-get install -y --no-install-recommends \\\n        curl \\\n        && rm -rf /var/lib/apt/lists/*\n\n# Copy requirements and install Python dependencies\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\n# Copy application code\nCOPY app.py .\n\n# Create non-root user for security\nRUN useradd --create-home --shell /bin/bash miniuser && \\\n    chown -R miniuser:miniuser /app\nUSER miniuser\n\n# Health check\nHEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\\n    CMD curl --fail http://localhost:8088/health || exit 1\n\n# Expose port\nEXPOSE 8088\n\n# Default command\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8088\"]",
+      "/workspace/Top-TieR-Global-HUB-AI/veritas-web/Dockerfile": "# Use Python 3.11 slim image for optimal size and security\nFROM python:3.11-slim\n\n# Set working directory\nWORKDIR /app\n\n# Set environment variables\nENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1 \\\n    PIP_NO_CACHE_DIR=1 \\\n    PIP_DISABLE_PIP_VERSION_CHECK=1\n\n# Install system dependencies\nRUN apt-get update && \\\n    apt-get install -y --no-install-recommends \\\n        curl \\\n        && rm -rf /var/lib/apt/lists/*\n\n# Copy requirements and install Python dependencies\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\n# Copy application code\nCOPY app.py .\n\n# Create non-root user for security\nRUN useradd --create-home --shell /bin/bash miniuser && \\\n    chown -R miniuser:miniuser /app\nUSER miniuser\n\n# Health check\nHEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\\n    CMD curl --fail http://localhost:8088/health || exit 1\n\n# Expose port\nEXPOSE 8088\n\n# Default command\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8088\"]"
+    },
+    "compose_samples": {
+      "/workspace/Top-TieR-Global-HUB-AI/docker-compose.yml": "services:\n  core:\n    build: ./core\n    ports: [\"8080:8080\"]\n    environment:\n      RUST_LOG: info\n  api:\n    build: ./services/api\n    ports: [\"3000:3000\"]\n    env_file: .env\n    depends_on: [core]\n    environment:\n      CORE_URL: ${CORE_URL:-http://core:8080}\n"
+    }
+  },
+  "github_actions": {
+    "codeql.yml": "---\nname: \"CodeQL\"\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\n'on':\n  push:\n    branches: [\"main\", \"master\"]\n  pull_request:\n    branches: [\"main\", \"master\"]\n  schedule:\n    - cron: '26 10 * * 1'\n\njobs:\n  analyze:\n    name: Analyze\n    runs-on: ubuntu-latest\n    permissions:\n      actions: read\n      contents: read\n      security-events: write\n\n    strategy:\n      fail-fast: false\n      matrix:\n        language: ['python']\n        # CodeQL supports ['cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby']\n        # Simplified to focus only on Python analysis\n\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n\n      - name: Initialize CodeQL\n        uses: github/codeql-action/init@v3\n        with:\n          languages: ${{ matrix.language }}\n          # If you wish to specify custom queries, you can do so here or in a config file.\n          # By default, queries listed here will override any specified in a config file.\n          # Prefix the list here with \"+\" to use these queries and those in the config file.\n\n      # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).\n      # If this step fails, then you should remove it and run the build manually (see below)\n      - name: Autobuild\n        uses: github/codeql-action/autobuild@v3\n\n      # ℹ️ Command-line programs to run using the OS shell.\n      # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun\n\n      #   If the Autobuild fails above, remove it and uncomment the following three lines.\n      #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.\n\n      # - run: |\n      #     echo \"Run, Build Application using script\"\n      #     ./location_of_script_within_repo/buildscript.sh\n\n      - name: Perform CodeQL Analysis\n        uses: github/codeql-action/analyze@v3\n        with:\n          category: \"/language:${{matrix.language}}\"\n",
+    "post_merge_validation.yml": "name: Post Merge Validation\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  push:\n    branches:\n      - main\n\njobs:\n  validate:\n    runs-on: ubuntu-latest\n\n    steps:\n      - name: 🛠️ Checkout code\n        uses: actions/checkout@v3\n\n      - name: 🐍 Setup Python\n        uses: actions/setup-python@v4\n        with:\n          python-version: \"3.10\"\n\n      - name: 📦 Install dependencies\n        run: |\n          python -m pip install --upgrade pip\n          pip install -r requirements.txt\n\n      # ✅ نصحح شرط if باستخدام صيغة تعبير صحيحة\n      - name: Run GPT client check\n        if: ${{ secrets.OPENAI_API_KEY != '' }}\n        env:\n          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n        run: python gpt_client.py\n\n      # ✅ تأكد من المسار الصحيح للسكربت\n      - name: Make script executable\n        run: chmod +x scripts/collect_context_for_claude.sh\n\n      - name: Run script\n        run: ./scripts/collect_context_for_claude.sh\n\n      # ❌ تعطيل خطوة Analyze مؤقتًا\n      # - name: Analyze (python)\n      #   uses: github/codeql-action/analyze@v2\n",
+    "auto-assign-reviewer.yml": "name: Auto Assign Reviewer\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  pull_request:\n    types: [opened, reopened, ready_for_review]\n\npermissions:\n  pull-requests: write\n  contents: read\n\njobs:\n  assign-reviewer:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Request MOTEB1989 as reviewer\n        uses: actions/github-script@v7\n        with:\n          script: |\n            const { owner, repo, number } = context.issue;\n            \n            // Check if MOTEB1989 is already requested\n            const { data: pr } = await github.rest.pulls.get({\n              owner,\n              repo,\n              pull_number: number,\n            });\n            \n            const isAlreadyRequested = pr.requested_reviewers.some(\n              reviewer => reviewer.login === 'MOTEB1989'\n            );\n            \n            if (!isAlreadyRequested) {\n              await github.rest.pulls.requestReviewers({\n                owner,\n                repo,\n                pull_number: number,\n                reviewers: ['MOTEB1989']\n              });\n              \n              console.log('Successfully requested MOTEB1989 as reviewer');\n            } else {\n              console.log('MOTEB1989 is already requested as reviewer');\n            }",
+    "CI.yml": "name: CI\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  push:\n    branches: [ main, master ]\n  pull_request:\n    branches: [ main, master ]\n  schedule:\n    - cron: \"0 6 * * 1\"   # كل اثنين 06:00 UTC\n  workflow_dispatch:\n\njobs:\n  build-test:\n    runs-on: ubuntu-latest\n    env:\n      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n        with:\n          submodules: false\n          fetch-depth: 0\n\n      - name: Fail-fast Python syntax\n        run: |\n          python -m py_compile $(git ls-files '*.py') || exit 1\n          python - << 'PY'\n          import sys, tokenize, os\n          p='veritas_console.py'\n          if os.path.exists(p):\n            try:\n              with open(p,'rb') as f:\n                for _ in tokenize.tokenize(f.readline): pass\n              print('OK:', p)\n            except tokenize.TokenError as e:\n              print('TokenError in', p, ':', e); sys.exit(1)\n          PY\n\n      - name: Install linters\n        run: |\n          pip install yamllint\n          sudo curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o /usr/local/bin/hadolint\n          sudo chmod +x /usr/local/bin/hadolint\n\n      - name: Lint YAML\n        run: yamllint -s .\n\n      - name: Lint Dockerfiles\n        run: |\n          find . -name 'Dockerfile*' -maxdepth 4 -print0 | xargs -0 -I{} hadolint {}\n\n      - name: Set up Docker Buildx\n        uses: docker/setup-buildx-action@v3\n        with:\n          install: true\n\n      - name: Verify Buildx\n        run: |\n          docker buildx version\n          docker buildx inspect --bootstrap\n\n      - name: Build image (no push)\n        uses: docker/build-push-action@v6\n        with:\n          context: .\n          file: ./gateway/Dockerfile\n          push: false\n          load: true\n          tags: local/veritas-gateway:test\n\n      - name: Start services (Compose)\n        run: docker compose up -d\n        env:\n          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}\n\n      - name: Health check\n        run: |\n          for i in {1..60}; do curl -sf http://localhost:8080/health && break || true; sleep 2; done\n          curl -sSf http://localhost:8080/health\n\n      - name: Smoke test — Unified Query\n        run: |\n          curl -s -X POST http://localhost:8080/query \\\n            -H \"Content-Type: application/json\" \\\n            -d '{\"query\":\"+966500000000\",\"type\":\"phone\",\"scope\":[\"osint\"],\"trace\":true}' \\",
+    "context-collector.yml": "name: Context Collector\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  workflow_dispatch:\n  push:\n    branches:\n      - main\n\njobs:\n  run-collector:\n    runs-on: ubuntu-latest\n\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n\n      - name: Set up environment\n        run: |\n          sudo apt-get update -y\n          sudo apt-get install -y jq\n\n      - name: Make script executable\n        run: chmod +x scripts/collect_context_for_claude.sh\n\n      - name: Run context collector\n        run: ./scripts/collect_context_for_claude.sh\n\n      - name: Upload generated files\n        uses: actions/upload-artifact@v4\n        with:\n          name: context-files\n          path: |\n            CLAUDE_CONTEXT.md\n            CLAUDE_CONTEXT.json\n",
+    "sync-labels.yml": "name: Sync labels\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  workflow_dispatch:\n  push:\n    branches: [ \"main\" ]\n    paths:\n      - \".github/labels.yml\"\n\npermissions:\n  contents: read\n  issues: write\n  pull-requests: write\n\njobs:\n  sync:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n      - name: Sync labels\n        uses: crazy-max/ghaction-github-labeler@v5\n        with:\n          skip-delete: false\n          yaml-file: .github/labels.yml\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n",
+    "generate-repo-summary.yml": "name: Generate repository summary\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  workflow_dispatch: {}\n  push:\n    branches:\n      - main\n\njobs:\n  generate:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n\n      - name: Make script executable\n        run: |\n          chmod +x scripts/generate_repo_summary.sh || true\n\n      - name: Run repo summary generator\n        run: |\n          mkdir -p artifacts\n          ./scripts/generate_repo_summary.sh\n\n      - name: Upload repo_summary artifact\n        uses: actions/upload-artifact@v4\n        with:\n          name: repo_summary.txt\n          path: repo_summary.txt",
+    "Immutable-Release.yml": "name: Immutable-Release\non:\n  push:\n    tags: [\"v*.*.*\"]\n  workflow_dispatch:\n\npermissions:\n  contents: write\n  packages: write\n\nenv:\n  IMAGE_NAME: veritas-console\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\njobs:\n  build-release:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      # بناء الحاوية + نشرها إلى ghcr.io\n      - uses: docker/login-action@v3\n        with:\n          registry: ghcr.io\n          username: ${{ github.actor }}\n          password: ${{ secrets.GITHUB_TOKEN }}\n\n      - uses: docker/metadata-action@v5\n        id: meta\n        with:\n          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}\n\n      - uses: docker/build-push-action@v6\n        with:\n          context: .\n          push: true\n          tags: ${{ steps.meta.outputs.tags }},ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest\n          labels: ${{ steps.meta.outputs.labels }}\n\n      # توليد Checksum للإخراج (يوثق سلامة الإصدار)\n      - name: Generate checksum\n        run: |\n          echo \"{}\" > release.json\n          tar czf src.tgz $(git ls-files)\n          sha256sum src.tgz > SHA256SUMS\n\n      # إنشاء إصدار GitHub وإرفاق الملفات\n      - name: Create Release\n        uses: softprops/action-gh-release@v2\n        with:\n          files: |\n            SHA256SUMS\n            src.tgz\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n\n  mirror:\n    needs: build-release\n    runs-on: ubuntu-latest\n    if: ${{ secrets.MIRROR_URL && secrets.MIRROR_DEPLOY_KEY }}\n    steps:\n      - uses: actions/checkout@v4\n      - name: Configure mirror key\n        run: |\n          install -m 600 -D /dev/null ~/.ssh/id_ed25519\n          echo \"${{ secrets.MIRROR_DEPLOY_KEY }}\" > ~/.ssh/id_ed25519\n          printf \"Host mirror\\n\\tHostname %s\\n\\tIdentityFile ~/.ssh/id_ed25519\\n\\tStrictHostKeyChecking no\\n\" \"${{ secrets.MIRROR_HOST }}\" >> ~/.ssh/config\n      - name: Push mirror\n        run: |\n          git remote add mirror \"${{ secrets.MIRROR_URL }}\"\n          git push mirror --tags",
+    "external-api-diagnosis.yml": "name: External API Diagnosis\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  schedule:\n    - cron: \"0 */6 * * *\"   # كل 6 ساعات (تقدر تعدل)\n  workflow_dispatch:          # تشغيل يدوي\n\npermissions:\n  issues: write\n  contents: read\n\njobs:\n  diagnose:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout repo\n        uses: actions/checkout@v4\n\n      - name: Setup Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n\n      - name: Install deps\n        run: pip install requests openai\n\n      - name: Run diagnosis\n        id: run_diag\n        env:\n          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n        run: |\n          python scripts/diagnose_external_apis.py > report.log\n\n      - name: Find or create persistent issue\n        id: issue\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        run: |\n          number=$(gh issue list \\\n            --state open \\\n            --limit 1 \\\n            --search '\"🌐 External API Diagnosis\" in:title' \\\n            --json number -q '.[0].number' || true)\n\n          if [ -z \"$number\" ]; then\n            body=\"🌐 Persistent External API Diagnosis Issue\\n\\nThis issue tracks connectivity to OpenAI + WHO + World Bank + Wikidata.\\n\\nLatest run: $(date -u)\"\n            number=$(gh issue create \\\n              --title \"🌐 External API Diagnosis\" \\\n              --body \"$body\" \\\n              --label \"automation,api-diagnosis\" \\\n              --json number -q '.number')\n            echo \"Created issue #$number\"\n          fi\n          echo \"number=$number\" >> $GITHUB_OUTPUT\n\n      - name: Update issue body & comment\n        if: always()\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        run: |\n          issue=${{ steps.issue.outputs.number }}\n          stamp=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\n          summary=$(cat report.log)\n\n          # Add comment\n          gh issue comment $issue \\\n            --body \"🕒 Run at $stamp (UTC)\\n\\n\\`\\`\\`\\n$summary\\n\\`\\`\\`\"\n\n          # Update body with last run\n          current=$(gh api repos/${{ github.repository }}/issues/$issue --jq '.body')\n          updated=\"$current\\n\\n_Last run: $stamp UTC_\"\n          gh issue edit $issue --body \"$updated\"\n\n      - name: Upload report artifact\n        uses: actions/upload-artifact@v4\n        with:\n          name: api-diagnosis-log\n          path: report.log\n          retention-days: 7\n",
+    "cleanup.yml": "name: Repository Hygiene - Close Old Issues & PRs\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  workflow_dispatch:\n    inputs:\n      mode:\n        description: \"Execution mode (dry-run = لا يغلق فعلياً، execute = إغلاق حقيقي)\"\n        required: true\n        type: choice\n        default: dry-run\n        options:\n          - dry-run\n          - execute\n      skip-issues:\n        description: \"تخطي إغلاق الـ Issues\"\n        required: false\n        type: boolean\n        default: false\n      skip-prs:\n        description: \"تخطي إغلاق الـ Pull Requests\"\n        required: false\n        type: boolean\n        default: false\n      before:\n        description: \"أغلق العناصر الأقدم من هذا التاريخ فقط (YYYY-MM-DD)\"\n        required: false\n        type: string\n        default: \"\"\n      exclude:\n        description: \"أرقام Issues/PRs مفصولة بمسافات لاستثنائها (مثال: 123 456 789)\"\n        required: false\n        type: string\n        default: \"\"\n      label-exclude:\n        description: \"استثناء العناصر التي تحتوي على هذه التسميات (مفصولة بمسافات)\"\n        required: false\n        type: string\n        default: \"priority keep wontfix\"\n  \n  schedule:\n    # Run monthly on the 1st at 02:00 UTC (dry-run only for safety)\n    - cron: '0 2 1 * *'\n\npermissions:\n  issues: write\n  pull-requests: write\n  contents: read\n\njobs:\n  cleanup:\n    runs-on: ubuntu-latest\n    \n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n      \n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: '3.11'\n      \n      - name: Install dependencies\n        run: |\n          python -m pip install --upgrade pip\n          pip install requests\n      \n      - name: Determine execution parameters\n        id: params\n        run: |\n          # For scheduled runs, always use dry-run mode for safety\n          if [ \"${{ github.event_name }}\" = \"schedule\" ]; then\n            echo \"mode=dry-run\" >> $GITHUB_OUTPUT\n            echo \"skip_issues=false\" >> $GITHUB_OUTPUT\n            echo \"skip_prs=false\" >> $GITHUB_OUTPUT\n            echo \"before=\" >> $GITHUB_OUTPUT\n            echo \"exclude=\" >> $GITHUB_OUTPUT\n            echo \"label_exclude=priority keep wontfix\" >> $GITHUB_OUTPUT\n          else\n            # Manual dispatch - use input parameters\n            echo \"mode=${{ github.event.inputs.mode }}\" >> $GITHUB_OUTPUT\n            echo \"skip_issues=${{ github.event.inputs.skip-issues }}\" >> $GITHUB_OUTPUT\n            echo \"skip_prs=${{ github.event.inputs.skip-prs }}\" >> $GITHUB_OUTPUT\n            echo \"before=${{ github.event.",
+    "comment-on-pr6.yml": "name: Comment on PR #6\n\nenv:\n  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n  DB_URL: ${{ secrets.DB_URL }}\n  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}\n  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}\n  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}\n  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}\n  REDIS_URL: ${{ secrets.REDIS_URL }}\n  NEO4J_URI: ${{ secrets.NEO4J_URI }}\n  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}\n  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}\n\non:\n  workflow_dispatch:\n  push:\n    branches: [main, 'copilot/fix-f99f8933-db63-4dbf-aee8-6caf44f487f8']\n    paths:\n      - '.github/workflows/comment-on-pr6.yml'\n\npermissions:\n  pull-requests: write\n  contents: read\n\njobs:\n  comment-on-pr:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Check if comment already posted\n        id: check_comment\n        uses: actions/github-script@v7\n        with:\n          script: |\n            const { data: comments } = await github.rest.issues.listComments({\n              owner: context.repo.owner,\n              repo: context.repo.repo,\n              issue_number: 6\n            });\n            \n            const botCommentExists = comments.some(comment => \n              comment.body.includes('PR Analysis & Merge Conflict Resolution')\n            );\n            \n            return botCommentExists;\n      - name: Post comment on PR #6\n        if: steps.check_comment.outputs.result == 'false'\n        uses: actions/github-script@v7\n        with:\n          script: |\n            const prNumber = 6;\n            \n            const commentLines = [\n              \"## 🔍 PR Analysis & Merge Conflict Resolution\",\n              \"\",\n              \"Thank you for the Flask dependency update, @dependabot!\",\n              \"\",\n              \"### Current Status\",\n              \"This PR attempts to update Flask from 2.0.3 to 2.2.5, but there appears to be a merge conflict with the current requirements.txt file.\",\n              \"\",\n              \"### Issue Identified\",\n              \"- **PR changes**: Updates Flask 2.0.3 → 2.2.5 and related dependencies\",\n              \"- **Main branch**: Currently uses FastAPI-based dependencies\",\n              \"- **Conflict**: The main branch has evolved to use FastAPI instead of Flask\",\n              \"\",\n              \"### Recommended Actions\",\n              \"1. **For maintainers**:\",\n              \"   - This PR may be outdated since the project has migrated from Flask to FastAPI\",\n              \"   - Consider closing this PR if Flask is no longer used\",\n              \"   - Review if any Flask dependencies are still needed alongside FastAPI\",\n              \"\",\n              \"2. **Alternative approach**:\",\n              \"   - If Flask is still needed for specific components, manually merge the required Flask dependencies\",\n              \"   - Update the requirements.txt to include both Flask and FastAPI dependencies if both are needed\",\n              \"\",\n              \"### Dependencies Comparison\",\n              \"**PR #6 sug"
+  },
+  "dependencies": {
+    "python": "fastapi>=0.104.1\nuvicorn[standard]>=0.24.0\npydantic>=2.5.0\npython-multipart>=0.0.6\npsycopg2-binary>=2.9\nrequests==2.32.4\nbeautifulsoup4>=4.12.2\nPyMuPDF>=1.23.8\npython-dotenv>=1.0.0\nopenai==0.27.10\n\n# Development/testing dependencies\npytest>=8.0.0\npytest-asyncio>=1.0.0\n",
+    "rust": "[package]\nname = \"lexcode_core\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\naxum = { version = \"0.7\", features = [\"json\"] }\ntokio = { version = \"1\", features = [\"macros\", \"rt-multi-thread\"] }\nserde = { version = \"1\", features = [\"derive\"] }\nserde_json = \"1\"\ntracing = \"0.1\"\ntracing-subscriber = { version = \"0.3\", features = [\"fmt\", \"env-filter\"] }\nreqwest = { version = \"0.12\", features = [\"json\"] }\n",
+    "node": "{\n  \"name\": \"lexcode-api\",\n  \"version\": \"0.1.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"tsx src/index.ts\",\n    \"build\": \"tsc -p .\",\n    \"start\": \"node dist/index.js\"\n  },\n  \"dependencies\": {\n    \"axios\": \"^1.7.2\",\n    \"express\": \"^4.19.2\",\n    \"zod\": \"^3.23.8\",\n    \"dotenv\": \"^16.4.5\",\n    \"cors\": \"^2.8.5\"\n  },\n  \"devDependencies\": {\n    \"@types/express\": \"^4.17.21\",\n    \"tsx\": \"^4.15.7\",\n    \"typescript\": \"^5.5.4\"\n  }\n}"
+  },
+  "sql": {}
+}
