@@ -109,7 +109,7 @@ if __name__ == "__main__":
         debug = os.getenv("DEBUG", "false").lower() == "true"
 
         uvicorn.run(
-            "api_server:app",
+            "services.api_server:app",
             host=host,
             port=port,
             reload=debug,

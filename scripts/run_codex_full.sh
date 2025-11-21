@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_DIR="/workspaces/Top-TieR-Global-HUB-AI"
-APP_MODULE="api_server.main:app"
+APP_MODULE="services.api_server.main:app"
 HOST="0.0.0.0"
 PORT="8000"
 

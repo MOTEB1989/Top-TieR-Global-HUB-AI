@@ -12,7 +12,7 @@ echo "1. Neo4j Initialization"
 echo "------------------------"
 echo "To initialize Neo4j with OSINT schema, run:"
 echo "NEO4J_CID=\$(docker ps --filter 'name=neo4j' -q | head -n1)"
-echo "[ -n \"\$NEO4J_CID\" ] && docker exec -i \"\$NEO4J_CID\" cypher-shell -u \"\${NEO4J_USER:-neo4j}\" -p \"\${NEO4J_PASS:-password}\" < db/neo4j/init_graph.cql"
+echo "[ -n \"\$NEO4J_CID\" ] && docker exec -i \"\$NEO4J_CID\" cypher-shell -u \"\${NEO4J_USER:-neo4j}\" -p \"\${NEO4J_PASS:-password}\" < databases/neo4j/init_graph.cql"
 
 echo ""
 echo "2. Mini-Web Service"
