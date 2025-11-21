@@ -1,0 +1,41 @@
+name: "Secure AI Pipeline"
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  security-scan:
+    name: Secret scan and validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --no-banner
+
+      - name: Validate required security artifacts
+        run: |
+          required=( \
+            "services/api/gateways/secureCodex.js" \
+            "adapters/python/lexhub/usage_guard.py" \
+            "middleware/security.js" \
+            "security-setup.sh" \
+          )
+          missing=0
+          for path in "${required[@]}"; do
+            if [ ! -f "$path" ]; then
+              echo "::error::Missing required security artifact: $path"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Report status
+        run: echo "✅ Security scan completed"
