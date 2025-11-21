@@ -1,0 +1,12 @@
+name: 🔒 Secure AI Pipeline
+on: [push, pull_request]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan secrets
+        run: grep -r "sk-\|ghp_" . --exclude-dir=.git && exit 1 || echo "✅ Clean"
+      - name: Validate security files
+        run: test -f services/api/gateways/secureCodex.js && echo "✅ Ready" || exit 1
