@@ -1,0 +1,95 @@
+name: AI Gateway Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Determine changed files
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1 || true
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
+          cat changed_files.txt || true
+
+      - name: Detect available AI providers
+        id: detect_providers
+        run: |
+          touch providers.txt
+          if [ ! -z "${OPENAI_API_KEY}" ]; then echo "openai" >> providers.txt; fi
+          if [ ! -z "${GROQ_API_KEY}" ]; then echo "groq" >> providers.txt; fi
+          if [ ! -z "${LOCAL_MODEL_ENDPOINT}" ]; then echo "local" >> providers.txt; fi
+          cat providers.txt || true
+          if [ ! -s providers.txt ]; then
+            echo "[SKIP] No providers configured"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Run AI Gateway reviewer
+        if: steps.detect_providers.outputs.skip != 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LOCAL_MODEL_ENDPOINT: ${{ secrets.LOCAL_MODEL_ENDPOINT }}
+        run: |
+          mkdir -p ai_review_output
+          for prov in $(cat providers.txt); do
+            out_file="ai_review_output/review_${prov}.md"
+            echo "### Provider: $prov" >> "$out_file"
+            export PROVIDER="$prov"
+            while IFS= read -r file; do
+              if [ -f "$file" ]; then
+                echo "=== Analyzing $file with $prov ==="
+                python gateway.py --task auto --file "$file" >> "$out_file" 2>&1 || true
+                echo -e "\n\n---\n\n" >> "$out_file"
+              fi
+            done < changed_files.txt
+          done
+
+      - name: Run risk assessor
+        if: steps.detect_providers.outputs.skip != 'true'
+        run: |
+          python scripts/ai_risk_assessor.py \
+            --inputs ai_review_output/review_*.md \
+            --output ai_review_output/risk_summary.json \
+            | tee ai_review_output/risk_summary.txt
+
+      - name: Attach risk summary to CI summary
+        if: steps.detect_providers.outputs.skip != 'true'
+        run: |
+          echo "## AI Risk Summary" >> $GITHUB_STEP_SUMMARY
+          cat ai_review_output/risk_summary.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload AI review artifacts
+        if: steps.detect_providers.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-output
+          path: ai_review_output/
+
+      - name: Upload Risk Summary Artifact
+        if: steps.detect_providers.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-risk-summary
+          path: ai_review_output/risk_summary.json
