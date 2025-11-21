@@ -1,70 +1,0 @@
-
-### 🔎 مزوّدات البيانات (Data Providers)
-- **IntelX** (أرشيف وتسريبات – API)
-- **DeHashed** (تسريبات قواعد بيانات – API)
-- **Social Links** (شبكات اجتماعية، Deep/Dark Web)
-- **Skopenow** (OSINT مؤسسي)
-- **Shodan** (أجهزة متصلة بالإنترنت، خدمات، ثغرات)
-- **Maltego Transform Hub** (تحويل كيانات متقدم)
-- **Web Search**:
-  - SerpAPI (Google/DuckDuckGo)
-  - Bing Web Search API
-  - DuckDuckGo HTML (افتراضي بدون API)
-
-### 👤 أدوات الكيانات (Entities)
-- **Phone Intelligence**: Truecaller، NumLookup، EveryCaller، HIBP
-- **Email Intelligence**: Hunter.io، Email Hippo، HIBP
-- **Username Tracking**: Sherlock، WhatsMyName، Namechk
-- **Image Intelligence**: Yandex Reverse Image، Bing Visual Search، PimEyes
-
-### 🧠 التحليل (Analysis Layer)
-- **Neo4j Graph DB** (تخزين علاقات: Person, Phone, Email, Username, IP, Provider, Image)
-- **Temporal Analysis**: `first_seen` / `last_seen`
-- **Behavioral Analysis**: أنماط النشاط، بصمة الأسلوب، pHash للصور
-- **Arabic NLP**: `/v1/nlp/arabic/analyze` (تطبيع + مشاعر + تقسيم كلمات)
-- **Rules Engine**: phone/email overlap، username similarity
-- **ML Identity Resolution** (بوابة لمصنّف تعلم آلي)
-- **Link Prediction** (توقع علاقات مخفية – مستقبلًا)
-
-### 🎨 الواجهات (Interfaces)
-- **REST API**:  
-  `/v1/report`, `/v1/phone/verify`, `/v1/email/check`, `/v1/username/track`, `/v1/image/reverse`, `/v1/search/web`, `/v1/nlp/arabic/analyze`
-- **Web UI**: `/ui/cyto/index.html` (Cytoscape.js لعرض البيانات رسوميًا)
-- **LangChain Agent**: وكيل Rule-based أو مدعوم بـ GPT/Llama
-
-### 🔔 التنبيهات (Alerts)
-- **Webhook Alerts**: تنبيه عند اكتشاف علاقات حرجة (مثل IP به ثغرات، أو بريد جديد في تسريب)
-- **قواعد قابلة للتوسع**: يمكن إضافة قواعد مخصصة بسهولة في `utils/alerts.py`
-
-### 🔐 الأمان والسياسات (Security & Policies)
-- **Residential Proxies** (بروكسيات سكنية + تدوير IP)
-- **سياسة CAPTCHA مرنة** (`HARD_FAIL_ON_CAPTCHA=false` مع دعم 2Captcha)
-- **HTTPS + mTLS** لتشفير كامل للتواصل
-- **Sanitization**: تنظيف المخرجات من أي روابط/خطوات يدوية
-- **Audit Log / RBAC** (مدرجة في خارطة الطريق المستقبلية)
-
-### 📊 استعلامات جاهزة (Neo4j Cypher Examples)
-```cypher
-// أشخاص مرتبطون برقم هاتف
-MATCH (p:Person)-[:HAS_PHONE]->(ph:Phone {id:"+9665XXXXXXX"})
-RETURN p, ph;
-
-// مصادر الاستعلام لرقم
-MATCH (ph:Phone {id:"+9665XXXXXXX"})-[r:QUERIED]->(prov:Provider)
-RETURN prov, r.latency_ms, r.first_seen
-ORDER BY r.first_seen DESC;
-
-// شبكة اتصالية (Person–Phone–Email–Username)
-MATCH path = (p:Person)-[:HAS_PHONE|:HAS_EMAIL|:USES]-(related)
-RETURN path
-LIMIT 50;
-
----
-
-بهذا القسم، أي زائر لمستودعك سيرى أن المنصة تدعم:  
-- **مزوّدات بيانات كثيرة** (أشخاص + أجهزة + تسريبات + صور + بحث ويب).  
-- **تحليل متقدم** (Graph, NLP, ML, Temporal/Behavioral).  
-- **واجهات متعددة** (API, Web UI, LangChain Agent).  
-- **أمان وتنبيهات** على مستوى احترافي.  
-
-تحبني أضيف فوق هذا القسم في الـREADME رسم بياني (Diagram) صغير يوضح **التدفق: المستخدم → الوكيل → الأدوات → Neo4j → واجهة/تنبيه**؟
