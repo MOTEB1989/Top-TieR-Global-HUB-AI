@@ -25,3 +25,6 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```bash
 curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
 ```
+
+## AI Gateway V3 (CLI)
+أداة `gateway.py` توفر مراجعات ملفات متعددة المزودات والمهام مع مخرجات Markdown. راجع [docs/GATEWAY_V3.md](docs/GATEWAY_V3.md) للتفاصيل واستخدامها في CI.

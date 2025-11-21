@@ -1,0 +1,97 @@
+name: AI Gateway V3 File Review
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**/*.py'
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.docx'
+      - '**/*.pdf'
+
+jobs:
+  ai-gateway-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install gateway dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests PyPDF2 python-docx
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          BASE_REF="${{ github.base_ref }}"
+          if [ -z "$BASE_REF" ]; then
+            echo "BASE_REF is empty; skipping."
+            exit 0
+          fi
+          git fetch origin "$BASE_REF" --depth=1
+          git diff --name-only "origin/${BASE_REF}...HEAD" > /tmp/changed_files.txt
+          SUPPORTED=$(grep -E '\.(py|md|txt|yaml|yml|docx|pdf)$' /tmp/changed_files.txt || true)
+          if [ -z "$SUPPORTED" ]; then
+            echo "changed=" >> "$GITHUB_OUTPUT"
+            echo "No supported files changed."
+            exit 0
+          fi
+          printf "%s\n" "$SUPPORTED" > /tmp/supported_files.txt
+          echo "changed=$SUPPORTED" >> "$GITHUB_OUTPUT"
+
+      - name: Check provider configuration
+        id: provider
+        run: |
+          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "provider=openai" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ secrets.GROQ_API_KEY }}" ]; then
+            echo "provider=groq" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ secrets.AZURE_OPENAI_KEY }}" ] && [ -n "${{ secrets.AZURE_OPENAI_ENDPOINT }}" ] && [ -n "${{ secrets.AZURE_OPENAI_DEPLOYMENT }}" ]; then
+            echo "provider=azure" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ secrets.LOCAL_MODEL_ENDPOINT }}" ]; then
+            echo "provider=local" >> "$GITHUB_OUTPUT"
+          else
+            echo "provider=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run AI Gateway review
+        if: steps.diff.outputs.changed != ''
+        env:
+          PROVIDER: ${{ steps.provider.outputs.provider }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          LOCAL_MODEL_ENDPOINT: ${{ secrets.LOCAL_MODEL_ENDPOINT }}
+        run: |
+          if [ -z "$PROVIDER" ]; then
+            echo "[SKIP] No AI provider configured"
+            exit 0
+          fi
+
+          REPORT=ai_gateway_report.md
+          : > "$REPORT"
+          while IFS= read -r file; do
+            if [ -n "$file" ]; then
+              python gateway.py --task auto --file "$file" >> "$REPORT"
+            fi
+          done < /tmp/supported_files.txt
+
+      - name: Upload AI Gateway report
+        if: steps.diff.outputs.changed != '' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-gateway-report
+          path: ai_gateway_report.md
+          if-no-files-found: warn
