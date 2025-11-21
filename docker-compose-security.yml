@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  api-gateway:
+    environment:
+      - CODEX_ENCRYPTION_KEY=${CODEX_KEY}
+      - SECURITY_MODE=enabled
