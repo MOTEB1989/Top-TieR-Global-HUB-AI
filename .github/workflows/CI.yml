@@ -49,6 +49,9 @@ jobs:
               print('TokenError in', p, ':', e); sys.exit(1)
           PY
 
+      - name: Compile RAG package
+        run: python -m compileall rag/
+
       - name: Install linters
         run: |
           pip install yamllint
