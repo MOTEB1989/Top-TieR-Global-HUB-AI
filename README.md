@@ -25,3 +25,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```bash
 curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
 ```
+
+## AI Gateway Layer
+
+This repository now includes a unified AI gateway (OpenAI, Groq, Azure, local) under `gateway/`, and a validation workflow at `.github/workflows/ai-gateway-validation.yml`. Configure `LLM_PROVIDER`, `LLM_MODEL`, and provider API keys (e.g., `OPENAI_API_KEY`, `GROQ_API_KEY`) to switch providers without changing application code.
