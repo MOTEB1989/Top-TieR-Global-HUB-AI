@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from api_server import app
+from services.api_server import app
 from gpt_client import GPTClient, GPTRequest, GPTResponse
 
 
@@ -77,7 +77,7 @@ class TestGPTEndpoint:
         """Test /gpt endpoint without API key configured"""
         with patch.dict(os.environ, {}, clear=True):
             # Reinitialize the gpt_client in the module
-            with patch('api_server.gpt_client') as mock_client:
+            with patch('services.api_server.gpt_client') as mock_client:
                 mock_client.is_available.return_value = False
                 
                 response = client.post(
@@ -111,7 +111,7 @@ class TestGPTEndpoint:
         assert isinstance(data["response"], str)
         assert len(data["response"]) > 0
     
-    @patch('api_server.gpt_client')
+    @patch('services.api_server.gpt_client')
     def test_gpt_endpoint_mock_success(self, mock_client):
         """Test /gpt endpoint with mocked successful response"""
         # Configure mock
@@ -139,7 +139,7 @@ class TestGPTEndpoint:
         assert data["usage"] == {"total_tokens": 10}
         assert data["model"] == "text-davinci-003"
     
-    @patch('api_server.gpt_client')
+    @patch('services.api_server.gpt_client')
     def test_gpt_endpoint_value_error(self, mock_client):
         """Test /gpt endpoint with ValueError"""
         mock_client.is_available.return_value = True
@@ -157,7 +157,7 @@ class TestGPTEndpoint:
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid request"
     
-    @patch('api_server.gpt_client')
+    @patch('services.api_server.gpt_client')
     def test_gpt_endpoint_runtime_error(self, mock_client):
         """Test /gpt endpoint with RuntimeError"""
         mock_client.is_available.return_value = True

@@ -71,7 +71,7 @@ ignore = [
 max-complexity = 10
 
 [tool.ruff.lint.isort]
-known-first-party = ["api_server", "veritas_console"]
+known-first-party = ["services.api_server", "veritas_console"]
 
 [tool.black]
 line-length = 127
@@ -95,7 +95,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 127
-known_first_party = ["api_server", "veritas_console"]
+known_first_party = ["services.api_server", "veritas_console"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
