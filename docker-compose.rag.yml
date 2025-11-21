@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.8.4
+    ports:
+      - "6333:6333"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  local_phi:
+    build: ./services/local_llm
+    environment:
+      - CONTEXT_SIZE=4096
+    volumes:
+      - ./models:/models
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  rag_api:
+    build: .
+    command: python services/rag_engine/rag.py query "health check" || true
+    environment:
+      - RAG_QDRANT_URL=http://qdrant:6333
+      - LOCAL_PHI_BASE_URL=http://local_phi:8001
+    depends_on:
+      - qdrant
+      - local_phi
+
+  web_ui:
+    build: .
+    command: streamlit run services/web_ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - RAG_QDRANT_URL=http://qdrant:6333
+      - LOCAL_PHI_BASE_URL=http://local_phi:8001
+    depends_on:
+      - rag_api
+      - qdrant
+      - local_phi
