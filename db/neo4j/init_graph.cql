@@ -29,7 +29,7 @@ CREATE INDEX image_source_index IF NOT EXISTS FOR (img:Image) ON (img.source);
 // Composite indexes for common queries
 CREATE INDEX person_name_confidence IF NOT EXISTS FOR (p:Person) ON (p.name, p.confidence);
 CREATE INDEX phone_country_number IF NOT EXISTS FOR (ph:Phone) ON (ph.country, ph.number);
-CREATE INDEX email_domain_address IF NOT EXISTS FOR (e:Email) ON (e.domain, p.address);
+CREATE INDEX email_domain_address IF NOT EXISTS FOR (e:Email) ON (e.domain, e.address);
 
 // ============================================================================
 // SCHEMA SETUP WITH SAMPLE STRUCTURE
