@@ -1,137 +1,65 @@
 name: CI
 
-env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  DB_URL: ${{ secrets.DB_URL }}
-  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
-  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
-  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
-  REDIS_URL: ${{ secrets.REDIS_URL }}
-  NEO4J_URI: ${{ secrets.NEO4J_URI }}
-  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}
-  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
-
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
   schedule:
-    - cron: "0 6 * * 1"   # كل اثنين 06:00 UTC
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          submodules: false
-          fetch-depth: 0
+          python-version: "3.11"
 
-      - name: Fail-fast Python syntax
+      - name: Install dependencies
         run: |
-          python -m py_compile $(git ls-files '*.py') || exit 1
-          python - << 'PY'
-          import sys, tokenize, os
-          p='veritas_console.py'
-          if os.path.exists(p):
-            try:
-              with open(p,'rb') as f:
-                for _ in tokenize.tokenize(f.readline): pass
-              print('OK:', p)
-            except tokenize.TokenError as e:
-              print('TokenError in', p, ':', e); sys.exit(1)
-          PY
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt ruff mypy
 
-      - name: Install linters
-        run: |
-          pip install yamllint
-          sudo curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o /usr/local/bin/hadolint
-          sudo chmod +x /usr/local/bin/hadolint
+      - name: Ruff lint
+        run: ruff check .
 
-      - name: Lint YAML
-        run: yamllint -s .
+      - name: Type check
+        run: mypy api_server app utils gpt_client.py providers.py
 
-      - name: Lint Dockerfiles
-        run: |
-          find . -name 'Dockerfile*' -maxdepth 4 -print0 | xargs -0 -I{} hadolint {}
+      - name: Run tests
+        run: pytest
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           install: true
 
-      - name: Verify Buildx
-        run: |
-          docker buildx version
-          docker buildx inspect --bootstrap
-
-      - name: Build image (no push)
+      - name: Build api_server image (no push)
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./gateway/Dockerfile
+          context: ./api_server
+          file: ./api_server/Dockerfile
           push: false
-          load: true
-          tags: local/veritas-gateway:test
+          tags: local/api_server:ci
 
-      - name: Start services (Compose)
-        run: docker compose up -d
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-
-      - name: Health check
-        run: |
-          for i in {1..60}; do curl -sf http://localhost:8080/health && break || true; sleep 2; done
-          curl -sSf http://localhost:8080/health
-
-      - name: Smoke test — Unified Query
-        run: |
-          curl -s -X POST http://localhost:8080/query \
-            -H "Content-Type: application/json" \
-            -d '{"query":"+966500000000","type":"phone","scope":["osint"],"trace":true}' \
-            | tee /tmp/smoke.json
-          test -s /tmp/smoke.json
-
-      - name: Stop services
-        if: always()
-        run: docker compose down -v
-
-  push-image:
-    needs: build-test
-    runs-on: ubuntu-latest
-    if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Docker login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build & Push gateway
+      - name: Build veritas-web image (no push)
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./gateway/Dockerfile
-          push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/veritas-gateway:ci-${{ github.sha }}
+          context: ./veritas-web
+          file: ./veritas-web/Dockerfile
+          push: false
+          tags: local/veritas-web:ci
 
-  notify:
-    needs: [build-test, push-image]
-    runs-on: ubuntu-latest
-    if: always() && ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-    steps:
-      - name: Slack notify
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_MESSAGE: "CI • ref=${{ github.ref }} • build=${{ needs.build-test.result }} • push=${{ needs.push-image.result || 'skipped' }}"
+      - name: Build veritas-mini-web image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./veritas-mini-web
+          file: ./veritas-mini-web/Dockerfile
+          push: false
+          tags: local/veritas-mini-web:ci

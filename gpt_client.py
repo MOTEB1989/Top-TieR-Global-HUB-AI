@@ -1,6 +1,8 @@
 import os
 from typing import Any
 
+# TODO: Migrate from legacy Completion API to ChatCompletion.
+
 import openai
 from pydantic import BaseModel
 

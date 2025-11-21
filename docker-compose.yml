@@ -1,13 +1,37 @@
 services:
-  core:
-    build: ./core
-    ports: ["8080:8080"]
+  api_server:
+    build:
+      context: ./api_server
+      dockerfile: Dockerfile
+    command: uvicorn api_server:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+
+  veritas-web:
+    build: ./veritas-web
     environment:
-      RUST_LOG: info
-  api:
-    build: ./services/api
-    ports: ["3000:3000"]
-    env_file: .env
-    depends_on: [core]
+      MINI_WEB_PORT: "8080"
+    command: uvicorn app:app --host 0.0.0.0 --port 8080
+    ports:
+      - "8080:8080"
+
+  veritas-mini-web:
+    build: ./veritas-mini-web
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      MINI_WEB_PORT: "8088"
+    command: uvicorn app:app --host 0.0.0.0 --port 8088
+    ports:
+      - "8088:8088"
+
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    env_file:
+      - .env.neo4j
+
+volumes:
+  neo4j_data:
