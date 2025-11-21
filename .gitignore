@@ -104,6 +104,25 @@ yarn-error.log*
 *.cert
 
 # Backup files
-*.bak
-*.backup
+.bak
+.backup
 *.old
+
+# Python caches
+.mypy_cache/
+.ruff_cache/
+
+# Node / TypeScript
+
+# OS / editor junk
+
+# Archives and logs
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# General caches
+.cache/
+tmp/
