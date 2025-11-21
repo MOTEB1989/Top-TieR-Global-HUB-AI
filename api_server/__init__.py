@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from gpt_client import GPTClient, GPTRequest, GPTResponse
 from app.ingestion.cli import run_ingestion
+from rag.query import rag_answer
 
 # Fallback if python-dotenv is not available
 try:
@@ -29,6 +30,21 @@ class HealthResponse(BaseModel):
     message: str
     status: str
     version: str
+
+
+class RAGQuery(BaseModel):
+    question: str
+    top_k: int = 5
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+class RAGResponse(BaseModel):
+    question: str
+    answer: str
+    provider: Optional[str] = None
+    model: Optional[str] = None
+    contexts: Any
 
 
 @app.get("/", response_model=HealthResponse)
@@ -71,6 +87,18 @@ async def gpt_endpoint(request: GPTRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/rag/query", response_model=RAGResponse)
+async def rag_query(payload: RAGQuery) -> Dict:
+    """Query the local RAG engine and return the composed answer."""
+    result = rag_answer(
+        question=payload.question,
+        top_k=payload.top_k,
+        provider=payload.provider,
+        model=payload.model,
+    )
+    return result
 
 
 @app.post("/v1/sources/{source}/sync")
