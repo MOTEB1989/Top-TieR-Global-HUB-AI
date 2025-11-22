@@ -1,27 +1,45 @@
-# LexCode Hybrid Stack 🚀
+# Top-TieR Global HUB AI 🚀
 
-هندسة هجينة متينة:
-- **Rust (core/):** محرك الأداء والخدمات الأساسية (HTTP/axum).
-- **Node.js + TypeScript (services/api/):** بوابة API، مصادقة، توحيد المزوّدات.
-- **Python (adapters/python/lexhub/):** وصلات الذكاء الاصطناعي والبيانات (OpenAI/Anthropic/HF/Kaggle...).
+**Stable Stack - Streamlit + SearXNG + Qdrant + Phi-3**
 
-## التشغيل السريع
+## Quick Start
 ```bash
-cp .env.example .env
-docker compose up --build
+./scripts/run_stable.sh
 ```
-- Rust Core على `http://localhost:8080`
-- API Gateway على `http://localhost:3000`
 
+### Access from iPhone / LAN
+http://<YOUR-IP>:8501
 
-## استخدام /v1/ai/infer (OpenAI)
-ضع مفتاحك في `.env`:
+## Services
+Service | Port | Access
+--- | --- | ---
+Streamlit UI | 8501 | Main Interface
+SearXNG | 8080 | Search Engine
+Qdrant | 6333 | Vector DB
+Phi-3 | 8082 | Local LLM
+Redis | 6379 | Cache
+
+## Configuration
+Copy or edit `.env`:
 ```
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini  # اختياري
-OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
+REDIS_URL=redis://redis:6379/1
+PHI3_URL=http://phi3:8082
+QDRANT_URL=http://qdrant:6333
+SEARXNG_URL=http://searxng:8080
+# Add API keys if needed
 ```
-اختبر:
-```bash
-curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
-```
+
+## Troubleshooting
+- **Streamlit not loading in Codespaces?**
+  1. Go to Ports tab
+  2. Add port 8501
+  3. Set visibility to Public
+  4. Open in browser
+- **Phi-3 slow on first run?** Wait 60–90 seconds for the model to load.
+
+## Stack Architecture
+- Frontend: Streamlit (`src/web/app.py`)
+- Backend: Docker Compose (Redis, SearXNG, Qdrant, Phi-3)
+- AI: Local Phi-3 inference
+
+License: MIT
