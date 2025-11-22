@@ -1,0 +1,89 @@
+version: "3.8"
+
+networks:
+  ai-net:
+
+services:
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    networks:
+      - ai-net
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant-data:/qdrant/storage
+    restart: unless-stopped
+
+  rag_engine:
+    build:
+      context: ./rag_engine
+      dockerfile: Dockerfile
+    container_name: rag_engine
+    networks:
+      - ai-net
+    ports:
+      - "8081:8081"
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  phi3:
+    image: ghcr.io/ggerganov/llama.cpp:light
+    container_name: phi3
+    networks:
+      - ai-net
+    ports:
+      - "8082:8080"
+    command: -m /models/phi-3-mini-4k-q4.gguf --host 0.0.0.0 --port 8080
+    volumes:
+      - ./models:/models
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    networks:
+      - ai-net
+    ports:
+      - "3000:3000"
+    environment:
+      - PHI3_URL=http://phi3:8080
+      - RAG_ENGINE_URL=http://rag_engine:8081
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - rag_engine
+      - phi3
+      - qdrant
+    restart: unless-stopped
+
+  web_ui:
+    image: python:3.11-slim
+    container_name: web_ui
+    working_dir: /app
+    networks:
+      - ai-net
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src/web:/app
+    command: streamlit run app.py --server.address 0.0.0.0 --server.port 8501
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  core:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    container_name: core
+    networks:
+      - ai-net
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

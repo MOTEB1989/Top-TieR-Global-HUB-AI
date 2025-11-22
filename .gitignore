@@ -70,6 +70,8 @@ Thumbs.db
 
 # Docker
 # .dockerignore should be committed, so it's not ignored
+qdrant-data/
+models/
 
 # Temporary files
 *.tmp
