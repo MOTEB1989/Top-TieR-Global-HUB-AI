@@ -1,0 +1,109 @@
+version: "3.9"
+
+networks:
+  rag-net:
+    driver: bridge
+
+volumes:
+  qdrant_data:
+
+services:
+  qdrant:
+    image: qdrant/qdrant:1.10.0
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rag-net
+
+  phi3:
+    image: python:3.11-slim
+    command: >
+      sh -c "pip install --no-cache-dir fastapi uvicorn[standard] pydantic && \
+      python -c \"from fastapi import FastAPI; from pydantic import BaseModel; import uvicorn; app=FastAPI(); \
+      class Prompt(BaseModel): prompt: str; \
+      @app.get('/health')
+      def health(): return {'status': 'ok'}; \
+      @app.post('/generate')
+      def generate(body: Prompt): return {'response': f'phi3 mock response to {body.prompt}'}; \
+      uvicorn.run(app, host='0.0.0.0', port=11434)\""
+    ports:
+      - "11434:11434"
+    networks:
+      - rag-net
+
+  rag_engine:
+    image: python:3.11-slim
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      PHI3_URL: http://phi3:11434
+    command: >
+      sh -c "pip install --no-cache-dir fastapi uvicorn[standard] requests && \
+      python -c \"import os, requests; from fastapi import FastAPI; import uvicorn; \
+      QDRANT_URL=os.getenv('QDRANT_URL', 'http://qdrant:6333'); PHI3_URL=os.getenv('PHI3_URL', 'http://phi3:11434'); \
+      app=FastAPI(); \
+      @app.get('/health')
+      def health(): return {'status':'ok','qdrant':QDRANT_URL,'phi3':PHI3_URL}; \
+      @app.get('/query')
+      def query(q: str = 'hello'): resp = requests.post(f"{PHI3_URL}/generate", json={'prompt': q}); return {'query': q, 'phi3_response': resp.json() if resp.ok else {'error': resp.text}}; \
+      uvicorn.run(app, host='0.0.0.0', port=8000)\""
+    ports:
+      - "8000:8000"
+    depends_on:
+      - qdrant
+      - phi3
+    networks:
+      - rag-net
+
+  gateway:
+    image: python:3.11-slim
+    environment:
+      RAG_ENGINE_URL: http://rag_engine:8000
+    command: >
+      sh -c "pip install --no-cache-dir fastapi uvicorn[standard] requests && \
+      python -c \"import os, requests; from fastapi import FastAPI; import uvicorn; \
+      RAG_ENGINE_URL=os.getenv('RAG_ENGINE_URL', 'http://rag_engine:8000'); \
+      app=FastAPI(); \
+      @app.get('/health')
+      def health(): return {'status':'ok','rag_engine':RAG_ENGINE_URL}; \
+      @app.get('/search')
+      def search(q: str = 'hello'): resp = requests.get(f"{RAG_ENGINE_URL}/query", params={'q': q}); return resp.json() if resp.ok else {'error': resp.text}; \
+      uvicorn.run(app, host='0.0.0.0', port=8080)\""
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rag_engine
+    networks:
+      - rag-net
+
+  web_ui:
+    image: python:3.11-slim
+    environment:
+      GATEWAY_URL: http://gateway:8080
+    command: |-
+      sh -c "pip install --no-cache-dir streamlit requests && \
+      cat <<'PY' > /tmp/app.py
+      import os
+      import requests
+      import streamlit as st
+
+      gateway_url = os.getenv('GATEWAY_URL', 'http://gateway:8080')
+      st.title('Local RAG UI')
+      query = st.text_input('Enter your query', 'hello world')
+      if st.button('Send Query'):
+          with st.spinner('Contacting RAG gateway...'):
+              resp = requests.get(f"{gateway_url}/search", params={'q': query})
+              if resp.ok:
+                  st.json(resp.json())
+              else:
+                  st.error(resp.text)
+      st.caption('Local developer RAG stack. Not for production use.')
+      PY
+      streamlit run --server.port 8501 --server.address 0.0.0.0 /tmp/app.py"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - gateway
+    networks:
+      - rag-net
