@@ -23,6 +23,10 @@ COMPOSE_FILE="${REPO_ROOT}/docker-compose.rag.yml"
 HEALTH_SCRIPT="${REPO_ROOT}/scripts/system_health_check.py"
 ENV_FILE="${REPO_ROOT}/.env"
 
+# Configuration
+readonly SERVICES="qdrant rag_engine phi3 gateway web_ui"
+readonly STARTUP_WAIT_TIME=5
+
 ################################################################################
 # Function: detect_ip
 # Detects local IP address for iPhone-friendly URLs
@@ -190,10 +194,10 @@ fi
 ################################################################################
 print_banner "Starting RAG Stack Services"
 
-print_info "Starting services: qdrant, rag_engine, phi3, gateway, web_ui..."
+print_info "Starting services: ${SERVICES}..."
 print_info "This may take a few minutes on first run..."
 
-if docker compose -f "$COMPOSE_FILE" up --build -d qdrant rag_engine phi3 gateway web_ui; then
+if docker compose -f "$COMPOSE_FILE" up --build -d ${SERVICES}; then
     print_success "Services started successfully"
 else
     print_error "فشل في تشغيل الخدمات. يرجى التحقق من السجلات."
@@ -202,8 +206,8 @@ else
 fi
 
 # Give services time to initialize
-print_info "Waiting for services to initialize (5 seconds)..."
-sleep 5
+print_info "Waiting for services to initialize (${STARTUP_WAIT_TIME} seconds)..."
+sleep "${STARTUP_WAIT_TIME}"
 
 ################################################################################
 # Step 6: Run health check if available
@@ -214,11 +218,12 @@ if [ -f "$HEALTH_SCRIPT" ]; then
     print_info "Running health check script..."
     python3 "$HEALTH_SCRIPT" || {
         print_warning "Health check script reported issues (non-fatal)"
+        print_info "The system may still be usable. Check logs with: docker compose -f ${COMPOSE_FILE} logs"
     }
 else
     print_warning "لم يتم العثور على سكريبت الفحص الصحي في: ${HEALTH_SCRIPT}"
     print_warning "Health check script not found at: ${HEALTH_SCRIPT}"
-    print_info "Continuing without health check..."
+    print_info "Continuing without health check. Monitor service logs if needed."
 fi
 
 ################################################################################
