@@ -8,8 +8,7 @@ set -euo pipefail
 ##############################################
 
 # ========== Config ==========
-REPO_ROOT="$(cd "
-$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "".$0})/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.rag.yml"
 HEALTH_SCRIPT="${REPO_ROOT}/scripts/system_health_check.py"
 ENV_FILE="${REPO_ROOT}/.env"
@@ -69,7 +68,7 @@ declare -a ARGS=()
 # Parse args
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    up|down|restart|ps|logs|health|services) COMMAND="$1"; shift ;;
+    up|down|restart|ps|logs|health|services) COMMAND="$1"; shift ;; 
     --no-build) NO_BUILD=1; shift ;;
     --pull) DO_PULL=1; shift ;;
     --auto-fix) AUTO_FIX=1; shift ;;
@@ -122,7 +121,7 @@ fi
 EMPTY_KEYS=()
 for k in OPENAI_API_KEY GROQ_API_KEY ANTHROPIC_API_KEY; do
   if ! grep -q "^${k}=" "$ENV_FILE"; then EMPTY_KEYS+=("$k (مفقود)");
-  elif grep -q "^${k}=$" "$ENV_FILE"; then EMPTY_KEYS+=("$k (فارغ)"); fi; done
+  elif grep -q "^${k}=$" "$ENV_FILE"; then EMPTY_KEYS+=("$k (فارغ)" ); fi; done
 [[ ${#EMPTY_KEYS[@]} -gt 0 ]] && warn "مفاتيح API التالية فارغة/ناقصة: ${EMPTY_KEYS[*]}"
 
 # Local IP detection
@@ -145,8 +144,7 @@ TARGET_SERVICES=("${SERVICES[@]}")
 if [[ ("$COMMAND" == "up" || "$COMMAND" == "restart") && ${#ARGS[@]} -gt 0 ]]; then
   TARGET_SERVICES=()
   for a in "${ARGS[@]}"; do
-    if [[ -n "
-${SERVICE_MAP[$a]:-}" ]]; then TARGET_SERVICES+=("$a"); else warn "تجاهل خدمة غير معروفة: $a"; fi
+    if [[ -n "${SERVICE_MAP[$a]:-}" ]]; then TARGET_SERVICES+=("$a"); else warn "تجاهل خدمة غير معروفة: $a"; fi
   done
   if [[ ${#TARGET_SERVICES[@]} -eq 0 ]]; then
     warn "لم يتم تمرير خدمات صحيحة — سيتم تشغيل جميع الخدمات."; TARGET_SERVICES=("${SERVICES[@]}"); fi
@@ -183,7 +181,7 @@ auto_fix() {
 case "$COMMAND" in
   up) compose_up; sleep 5; run_health; [[ $AUTO_FIX -eq 1 ]] && auto_fix ;;
   down) compose_down ;;
-  restart) compose_restart; run_health ;;;
+  restart) compose_restart; run_health ;;
   ps) compose_ps; exit 0 ;;
   logs) compose_logs; exit 0 ;;
   health) run_health; exit 0 ;;
@@ -193,18 +191,15 @@ esac
 
 # Access points
 echo ""; echo "========================================="; echo "🎉 STACK IS RUNNING – ACCESS POINTS"; echo "========================================="
-if [[ "
-${TARGET_SERVICES[*]}" == *"web_ui"* || "${TARGET_SERVICES[*]}" == *"streamlit"* ]]; then
+has_service() { local n="$1"; for s in "${TARGET_SERVICES[@]}"; do [[ "$s" == "$n" ]] && return 0; done; return 1; }
+if has_service web_ui || has_service streamlit; then
   echo "📌 Streamlit Chat UI:"; echo "   http://localhost:8501"; [[ -n "$LOCAL_IP" ]] && echo "   📱 iPhone: http://${LOCAL_IP}:8501"; echo ""; fi
-if [[ "
-${TARGET_SERVICES[*]}" == *"gateway"* ]]; then echo "📌 Gateway:        http://localhost:3000"; fi
-if [[ "
-${TARGET_SERVICES[*]}" == *"rag_engine"* ]]; then echo "📌 RAG Engine:     http://localhost:8081"; fi
-if [[ "
-${TARGET_SERVICES[*]}" == *"phi3"* ]]; then echo "📌 Phi-3 Runner:   http://localhost:8082"; fi
-if [[ "
-${TARGET_SERVICES[*]}" == *"qdrant"* ]]; then echo "📌 Qdrant UI:      http://localhost:6333"; fi
-[[ -n "${CODESPACE_NAME:-}" ]] && echo "\n📌 Codespaces: استخدم منافذ الفوروارد في واجهة Codespaces."
+has_service gateway && echo "📌 Gateway:        http://localhost:3000"
+has_service rag_engine && echo "📌 RAG Engine:     http://localhost:8081"
+has_service phi3 && echo "📌 Phi-3 Runner:   http://localhost:8082"
+has_service qdrant && echo "📌 Qdrant UI:      http://localhost:6333"
+[[ -n "
+${CODESPACE_NAME:-}" ]] && echo "\n📌 Codespaces: استخدم منافذ الفوروارد في واجهة Codespaces."
 echo "========================================="; echo "🟢 النظام يعمل بنجاح"; echo "========================================="
 
 exit 0
