@@ -9,6 +9,8 @@
     "skipLibCheck": true
   },
   "include": [
-    "src"
+    "index.ts",
+    "ai.ts",
+    "openai.ts"
   ]
 }

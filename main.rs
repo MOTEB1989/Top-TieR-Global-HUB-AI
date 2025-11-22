@@ -7,6 +7,9 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct Health { status: String }
 
 #[derive(Serialize, Deserialize)]
+struct Ready { ready: bool }
+
+#[derive(Serialize, Deserialize)]
 struct EmbedRequest { text: String }
 
 #[derive(Serialize, Deserialize)]
@@ -14,6 +17,12 @@ struct EmbedResponse { vector: Vec<f32> }
 
 async fn health() -> Json<Health> {
     Json(Health { status: "ok".to_string() })
+}
+
+async fn ready() -> Json<Ready> {
+    // In a real system we would check dependencies (DB, cache, upstreams).
+    // For now, signal that the service is initialized and ready to receive traffic.
+    Json(Ready { ready: true })
 }
 
 async fn embed(Json(payload): Json<EmbedRequest>) -> Json<EmbedResponse> {
@@ -35,6 +44,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/health", get(health))
+        .route("/ready", get(ready))
         .route("/embed", post(embed));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
