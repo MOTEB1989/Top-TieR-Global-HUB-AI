@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AIProvider, ChatMessage } from './ai';
+import type { AIProvider, ChatMessage } from './ai.js';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';

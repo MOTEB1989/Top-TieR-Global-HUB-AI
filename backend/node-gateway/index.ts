@@ -44,8 +44,8 @@ app.listen(PORT, () => {
 
 
 /** ---------------- AI Inference ---------------- */
-import type { ChatMessage } from './ai';
-import { OpenAIProvider } from './openai';
+import type { ChatMessage } from './ai.js';
+import { OpenAIProvider } from './openai.js';
 
 const provider = new OpenAIProvider();
 
