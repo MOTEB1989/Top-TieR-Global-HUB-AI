@@ -1,0 +1,48 @@
+name: Auto Health Diagnostics
+
+on:
+workflow_dispatch:
+schedule:
+- cron: “0 3 * * *”  # daily at 03:00 UTC
+
+jobs:
+health-check:
+runs-on: ubuntu-latest
+env:
+GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+steps:
+- name: Checkout
+uses: actions/checkout@v4
+
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.11"
+
+  - name: Install dependencies
+    run: |
+      python -m pip install --upgrade pip
+      pip install requests
+
+  - name: Run system diagnostics
+    id: diag
+    run: |
+      mkdir -p health_reports
+      python scripts/system_diagnose_and_fix.py | tee health_reports/latest_health_report.md
+
+  - name: Run auto-fix engine (suggestions only)
+    run: |
+      python scripts/auto_fix_engine.py > health_reports/auto_fix_suggestions.md
+
+  - name: Upload health artifacts
+    uses: actions/upload-artifact@v4
+    with:
+      name: system-health-report
+      path: health_reports/
+
+  - name: Telegram notification (optional)
+    if: env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != ''
+    run: |
+      python scripts/telegram_notifier.py "✅ System health diagnostics finished for ${{ github.repository }} on ref ${{ github.ref }}."
