@@ -1,0 +1,66 @@
+name: "\U0001F50D API Audit & Codex Scan"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "\U0001F8FE Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "\U0001F40D Set up Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: "\U0001F4E6 Install Dependencies"
+        run: |
+          pip install -r requirements.txt
+
+      - name: "\u2699\ufe0f Run API Audit Script"
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          python codex_api_audit.py
+
+      - name: "\U0001F4E1 Call Codex Gateway API"
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          python <<'PYTHON'
+          import os
+          import requests
+
+          token = os.environ.get("GIT_TOKEN")
+          if not token:
+              raise SystemExit("Missing GIT_TOKEN secret")
+
+          url = "https://api.lexcode.ai/v1/lex/run"
+          headers = {
+              "Content-Type": "application/json",
+              "Authorization": f"Bearer {token}",
+          }
+
+          payload = {
+              "project": "Top-TieR-Global-HUB-AI",
+              "task": "api_audit",
+              "branch": "main",
+              "files": ["gpt_client.py", ".github/workflows/api-audit.yml"],
+              "mode": "analyze",
+              "prompt": "تحقق من وجود تسريبات API ومخاطر أمنية",
+              "language": "ar",
+          }
+
+          response = requests.post(url, headers=headers, json=payload, timeout=60)
+          print("✅ Codex API Response:", response.status_code)
+          try:
+              print(response.json())
+          except requests.exceptions.JSONDecodeError:
+              print(response.text)
+          response.raise_for_status()
+          PYTHON
