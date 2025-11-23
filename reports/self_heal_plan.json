@@ -1,0 +1,17 @@
+{
+  "summary": "1 issues detected",
+  "issues": [
+    {
+      "message": "Repository has uncommitted changes",
+      "file": null,
+      "severity": "warning"
+    }
+  ],
+  "recommended_fixes": [
+    {
+      "issue": "Repository has uncommitted changes",
+      "file": null,
+      "suggested_action": "manual review"
+    }
+  ]
+}

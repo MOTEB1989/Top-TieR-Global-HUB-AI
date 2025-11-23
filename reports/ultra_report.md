@@ -1,0 +1,158 @@
+# Ultra Agent OS Report
+
+Generated: 2025-11-23T00:16:45.941873Z
+Mode: full-scan
+
+## Git
+- Branch: work
+- Commit: 604d042e55d005019e885a1eff5210a9ab76d91a
+- Status: ?? reports/
+?? self_heal.sh
+?? ultra_agent_os.py
+
+## Repository Stats
+- Total files: 122
+- Total directories: 25
+- Files by extension:
+  - .cql: 1
+  - .example: 3
+  - .json: 4
+  - .md: 17
+  - .py: 27
+  - .rs: 1
+  - .save: 1
+  - .sh: 20
+  - .toml: 2
+  - .ts: 3
+  - .txt: 3
+  - .yaml: 6
+  - .yml: 16
+  - .zip: 6
+  - <none>: 12
+
+## Issues
+- [WARNING] Repository has uncommitted changes
+
+## File samples
+- veritas-nexus-v2.zip (3029 bytes)
+- providers.py (577 bytes)
+- setup_veritas.sh (18511 bytes)
+- pyproject.toml (2132 bytes)
+- docker-compose.yml (262 bytes)
+- openai.ts (999 bytes)
+- index.ts (1877 bytes)
+- do_all_now.sh (369 bytes)
+- main.rs (1312 bytes)
+- veritas_workflows_addon (191 bytes)
+- validate_security_improvements.sh (4815 bytes)
+- run_codex_full.sh (2003 bytes)
+- README_COMMENT_TASK.md (2530 bytes)
+- Dockerfile (184 bytes)
+- README.md (993 bytes)
+- bluetooth-open-diagnostics.zip (7743 bytes)
+- SECURITY_GOVERNANCE.md (8134 bytes)
+- example.py (182 bytes)
+- .dockerignore (1401 bytes)
+- test_gpt_connection.py (1070 bytes)
+- Owner (23924 bytes)
+- bluetooth-open-diagnostics2.zip (397 bytes)
+- committee_service.py (5079 bytes)
+- topTireAI-quality-pack.zip (281 bytes)
+- test_gpt_connection.py.save (1772 bytes)
+- harden_repo.sh (803 bytes)
+- gpt_client.py (3066 bytes)
+- issues_plan.md (13545 bytes)
+- SECURITY.md (4454 bytes)
+- LEXCODE_MANIFESTO.md (363 bytes)
+- ai.ts (232 bytes)
+- package.json (432 bytes)
+- demo_features.sh (2563 bytes)
+- ultra_agent_os.py (6509 bytes)
+- LexCode-Hybrid-Starter-AI-Infer.zip (7651 bytes)
+- top-tier-base-files.zip (1895 bytes)
+- PR6_COMMENT.md (1571 bytes)
+- .env.example (327 bytes)
+- REVIEWER_TEST.md (558 bytes)
+- Cargo.toml (408 bytes)
+- CHECKLIST.md (3056 bytes)
+- verify_repo_link.sh (2309 bytes)
+- setup_neo4j_security.sh (4789 bytes)
+- .gitignore (1069 bytes)
+- TopTireAI (6716 bytes)
+- upgrade_veritas.sh (1411 bytes)
+- requirements.txt (269 bytes)
+- package-lock.json (101 bytes)
+- tsconfig.json (236 bytes)
+- .yamllint.yml (156 bytes)
+- self_heal.sh (1286 bytes)
+- FAST (3731 bytes)
+- CONTRIBUTING.md (1594 bytes)
+- __init__.py (166 bytes)
+- .env.neo4j.example (708 bytes)
+- data/.gitignore (86 bytes)
+- utils/graph_ingestor.py (1 bytes)
+- utils/ai_trace.py (1050 bytes)
+- api_server/__init__.py (3528 bytes)
+- db/neo4j/init_graph.cql (9965 bytes)
+- policies/guardrails.yaml (654 bytes)
+- scripts/convert_thread_messages.py (2026 bytes)
+- scripts/bot_run_all.sh (9055 bytes)
+- scripts/close_github_items.py (10760 bytes)
+- scripts/housekeeping_prs.sh (907 bytes)
+- scripts/generate_repo_structure.py (2819 bytes)
+- scripts/collect_context_for_claude.sh (2782 bytes)
+- scripts/snap_osint_query.sh (8369 bytes)
+- scripts/comment-on-pr6.sh (4292 bytes)
+- scripts/generate_env_and_patch_workflows.py (2409 bytes)
+- scripts/run_everything.sh (9050 bytes)
+- scripts/generate_repo_summary.sh (1245 bytes)
+- scripts/diagnose_external_apis.py (2627 bytes)
+- scripts/status/collect_status.sh (3897 bytes)
+- scripts/ci/disable_health_auto.sh (5048 bytes)
+- scripts/connectors/add_connectors.sh (1219 bytes)
+- reports/ultra_report.md (5171 bytes)
+- reports/ultra_report.json (10262 bytes)
+- tests/test_gpt_client.py (6706 bytes)
+- tests/test_policy_load.py (1091 bytes)
+- tests/policy/policy.yaml (2139 bytes)
+- docs/banking_README.md (569 bytes)
+- docs/safety-belt-post-merge.md (1516 bytes)
+- docs/architecture/data-foundation.md (9963 bytes)
+- k8s/osint-deployment.yaml (2079 bytes)
+- k8s/core-deployment.yaml (2016 bytes)
+- k8s/README.md (3116 bytes)
+- k8s/pdb.yaml (328 bytes)
+- k8s/secrets.yaml.example (739 bytes)
+- k8s/neo4j.yaml (2090 bytes)
+- .github/labels.yml (1669 bytes)
+- .github/dependabot.yml (2131 bytes)
+- .github/pull_request_template.md (886 bytes)
+- .github/CODEOWNERS (475 bytes)
+- .github/auto-assign.yml (84 bytes)
+- .github/copilot-instructions.md (7504 bytes)
+- .github/workflows/cleanup.yml (5628 bytes)
+- .github/workflows/auto-assign-reviewer.yml (1667 bytes)
+- .github/workflows/codeql.yml (2407 bytes)
+- .github/workflows/generate-repo-summary.yml (1085 bytes)
+- .github/workflows/CI.yml (4303 bytes)
+- .github/workflows/Immutable-Release.yml (2515 bytes)
+- .github/workflows/context-collector.yml (1180 bytes)
+- .github/workflows/post_merge_validation.yml (1557 bytes)
+- .github/workflows/sync-labels.yml (976 bytes)
+- .github/workflows/external-api-diagnosis.yml (2862 bytes)
+- .github/workflows/comment-on-pr6.yml (4506 bytes)
+- veritas-mini-web/Dockerfile (995 bytes)
+- veritas-mini-web/app.py (15411 bytes)
+- veritas-mini-web/requirements.txt (199 bytes)
+- feature/llm-failover (13188 bytes)
+- app/__init__.py (88 bytes)
+- app/ingestion/utils.py (1655 bytes)
+- app/ingestion/cli.py (1926 bytes)
+- app/ingestion/registry.py (622 bytes)
+- app/ingestion/__init__.py (110 bytes)
+- app/ingestion/base.py (1237 bytes)
+- app/ingestion/sources/sama.py (3910 bytes)
+- app/ingestion/sources/__init__.py (110 bytes)
+- veritas-web/Dockerfile (995 bytes)
+- veritas-web/app.py (15411 bytes)
+- veritas-web/requirements.txt (199 bytes)
