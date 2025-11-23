@@ -50,7 +50,7 @@ def _mask_value(k: str, v: str) -> str:
         return (v[:6] + "...") if len(v) > 10 else "***MASKED***"
     return v if v else "empty"
 
-async def _run_cmd(cmd: str, timeout: int = 120) -> tuple[int, str, str]:
+async def _run_cmd(cmd: str, timeout: int = 120, env: dict = None) -> tuple[int, str, str]:
     """
     تشغيل أمر شيل مع timeout. يرجع (returncode, stdout, stderr)
     """
@@ -58,6 +58,7 @@ async def _run_cmd(cmd: str, timeout: int = 120) -> tuple[int, str, str]:
         *shlex.split(cmd),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        env=env,
     )
     try:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
@@ -167,9 +168,9 @@ async def handle_preflight(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     await update.message.reply_text("⏱️ تشغيل فحص الاتصالات (preflight)...")
     env = os.environ.copy()
-    env.setdefault("API_PORT", str(API_PORT))
-    # نفذ الأمر عبر /bin/bash -c لضمان توسعة المتغيرات
-    rc, out, err = await _run_cmd(f"/bin/bash -lc 'API_PORT={env['API_PORT']} scripts/check_connections.sh'", timeout=180)
+    env["API_PORT"] = str(API_PORT)
+    # تشغيل السكربت مع تمرير المتغيرات البيئية بشكل آمن
+    rc, out, err = await _run_cmd("scripts/check_connections.sh", timeout=180, env=env)
 
     if rc != 0:
         msg = f"⚠️ انتهى الفحص برمز {rc} — قد يستمر إنشاء التقرير رغم ذلك.\nSTDERR:\n{(err or '')[:1500]}"
@@ -196,12 +197,13 @@ async def handle_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     if REPORT_PATH.exists():
         try:
-            await context.bot.send_document(
-                chat_id=update.effective_chat.id,
-                document=REPORT_PATH.open("rb"),
-                filename=REPORT_PATH.name,
-                caption="📑 تقرير check_connections.json"
-            )
+            with REPORT_PATH.open("rb") as report_file:
+                await context.bot.send_document(
+                    chat_id=update.effective_chat.id,
+                    document=report_file,
+                    filename=REPORT_PATH.name,
+                    caption="📑 تقرير check_connections.json"
+                )
         except Exception as e:
             await update.message.reply_text(f"⚠️ تعذر إرسال الملف: {e}")
     else:
