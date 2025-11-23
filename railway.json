@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "bash start.sh"
+    "startCommand": "node dist/index.js"
   }
 }
