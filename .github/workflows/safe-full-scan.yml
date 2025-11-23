@@ -1,0 +1,37 @@
+name: Safe Full Scan (Dry Run)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run safe full scan (DRY_RUN)
+        env:
+          DRY_RUN: "true"
+          MAX_CLOSE: "0"
+          FORCE_FULL_CLOSE: "false"
+          TARGET_PR: "1090"
+        run: bash scripts/execute_full_scan.sh

@@ -1,0 +1,33 @@
+name: Safe Auto Merge (Dry Run)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  auto-merge-dry-run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub CLI
+        uses: cli/cli@v2
+        with:
+          version: latest
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run safe auto merge (DRY_RUN)
+        env:
+          DRY_RUN: "true"
+          MAX_MERGE: "5"
+          REQUIRE_SUCCESS_CHECKS: "true"
+          EXCLUDE_LABELS: "wip,WIP,do-not-merge,blocked"
+          EXCLUDE_TITLE_PATTERNS: "\\[WIP\\],draft,DRAFT"
+        run: bash scripts/auto_merge_prs_safe.sh
