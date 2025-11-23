@@ -1,1 +1,9 @@
-{\n  "$schema": "https://railway.app/railway.schema.json",\n  "build": {\n    "builder": "NIXPACKS"\n  },\n  "deploy": {\n    "startCommand": "python scripts/verify_env.py && python scripts/telegram_chatgpt_mode.py",\n    "numReplicas": 1,\n    "sleepApplication": false,\n    "restartPolicyType": "ON_FAILURE",\n    "restartPolicyMaxRetries": 10\n  }\n}
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "bash start.sh"
+  }
+}
