@@ -2,6 +2,7 @@
 FastAPI Backend Application for Top-TieR Global HUB AI
 تطبيق FastAPI الخلفي لمركز Top-TieR العالمي للذكاء الاصطناعي
 """
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -16,9 +17,11 @@ app = FastAPI(
 )
 
 # CORS configuration - adjust for production
+# In production, set CORS_ORIGINS environment variable with specific domains
+cors_origins = settings.ENV == "production" and os.getenv("CORS_ORIGINS", "").split(",") or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Configure specific origins in production
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

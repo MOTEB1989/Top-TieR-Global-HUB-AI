@@ -75,7 +75,7 @@ export function safeJsonParse<T = any>(json: string, fallback: T): T {
  * توليد معرف عشوائي
  */
 export function generateId(prefix: string = 'id'): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**

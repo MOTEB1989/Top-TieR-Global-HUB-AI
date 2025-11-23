@@ -45,7 +45,9 @@ OPTIONAL_SHOW = [
 
 def mask(value: str, key: str) -> str:
     """Mask sensitive values for display"""
-    if key.endswith("_TOKEN") or key.endswith("_KEY") or key.endswith("_SECRET"):
+    sensitive_patterns = ["_TOKEN", "_KEY", "_SECRET", "PASSWORD", "_PASS", "_AUTH", "API_KEY"]
+    key_upper = key.upper()
+    if any(pattern in key_upper for pattern in sensitive_patterns):
         return value[:6] + "..." if len(value) > 10 else "***MASKED***"
     return value
 

@@ -29,6 +29,9 @@ ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 if not TELEGRAM_BOT_TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN environment variable is required")
 
+if not ADMIN_CHAT_ID:
+    logger.warning("ADMIN_CHAT_ID not set - some features may be limited")
+
 # Initialize bot and dispatcher
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
