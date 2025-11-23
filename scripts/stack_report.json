@@ -1,30 +1,24 @@
 {
-  "timestamp": "2025-11-22T00:00:00Z",
+  "timestamp": "2025-11-22T19:40:27Z",
   "status": "completed",
-  "failed_services": [],
+  "failed_services": [
+  "\u001b[34mℹ\u001b[0m فحص صحة الخدمات...",
+  "\u001b[34mℹ\u001b[0m المنفذ 3000 غير مفتوح",
+  "\u001b[34mℹ\u001b[0m المنفذ 8080 غير مفتوح",
+  "\u001b[34mℹ\u001b[0m المنفذ 8000 غير مفتوح",
+  "\u001b[34mℹ\u001b[0m المنفذ 5000 غير مفتوح"
+],
   "access_urls": [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost:8000",
-    "https://${CODESPACE_NAME}-3000.app.github.dev",
-    "https://${CODESPACE_NAME}-8080.app.github.dev",
-    "https://${CODESPACE_NAME}-8000.app.github.dev"
-  ],
-  "services": [
-    {
-      "name": "core",
-      "status": "Ready",
-      "port": 8080
-    },
-    {
-      "name": "api",
-      "status": "Ready",
-      "port": 3000
-    }
-  ],
+  "http://localhost:3000",
+  "http://localhost:8080",
+  "http://localhost:8000",
+  "https://jubilant-fishstick-q76pj74w7v4gfvxp-3000.app.github.dev",
+  "https://jubilant-fishstick-q76pj74w7v4gfvxp-8080.app.github.dev",
+  "https://jubilant-fishstick-q76pj74w7v4gfvxp-8000.app.github.dev"
+],
+  "services": [],
   "environment": {
-    "codespace": "${CODESPACE_NAME}",
+    "codespace": "jubilant-fishstick-q76pj74w7v4gfvxp",
     "repo_root": "/workspaces/Top-TieR-Global-HUB-AI"
-  },
-  "notes": "Terminal execution blocked - script created and ready. Manual execution required: chmod +x scripts/bot_run_all.sh && ./scripts/bot_run_all.sh"
+  }
 }

@@ -1,13 +1,22 @@
 services:
   core:
-    build: ./core
-    ports: ["8080:8080"]
-    environment:
-      RUST_LOG: info
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    container_name: core
+    ports: 
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   api:
     build: ./services/api
     ports: ["3000:3000"]
     env_file: .env
-    depends_on: [core]
+    depends_on: 
+      - core
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      CORE_URL: ${CORE_URL:-http://core:8000}

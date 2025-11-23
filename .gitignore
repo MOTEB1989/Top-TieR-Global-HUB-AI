@@ -106,4 +106,4 @@ yarn-error.log*
 # Backup files
 *.bak
 *.backup
-*.old
+*.old.env
