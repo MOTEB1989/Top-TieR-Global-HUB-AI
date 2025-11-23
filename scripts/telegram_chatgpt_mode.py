@@ -46,7 +46,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import model selection utilities
-sys.path.insert(0, str(Path(__file__).parent))
 from lib.common import select_model, should_retry_with_fallback
 
 # ---------------------- إعداد السجل ----------------------
@@ -205,7 +204,7 @@ def call_openai_chat(
     # If force-fallback flag is set, simulate primary failure
     if FORCE_FALLBACK and OPENAI_FALLBACK_MODEL:
         logger.warning("⚠️ FORCE_FALLBACK enabled - simulating primary model failure for testing")
-        raise OpenAIError("Simulated failure for testing: rate limit exceeded (429)")
+        raise OpenAIError("OpenAI error 429: rate limit exceeded")
     
     # Try primary model first
     try:

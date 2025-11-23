@@ -3,13 +3,10 @@ Unit tests for model fallback functionality in scripts/lib/common.py
 """
 
 import os
-import sys
 import pytest
 from unittest.mock import patch, MagicMock
 
-# Add scripts to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-
+# Path configuration handled by conftest.py
 from lib.common import (
     select_model,
     should_retry_with_fallback,

@@ -15,6 +15,11 @@ OPTIONAL_SHOW = [
     "OPENAI_BASE_URL",
 ]
 
+# Message constants (Arabic for project consistency)
+MSG_FALLBACK_NOTE = "💡 ملاحظة: تم تكوين نموذج احتياطي (Fallback Model)"
+MSG_FALLBACK_USAGE = "   سيتم استخدام '{0}' تلقائياً إذا فشل النموذج الأساسي"
+MSG_FALLBACK_REASON = "   بسبب حدود السعر أو عدم التوفر المؤقت."
+
 def mask(value: str, key: str) -> str:
     if key.endswith("_TOKEN") or key.endswith("_KEY"):
         return value[:6] + "..." if len(value) > 10 else "***MASKED***"
@@ -52,9 +57,9 @@ def main():
     # Display fallback model note if configured
     fallback_model = os.getenv("OPENAI_FALLBACK_MODEL")
     if fallback_model:
-        print("\n💡 ملاحظة: تم تكوين نموذج احتياطي (Fallback Model)")
-        print(f"   سيتم استخدام '{fallback_model}' تلقائياً إذا فشل النموذج الأساسي")
-        print(f"   بسبب حدود السعر أو عدم التوفر المؤقت.")
+        print(f"\n{MSG_FALLBACK_NOTE}")
+        print(MSG_FALLBACK_USAGE.format(fallback_model))
+        print(MSG_FALLBACK_REASON)
     
     print("====================================")
 

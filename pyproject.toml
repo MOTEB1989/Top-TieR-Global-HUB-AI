@@ -114,5 +114,5 @@ norecursedirs = [
     "*.egg",
     "node_modules",
 ]
-# Don't try to import root __init__.py
-pythonpath = ["scripts"]
+# Add both root and scripts to path for comprehensive import capabilities
+pythonpath = [".", "scripts"]
