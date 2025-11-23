@@ -630,7 +630,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
     
     # Check rate limit
-    if not check_rate_limit(update):
+    if not await check_rate_limit(update):
         return
 
     message = update.message

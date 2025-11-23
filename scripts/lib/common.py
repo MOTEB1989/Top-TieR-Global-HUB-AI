@@ -114,8 +114,8 @@ def sanitize_filename(filename: str, max_length: int = 255) -> str:
     filename = os.path.basename(filename)
     
     # Remove or replace dangerous characters
-    # Keep alphanumeric, dots, dashes, underscores
-    filename = re.sub(r'[^\w\s.-]', '_', filename)
+    # Keep alphanumeric, dots, dashes, underscores (replace spaces with underscores)
+    filename = re.sub(r'[^\w.-]', '_', filename)
     
     # Remove leading/trailing dots and spaces
     filename = filename.strip('. ')

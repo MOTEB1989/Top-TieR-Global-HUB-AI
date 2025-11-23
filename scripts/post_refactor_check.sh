@@ -26,7 +26,7 @@ fail() {
 # Section 1: Environment Verification
 echo "📋 Section 1: Environment Verification"
 echo "------------------------------------------"
-if python3 scripts/verify_env.py 2>&1 | grep -q "جميع المتغيرات الحرجة موجودة"; then
+if python3 scripts/verify_env.py 2>&1 | grep -qE "(All Critical Variables Present|جميع المتغيرات الحرجة موجودة)"; then
     pass "verify_env.py runs successfully"
 else
     fail "verify_env.py failed or OPENAI_MODEL missing"
