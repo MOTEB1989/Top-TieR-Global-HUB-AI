@@ -12,6 +12,10 @@ OPTIONAL_SHOW = [
     "OPENAI_MODEL",
     "TELEGRAM_ALLOWLIST",
     "OPENAI_BASE_URL",
+    "ENABLE_RAG",
+    "EMBEDDING_MODEL",
+    "EMBEDDING_INDEX_PATH",
+    "VECTOR_TOP_K",
 ]
 
 def mask(value: str, key: str) -> str:
