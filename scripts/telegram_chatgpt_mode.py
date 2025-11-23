@@ -26,8 +26,9 @@ import json
 import logging
 import textwrap
 import subprocess
+import math
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 import requests
 from telegram import Update, Document
@@ -66,6 +67,12 @@ LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "analysis/ULTRA_REPORT.md")
 
 CHAT_HISTORY_PATH = Path(os.getenv("CHAT_HISTORY_PATH", "analysis/chat_sessions.json"))
 CHAT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# RAG Configuration
+ENABLE_RAG = os.getenv("ENABLE_RAG", "false").lower() in ("true", "1", "yes")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+EMBEDDING_INDEX_PATH = os.getenv("EMBEDDING_INDEX_PATH", "analysis/embeddings/index.json")
+VECTOR_TOP_K = int(os.getenv("VECTOR_TOP_K", "6"))
 
 # ---------------------- Allowlist ----------------------
 def parse_allowlist(raw: str):
@@ -207,6 +214,134 @@ def make_system_prompt() -> str:
     ).strip()
 
 
+# ---------------------- RAG Embedding Functions ----------------------
+def create_embedding(text: str) -> List[float]:
+    """
+    Create embedding for a single text using OpenAI API.
+    Returns embedding vector or empty list on failure.
+    """
+    if not OPENAI_API_KEY:
+        logger.error("Cannot create embedding: OPENAI_API_KEY not set")
+        return []
+    
+    url = f"{OPENAI_BASE_URL.rstrip('/')}/embeddings"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    
+    payload = {
+        "model": EMBEDDING_MODEL,
+        "input": [text],
+    }
+    
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["data"][0]["embedding"]
+    
+    except Exception as e:
+        logger.error(f"Failed to create embedding: {e}")
+        return []
+
+
+def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
+    """Calculate cosine similarity between two vectors."""
+    if not vec1 or not vec2:
+        return 0.0
+    
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    magnitude1 = math.sqrt(sum(a * a for a in vec1))
+    magnitude2 = math.sqrt(sum(b * b for b in vec2))
+    
+    if magnitude1 == 0 or magnitude2 == 0:
+        return 0.0
+    
+    return dot_product / (magnitude1 * magnitude2)
+
+
+def load_embeddings_index() -> List[Dict[str, Any]]:
+    """Load embeddings index from file. Returns empty list on failure."""
+    index_path = Path(EMBEDDING_INDEX_PATH)
+    if not index_path.is_absolute():
+        repo_root = Path(__file__).parent.parent
+        index_path = repo_root / index_path
+    
+    if not index_path.exists():
+        logger.warning(f"Embeddings index not found: {index_path}")
+        return []
+    
+    try:
+        with index_path.open("r", encoding="utf-8") as f:
+            index = json.load(f)
+        logger.info(f"Loaded embeddings index with {len(index)} chunks")
+        return index
+    except Exception as e:
+        logger.error(f"Failed to load embeddings index: {e}")
+        return []
+
+
+def retrieve_context_via_embeddings(query: str) -> Tuple[str, List[Dict[str, Any]]]:
+    """
+    Retrieve relevant context chunks from embeddings index.
+    Returns (formatted_context, results_list).
+    """
+    if not ENABLE_RAG:
+        return "", []
+    
+    index = load_embeddings_index()
+    if not index:
+        logger.warning("RAG enabled but index is empty or failed to load")
+        return "", []
+    
+    # Create query embedding
+    query_embedding = create_embedding(query)
+    if not query_embedding:
+        logger.error("Failed to create query embedding")
+        return "", []
+    
+    # Calculate similarities
+    results = []
+    for chunk in index:
+        if "embedding" not in chunk:
+            continue
+        
+        similarity = cosine_similarity(query_embedding, chunk["embedding"])
+        results.append((chunk, similarity))
+    
+    # Sort by similarity (highest first) and take top-k
+    results.sort(key=lambda x: x[1], reverse=True)
+    top_results = results[:VECTOR_TOP_K]
+    
+    if not top_results:
+        return "", []
+    
+    # Format context
+    context_parts = []
+    result_list = []
+    
+    for i, (chunk, score) in enumerate(top_results):
+        path = chunk.get("path", "unknown")
+        content = chunk.get("content", "")
+        
+        context_parts.append(f"[{i+1}] {path} (score: {score:.3f})")
+        context_parts.append(content[:500])  # Limit chunk size
+        context_parts.append("")
+        
+        result_list.append({
+            "rank": i + 1,
+            "path": path,
+            "score": round(score, 4),
+            "content_preview": content[:200] + "..." if len(content) > 200 else content,
+        })
+    
+    formatted_context = "\n".join(context_parts)
+    logger.info(f"Retrieved {len(top_results)} context chunks for query")
+    
+    return formatted_context, result_list
+
+
 # ---------------------- أدوات (Tools) ----------------------
 def run_local_script(cmd: str) -> str:
     """تشغيل سكربت محلي (مثل preflight أو scan) وإرجاع المخرجات."""
@@ -274,6 +409,12 @@ HELP_TEXT = textwrap.dedent(
       • دردشة تفاعلية مع ذاكرة لكل مستخدم
       • مثال: `/chat ما هي حالة البنية الحالية في المستودع؟`
 
+    🔍 البحث المتجه (RAG):
+    /search نص البحث...
+      • بحث متجه في ملفات المستودع باستخدام embeddings
+      • مثال: `/search authentication implementation`
+      • يتطلب تفعيل ENABLE_RAG
+
     🧠 تحليلات متقدمة:
     /repo
       • تحليل سريع للمستودع اعتماداً على ARCHITECTURE/SECURITY/ULTRA_REPORT
@@ -285,7 +426,7 @@ HELP_TEXT = textwrap.dedent(
 
     ⚙️ حالة تشغيل:
     /status
-      • عرض حالة التكوين (OpenAI, GitHub, Allowlist)
+      • عرض حالة التكوين (OpenAI, GitHub, Allowlist, RAG)
 
     ⚠️ الملاحظات:
     - بعض الأوامر متاحة فقط للمستخدمين داخل Allowlist (TELEGRAM_ALLOWLIST).
@@ -328,6 +469,30 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     else:
         parts.append("🧠 OpenAI: ❌ مفقود (OPENAI_API_KEY غير موجود)")
 
+    # RAG Status
+    if ENABLE_RAG:
+        parts.append("🔍 RAG: ✅ مفعّل")
+        parts.append(f"   • نموذج Embedding: `{EMBEDDING_MODEL}`")
+        parts.append(f"   • Top-K: `{VECTOR_TOP_K}`")
+        
+        # Check index file
+        index_path = Path(EMBEDDING_INDEX_PATH)
+        if not index_path.is_absolute():
+            repo_root = Path(__file__).parent.parent
+            index_path = repo_root / index_path
+        
+        if index_path.exists():
+            try:
+                with index_path.open("r") as f:
+                    index = json.load(f)
+                parts.append(f"   • ملف الفهرس: ✅ ({len(index)} chunks)")
+            except Exception:
+                parts.append(f"   • ملف الفهرس: ⚠️ موجود لكن به خطأ")
+        else:
+            parts.append(f"   • ملف الفهرس: ❌ غير موجود")
+    else:
+        parts.append("🔍 RAG: ⚠️ غير مفعّل (ENABLE_RAG=false)")
+
     # Allowlist
     if USER_ALLOWLIST:
         parts.append("🔐 Allowlist: ✅ مفعّل")
@@ -369,8 +534,22 @@ async def cmd_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_question = " ".join(context.args).strip()
     user_key = get_user_key(update)
 
+    # Retrieve context via RAG if enabled
+    rag_context = ""
+    if ENABLE_RAG:
+        retrieved_context, _ = retrieve_context_via_embeddings(user_question)
+        if retrieved_context:
+            rag_context = f"\n\n**سياق من المستودع (RAG):**\n{retrieved_context}\n"
+            logger.info(f"RAG context added to chat for user {user_key}")
+
     sessions = load_sessions()
-    append_message(sessions, user_key, "user", user_question)
+    
+    # Add user message with optional RAG context
+    user_message_with_context = user_question
+    if rag_context:
+        user_message_with_context = user_question + rag_context
+    
+    append_message(sessions, user_key, "user", user_message_with_context)
 
     # بناء الرسائل مع System Prompt + تاريخ المستخدم
     messages = [{"role": "system", "content": make_system_prompt()}]
@@ -548,6 +727,70 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await message.reply_text(reply[:3500])
 
 
+async def cmd_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """البحث المتجه في فهرس المستودع."""
+    if await reject_if_unauthorized(update):
+        return
+
+    if not ENABLE_RAG:
+        await update.message.reply_text(
+            "⚠️ ميزة البحث المتجه غير مفعّلة.\n"
+            "لتفعيلها، اضبط ENABLE_RAG=true في المتغيرات البيئية."
+        )
+        return
+
+    if not OPENAI_API_KEY:
+        await update.message.reply_text("❌ لا يمكن استخدام /search لأن OPENAI_API_KEY غير مهيأ.")
+        return
+
+    if not context.args:
+        await update.message.reply_text(
+            "❌ الرجاء كتابة استعلام بحث بعد الأمر.\n"
+            "مثال:\n"
+            "/search authentication implementation"
+        )
+        return
+
+    query = " ".join(context.args).strip()
+    
+    await update.message.reply_text("🔍 جاري البحث في فهرس المستودع...")
+
+    try:
+        retrieved_context, results = retrieve_context_via_embeddings(query)
+        
+        if not results:
+            await update.message.reply_text(
+                "❌ لم يتم العثور على نتائج.\n"
+                "تأكد من أن ملف الفهرس موجود وليس فارغاً."
+            )
+            return
+        
+        # Format results for display
+        response_parts = [f"🔍 *نتائج البحث لـ:* {query}\n"]
+        
+        for result in results:
+            rank = result["rank"]
+            score = result["score"]
+            path = result["path"]
+            preview = result["content_preview"]
+            
+            response_parts.append(f"**[{rank}] {path}** (score: {score})")
+            response_parts.append(f"```\n{preview}\n```\n")
+        
+        response_text = "\n".join(response_parts)
+        
+        # Split if too long
+        if len(response_text) > 3500:
+            response_text = response_text[:3500] + "\n...\n[تم قطع النتائج لطولها]"
+        
+        await update.message.reply_markdown(response_text)
+        logger.info(f"Search completed for query: {query}, found {len(results)} results")
+    
+    except Exception as e:
+        logger.error(f"Search failed: {e}")
+        await update.message.reply_text(f"❌ فشل البحث:\n{e}")
+
+
 async def fallback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """التعامل مع رسائل نصية لا تبدأ بأمر /."""
     text = update.message.text or ""
@@ -601,6 +844,7 @@ def main() -> None:
     app.add_handler(CommandHandler("whoami", cmd_whoami))
     app.add_handler(CommandHandler("status", cmd_status))
     app.add_handler(CommandHandler("chat", cmd_chat))
+    app.add_handler(CommandHandler("search", cmd_search))
     app.add_handler(CommandHandler("repo", cmd_repo))
     app.add_handler(CommandHandler("insights", cmd_insights))
 
