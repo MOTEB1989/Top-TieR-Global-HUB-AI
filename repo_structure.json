@@ -136,9 +136,9 @@
     },
     {
       "path": "./.gitignore",
-      "size_bytes": 1069,
-      "sha256": "6736cc39dd2332a37144156c5842eb9b92bb460974a79589c3cefa4b38f6dcd1",
-      "modified": 1763863154.6989508
+      "size_bytes": 1123,
+      "sha256": "071cae129f628b80682ac4de7549bf6a9a82d68efa21a15fa9522c26adc7037d",
+      "modified": 1763863267.0319893
     },
     {
       "path": "./README.md",
@@ -261,6 +261,12 @@
       "modified": 1763863154.6999507
     },
     {
+      "path": "./execute_full_scan.sh",
+      "size_bytes": 1582,
+      "sha256": "8991fa6fe6ed5910770ccf6fda7d23fd64e366f95c691a2c9ee46b797983d9f0",
+      "modified": 1763863279.7051098
+    },
+    {
       "path": "./openai.ts",
       "size_bytes": 999,
       "sha256": "fcacd9ed9e0426e32f1468310b2a6e7229fa726c85609d14ebc2d526b51a3364",
@@ -313,6 +319,12 @@
       "size_bytes": 363,
       "sha256": "f329084385b90573d224314ecd255e3657274b62e8fc646e57c218045e01149f",
       "modified": 1763863154.6989508
+    },
+    {
+      "path": "./repo_structure.json",
+      "size_bytes": 25314,
+      "sha256": "9f0c20a94a86b2e5bdd1d3c1773fed847e35ddae4d588f0bf96433fa3dcc0f38",
+      "modified": 1763863229.9256687
     },
     {
       "path": "./Cargo.toml",
@@ -657,6 +669,36 @@
       "modified": 1763863154.7009509
     },
     {
+      "path": "./.pytest_cache/CACHEDIR.TAG",
+      "size_bytes": 191,
+      "sha256": "37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4",
+      "modified": 1763863365.2948692
+    },
+    {
+      "path": "./.pytest_cache/.gitignore",
+      "size_bytes": 37,
+      "sha256": "3ed731b65d06150c138e2dadb0be0697550888a6b47eb8c45ecc9adba8b8e9bd",
+      "modified": 1763863365.2948692
+    },
+    {
+      "path": "./.pytest_cache/README.md",
+      "size_bytes": 302,
+      "sha256": "73fd6fccdd802c419a6b2d983d6c3173b7da97558ac4b589edec2dfe443db9ad",
+      "modified": 1763863365.2948692
+    },
+    {
+      "path": "./.pytest_cache/v/cache/lastfailed",
+      "size_bytes": 353,
+      "sha256": "330aa02575521e0d23d047fd9d2e7d6bfc8a7d23035aa14123ebdf3a59088046",
+      "modified": 1763863433.974395
+    },
+    {
+      "path": "./.pytest_cache/v/cache/nodeids",
+      "size_bytes": 329,
+      "sha256": "6e19d9acc713ad187b2965ebce14bdd11db9b2d47b70f7b55f922e416791995c",
+      "modified": 1763863433.973395
+    },
+    {
       "path": "./data/.gitignore",
       "size_bytes": 86,
       "sha256": "60ea21982c259f405eddf7cd6803d47412e0d8f3db7875290df91fbe5f73fbdc",
@@ -742,24 +784,25 @@
     }
   ],
   "summary": {
-    "total_files": 123,
-    "total_size_bytes": 378555,
+    "total_files": 130,
+    "total_size_bytes": 406717,
     "file_types": {
-      ".md": 16,
-      "no_extension": 12,
+      ".md": 17,
+      "no_extension": 15,
       ".example": 3,
       ".txt": 3,
-      ".sh": 20,
+      ".sh": 21,
       ".save": 1,
       ".py": 27,
       ".yml": 18,
       ".zip": 6,
       ".ts": 3,
-      ".json": 4,
+      ".json": 5,
       ".toml": 2,
       ".rs": 1,
       ".cql": 1,
-      ".yaml": 6
+      ".yaml": 6,
+      ".TAG": 1
     }
   }
 }
