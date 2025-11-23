@@ -1,3 +1,13 @@
+/**
+ * Comprehensive OpenAI Provider
+ * 
+ * This is a standalone, comprehensive implementation of OpenAI API integration.
+ * Note: This returns `string` directly from infer(), unlike the src/providers/openai.ts
+ * which implements AIProvider interface and returns `{ content: string }` for compatibility.
+ * 
+ * Use this provider when you want direct string responses.
+ * Use src/providers/openai.ts when you need AIProvider interface compatibility.
+ */
 import axios from 'axios';
 
 export type ChatMessage = { 
@@ -120,7 +130,8 @@ export class OpenAIProvider {
                   onChunk?.(content);
                 }
               } catch (e) {
-                // Skip invalid JSON chunks
+                // Skip invalid JSON chunks from streaming response
+                // This is expected as some chunks may be incomplete or metadata
               }
             }
           }

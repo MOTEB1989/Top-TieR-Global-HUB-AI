@@ -123,7 +123,8 @@ export class OpenAIProvider implements AIProvider {
                   onChunk?.(content);
                 }
               } catch (e) {
-                // Skip invalid JSON chunks
+                // Skip invalid JSON chunks from streaming response
+                // This is expected as some chunks may be incomplete or metadata
               }
             }
           }
