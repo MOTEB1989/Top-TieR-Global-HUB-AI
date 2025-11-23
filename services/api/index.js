@@ -19,6 +19,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Validate API key on startup
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('Warning: OPENAI_API_KEY is not set. API calls will fail.');
+}
+
 // Generate response using OpenAI API
 async function generateResponse(query, context) {
   try {
@@ -37,6 +42,9 @@ Context: ${context}`;
     });
 
     // Return the content from the first choice
+    if (!completion.choices || completion.choices.length === 0) {
+      throw new Error('No response generated from OpenAI API');
+    }
     return completion.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI API error:', error);
