@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LocaleProvider } from "@/hooks/useLocale";
 import { ThemeProvider } from "@/hooks/useTheme";
-import Navigation from "@/components/Navigation";
+import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Top-TieR Global HUB AI",
@@ -15,14 +15,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider>
           <LocaleProvider>
-            <Navigation />
-            <main className="min-h-screen bg-white dark:bg-gray-900">
+            <ClientLayout>
               {children}
-            </main>
+            </ClientLayout>
           </LocaleProvider>
         </ThemeProvider>
       </body>

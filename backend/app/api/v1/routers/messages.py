@@ -1,10 +1,14 @@
 """Messages API router for handling message submissions."""
 import os
 import uuid
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -61,7 +65,7 @@ async def forward_to_telegram(content: str, locale: str) -> bool:
             return response.status_code == 200
     except Exception as e:
         # Log error but don't fail the request
-        print(f"Failed to forward to Telegram: {e}")
+        logger.error(f"Failed to forward to Telegram: {e}")
         return False
 
 
