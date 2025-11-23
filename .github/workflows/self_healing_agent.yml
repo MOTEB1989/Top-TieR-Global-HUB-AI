@@ -1,0 +1,51 @@
+# سير عمل لإجراء الفحص الذاتي والإصلاح التلقائي بشكل دوري
+# Autonomous Self-Healing & Auto-Fix Workflow
+
+name: '🤖 Agent: Self-Healing'
+
+on:
+  # يشتغل كل 24 ساعة (في منتصف الليل UTC)
+  schedule:
+    - cron: '0 0 * * *'
+  # يسمح بالتشغيل اليدوي من واجهة GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  run-auto-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      # إعطاء صلاحية لكتابة الملفات ودفعها
+      contents: write
+      # إعطاء صلاحية لإنشاء Pull Requests
+      pull-requests: write
+
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Python Environment'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # ملاحظة: إذا كانت هناك مكتبات بايثون مطلوبة، أضف خطوة تثبيت هنا
+      # - name: 'Install Python Dependencies'
+      #   run: pip install -r requirements.txt
+
+      - name: 'Make scripts executable'
+        run: |
+          chmod +x run_auto_fix.sh
+          chmod +x auto_pr.sh
+          # تأكد من أن self_heal.sh قابل للتنفيذ أيضاً
+          # chmod +x self_heal.sh
+
+      - name: 'Run Self-Healing Auto-Fix System'
+        run: ./run_auto_fix.sh
+        env:
+          # توكن المصادقة لإنشاء Pull Request
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # تعريف معلومات Git لمن سيقوم بالـ commit
+          GIT_AUTHOR_NAME: 'AI Auto-Fix Bot'
+          GIT_AUTHOR_EMAIL: 'github-actions[bot]@users.noreply.github.com'
+          GIT_COMMITTER_NAME: 'AI Auto-Fix Bot'
+          GIT_COMMITTER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
