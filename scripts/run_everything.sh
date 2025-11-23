@@ -8,7 +8,7 @@ set -euo pipefail
 ##############################################
 
 # ========== Config ==========
-REPO_ROOT="$(cd "".$0})/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.rag.yml"
 HEALTH_SCRIPT="${REPO_ROOT}/scripts/system_health_check.py"
 ENV_FILE="${REPO_ROOT}/.env"
