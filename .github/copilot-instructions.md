@@ -84,7 +84,7 @@ This is an OSINT (Open Source Intelligence) platform with a hybrid architecture:
 ### 11. Railway Deployment Considerations
 - **Environment variables**: Use Railway's environment variable system, avoid hardcoding configuration
 - **Port binding**: Always use `PORT` environment variable provided by Railway: `os.environ.get("PORT", 3000)`
-- **Start commands**: Ensure start commands in `railway.json` match the actual entry points
+- **Start command**: Ensure `startCommand` in `railway.json` matches the actual entry point
 - **Service references**: Use Railway's service reference syntax: `${{ServiceName.VARIABLE}}`
 - **Health checks**: Implement `/health` endpoints for all services
 - **Resource limits**: Be mindful of Railway's free tier limits ($5/month credit)
