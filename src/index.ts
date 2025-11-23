@@ -12,6 +12,11 @@ app.use(express.json());
 const PORT = Number(process.env.API_PORT || 3000);
 const CORE_URL = process.env.CORE_URL || 'http://localhost:8080';
 
+// Simple health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'lexcode-api', timestamp: new Date().toISOString() });
+});
+
 app.get('/v1/health', async (_req, res) => {
   try {
     const r = await axios.get(`${CORE_URL}/health`);
@@ -40,8 +45,8 @@ app.listen(PORT, () => {
 
 
 /** ---------------- AI Inference ---------------- */
-import type { ChatMessage } from './providers/ai';
-import { OpenAIProvider } from './providers/openai';
+import type { ChatMessage } from './providers/ai.js';
+import { OpenAIProvider } from './providers/openai.js';
 
 const provider = new OpenAIProvider();
 

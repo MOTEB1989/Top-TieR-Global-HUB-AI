@@ -1,0 +1,101 @@
+services:
+  ############################################################
+  # 1) Python AI Engine
+  ############################################################
+  - type: web
+    name: python-ai-engine
+    env: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python api_server/main.py"
+    autoDeploy: true
+
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ALLOWLIST
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: API_PORT
+        value: "3000"
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: REDIS_URL
+        fromService:
+          name: redis-db
+          property: connectionString
+      - key: QDRANT_URL
+        value: "http://qdrant-db:6333"
+      - key: NEO4J_URI
+        value: "neo4j://neo4j-db:7687"
+      - key: NEO4J_AUTH
+        value: "neo4j/password"
+
+  ############################################################
+  # 2) Node.js API Gateway
+  ############################################################
+  - type: web
+    name: node-api-gateway
+    env: node
+    plan: starter
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    autoDeploy: true
+
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: API_PORT
+        value: "3001"
+      - key: PYTHON_AI_URL
+        value: "https://python-ai-engine.onrender.com"
+      - key: REDIS_URL
+        fromService:
+          name: redis-db
+          property: connectionString
+
+  ############################################################
+  # 3) Telegram Bot Controller (Python)
+  ############################################################
+  - type: worker
+    name: telegram-control-panel
+    env: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python scripts/telegram_chatgpt_mode.py"
+    autoDeploy: true
+
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ALLOWLIST
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: "gpt-4o-mini"
+      - key: GITHUB_REPO
+        value: "MOTEB1989/Top-TieR-Global-HUB-AI"
+      - key: FULL_SCAN_SCRIPT
+        value: "scripts/execute_full_scan.sh"
+      - key: ULTRA_PREFLIGHT_PATH
+        value: "scripts/ultra_preflight.sh"
+      - key: LOG_FILE_PATH
+        value: "analysis/ULTRA_REPORT.md"
+
+############################################################
+# Databases
+############################################################
+databases:
+  - name: redis-db
+    plan: starter
+    ipAllowList: []

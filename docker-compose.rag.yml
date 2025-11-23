@@ -1,0 +1,77 @@
+version: "3.8"
+
+networks:
+  ai-net:
+    driver: bridge
+
+services:
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant-data:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - ai-net
+
+  rag_engine:
+    build:
+      context: ./rag_engine
+      dockerfile: Dockerfile
+    container_name: rag_engine
+    ports:
+      - "8081:8081"
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+    networks:
+      - ai-net
+
+  phi3:
+    image: ghcr.io/ggerganov/llama.cpp:light
+    container_name: phi3
+    command: -m /models/phi-3-mini-4k-q4.gguf --host 0.0.0.0 --port 8082
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./models:/models
+    restart: unless-stopped
+    networks:
+      - ai-net
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - RAG_ENGINE_URL=http://rag_engine:8081
+      - PHI3_URL=http://phi3:8082
+    depends_on:
+      - rag_engine
+      - phi3
+    restart: unless-stopped
+    networks:
+      - ai-net
+
+  web_ui:
+    build:
+      context: ./src/web
+      dockerfile: Dockerfile
+    container_name: web_ui
+    ports:
+      - "8501:8501"
+    environment:
+      - GATEWAY_URL=http://gateway:3000
+    depends_on:
+      - gateway
+    restart: unless-stopped
+    networks:
+      - ai-net

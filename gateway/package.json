@@ -1,0 +1,18 @@
+{
+  "name": "top-tier-gateway",
+  "version": "1.0.0",
+  "description": "API Gateway for Top-TieR Global HUB AI",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["api", "gateway", "ai"],
+  "author": "MOTEB1989",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  }
+}

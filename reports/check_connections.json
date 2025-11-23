@@ -1,0 +1,29 @@
+{
+  "repo": "MOTEB1989/Top-TieR-Global-HUB-AI",
+  "scan_time": "2025-11-23T08:16:44Z",
+  "docker_compose": {
+    "present": true,
+    "services": "core,api,",
+    "ports": ","
+  },
+  "api_port": {
+    "port": 3000,
+    "listening": "false"
+  },
+  "models_found_count": 50,
+  "models_sample": "./test_gpt_connection.py.save:6:Run inside Codespaces after setting OPENAI_API_KEY. ./test_gpt_connection.py.save:14:    api_key = os.getenv("OPENAI_API_KEY") ./test_gpt_connection.py.save:16:        print("❌ OPENAI_API_KEY not found. Please set it in Codespaces Secrets.") ./test_gpt_connection.py.save:64:echo $OPENAI_API_KEY | head -c 10 ./docker-compose.rag.yml:28:      - QDRANT_URL=http://qdrant:6333 ./docker-compose.rag.yml:38:    command: -m /models/phi-3-mini-4k-q4.gguf --host 0.0.0.0 --port 8082 ./docker-compose.rag.yml:56:      - PHI3_URL=http://phi3:8082 ./gpt_client.py:33:        self.api_key = api_key or os.getenv("OPENAI_API_KEY") ./dist/providers/openai.js:2:const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''; ./dist/providers/openai.js:6:        if (!OPENAI_API_KEY) ./dist/providers/openai.js:7:            throw new Error('Missing OPENAI_API_KEY'); ./dist/providers/openai.js:10:        const resp = await axios.post(`${OPENAI_BASE_URL}/chat/completions`, { model, messages, temperature, stream: false }, { headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' } }); ./TopTireAI:24:OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") ./TopTireAI:25:if not OPENAI_API_KEY: ./TopTireAI:28:client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None ./TopTireAI:35:    return {"ok": True, "openai_key_loaded": bool(OPENAI_API_KEY)} ./TopTireAI:40:        raise HTTPException(status_code=400, detail="OPENAI_API_KEY not configured.") ./TopTireAI:59:api_key = os.getenv("OPENAI_API_KEY") ./TopTireAI:61:    raise SystemExit("❌ لا يوجد OPENAI_API_KEY في البيئة/Secrets.") ./TopTireAI:96:OPENAI_API_KEY= ",
+  "telegram_test": "skipped",
+  "env": {
+    "TELEGRAM_BOT_TOKEN": "present",
+    "TELEGRAM_CHAT_ID": "missing",
+    "TELEGRAM_ALLOWLIST": "present",
+    "GITHUB_TOKEN": "present",
+    "OPENAI_API_KEY": "present",
+    "GROQ_API_KEY": "missing",
+    "ANTHROPIC_API_KEY": "missing",
+    "DB_URL": "missing",
+    "REDIS_URL": "missing",
+    "NEO4J_URI": "missing",
+    "NEO4J_AUTH": "missing"
+  }
+}

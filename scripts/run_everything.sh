@@ -81,11 +81,14 @@ info "📍 Repository root: $REPO_ROOT"
 
 # Docker check
 if ! command -v docker >/dev/null 2>&1; then
-  err "Docker غير مثبت. رجاءً ثبّت Docker ثم أعد المحاولة."; exit 1; fi
+  err "Docker غير مثبت. رجاءً ثبّت Docker ثم أعد المحاولة."
+  exit 1
+fi
 ok "Docker detected."
 
 if ! docker compose version >/dev/null 2>&1; then
-  warn "أمر docker compose غير متوفر أو قد تحتاج لتحديث Docker."; fi
+  warn "أمر docker compose غير متوفر أو قد تحتاج لتحديث Docker."
+fi
 
 # Compose file validation
 if [[ ! -f "$COMPOSE_FILE" ]]; then err "الملف غير موجود: $COMPOSE_FILE"; exit 1; fi
@@ -120,23 +123,39 @@ fi
 
 EMPTY_KEYS=()
 for k in OPENAI_API_KEY GROQ_API_KEY ANTHROPIC_API_KEY; do
-  if ! grep -q "^${k}=" "$ENV_FILE"; then EMPTY_KEYS+=("$k (مفقود)");
-  elif grep -q "^${k}=$" "$ENV_FILE"; then EMPTY_KEYS+=("$k (فارغ)" ); fi; done
+  if ! grep -q "^${k}=" "$ENV_FILE"; then
+    EMPTY_KEYS+=("$k (مفقود)")
+  elif grep -q "^${k}=$" "$ENV_FILE"; then
+    EMPTY_KEYS+=("$k (فارغ)")
+  fi
+done
 [[ ${#EMPTY_KEYS[@]} -gt 0 ]] && warn "مفاتيح API التالية فارغة/ناقصة: ${EMPTY_KEYS[*]}"
 
 # Local IP detection
 detect_ip() {
-  local ip=""; if command -v ipconfig >/dev/null 2>&1; then ip=$(ipconfig getifaddr en0 2>/dev/null || true); fi
-  if [[ -z "$ip" ]] && command -v hostname >/dev/null 2>&1; then ip=$(hostname -I 2>/dev/null | awk '{print $1}'); fi
-  echo "$ip"; }
+  local ip=""
+  if command -v ipconfig >/dev/null 2>&1; then
+    ip=$(ipconfig getifaddr en0 2>/dev/null || true)
+  fi
+  if [[ -z "$ip" ]] && command -v hostname >/dev/null 2>&1; then
+    ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+  fi
+  echo "$ip"
+}
 LOCAL_IP=$(detect_ip)
 info "🌐 Local IP (iPhone): ${LOCAL_IP:-unknown}"
 
 # Port check (optional if lsof exists)
 check_port() {
-  local port="$1"; if command -v lsof >/dev/null 2>&1; then
-    if lsof -iTCP -sTCP:LISTEN -n 2>/dev/null | grep -q ":$port "; then warn "المنفذ $port مستخدم حالياً."; fi
-  else warn "lsof غير متوفر — تخطي فحص المنفذ $port."; fi }
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    if lsof -iTCP -sTCP:LISTEN -n 2>/dev/null | grep -q ":$port "; then
+      warn "المنفذ $port مستخدم حالياً."
+    fi
+  else
+    warn "lsof غير متوفر — تخطي فحص المنفذ $port."
+  fi
+}
 for p in 8501 3000 8081 8082 6333; do check_port "$p"; done
 
 # Determine target services (selective run/restart)
@@ -144,25 +163,58 @@ TARGET_SERVICES=("${SERVICES[@]}")
 if [[ ("$COMMAND" == "up" || "$COMMAND" == "restart") && ${#ARGS[@]} -gt 0 ]]; then
   TARGET_SERVICES=()
   for a in "${ARGS[@]}"; do
-    if [[ -n "${SERVICE_MAP[$a]:-}" ]]; then TARGET_SERVICES+=("$a"); else warn "تجاهل خدمة غير معروفة: $a"; fi
+    if [[ -n "${SERVICE_MAP[$a]:-}" ]]; then
+      TARGET_SERVICES+=("$a")
+    else
+      warn "تجاهل خدمة غير معروفة: $a"
+    fi
   done
   if [[ ${#TARGET_SERVICES[@]} -eq 0 ]]; then
-    warn "لم يتم تمرير خدمات صحيحة — سيتم تشغيل جميع الخدمات."; TARGET_SERVICES=("${SERVICES[@]}"); fi
+    warn "لم يتم تمرير خدمات صحيحة — سيتم تشغيل جميع الخدمات."
+    TARGET_SERVICES=("${SERVICES[@]}")
+  fi
 fi
 
-list_services_pretty() { for s in "${TARGET_SERVICES[@]}"; do printf " - %s\n" "$s"; done; }
+list_services_pretty() {
+  for s in "${TARGET_SERVICES[@]}"; do
+    printf " - %s\n" "$s"
+  done
+}
 
 compose_up() {
-  local build_flag="--build"; [[ $NO_BUILD -eq 1 ]] && build_flag="";
+  local build_flag="--build"
+  [[ $NO_BUILD -eq 1 ]] && build_flag=""
   [[ $DO_PULL -eq 1 ]] && info "🔄 Pulling latest images..." && docker compose -f "$COMPOSE_FILE" pull
-  info "🚀 Starting services:"; list_services_pretty
+  info "🚀 Starting services:"
+  list_services_pretty
   docker compose -f "$COMPOSE_FILE" up $build_flag -d "${TARGET_SERVICES[@]}"
-  ok "Services started."; }
+  ok "Services started."
+}
 
-compose_down() { info "🛑 Stopping stack..."; docker compose -f "$COMPOSE_FILE" down; ok "Stack down."; }
-compose_restart() { info "🔁 Restarting services:"; list_services_pretty; docker compose -f "$COMPOSE_FILE" restart "${TARGET_SERVICES[@]}"; ok "Restart done."; }
-compose_ps() { docker compose -f "$COMPOSE_FILE" ps; }
-compose_logs() { if [[ ${#ARGS[@]} -gt 0 ]]; then docker compose -f "$COMPOSE_FILE" logs -f "${ARGS[0]}"; else docker compose -f "$COMPOSE_FILE" logs -f --tail=100; fi }
+compose_down() {
+  info "🛑 Stopping stack..."
+  docker compose -f "$COMPOSE_FILE" down
+  ok "Stack down."
+}
+
+compose_restart() {
+  info "🔁 Restarting services:"
+  list_services_pretty
+  docker compose -f "$COMPOSE_FILE" restart "${TARGET_SERVICES[@]}"
+  ok "Restart done."
+}
+
+compose_ps() {
+  docker compose -f "$COMPOSE_FILE" ps
+}
+
+compose_logs() {
+  if [[ ${#ARGS[@]} -gt 0 ]]; then
+    docker compose -f "$COMPOSE_FILE" logs -f "${ARGS[0]}"
+  else
+    docker compose -f "$COMPOSE_FILE" logs -f --tail=100
+  fi
+}
 show_services() { printf "الخدمات المتاحة:\n"; for s in "${SERVICES[@]}"; do echo " - $s"; done }
 
 run_health() {
@@ -193,13 +245,21 @@ esac
 echo ""; echo "========================================="; echo "🎉 STACK IS RUNNING – ACCESS POINTS"; echo "========================================="
 has_service() { local n="$1"; for s in "${TARGET_SERVICES[@]}"; do [[ "$s" == "$n" ]] && return 0; done; return 1; }
 if has_service web_ui || has_service streamlit; then
-  echo "📌 Streamlit Chat UI:"; echo "   http://localhost:8501"; [[ -n "$LOCAL_IP" ]] && echo "   📱 iPhone: http://${LOCAL_IP}:8501"; echo ""; fi
+  echo "📌 Streamlit Chat UI:"
+  echo "   http://localhost:8501"
+  [[ -n "$LOCAL_IP" ]] && echo "   📱 iPhone: http://${LOCAL_IP}:8501"
+  echo ""
+fi
+
 has_service gateway && echo "📌 Gateway:        http://localhost:3000"
 has_service rag_engine && echo "📌 RAG Engine:     http://localhost:8081"
 has_service phi3 && echo "📌 Phi-3 Runner:   http://localhost:8082"
 has_service qdrant && echo "📌 Qdrant UI:      http://localhost:6333"
-[[ -n "
-${CODESPACE_NAME:-}" ]] && echo "\n📌 Codespaces: استخدم منافذ الفوروارد في واجهة Codespaces."
-echo "========================================="; echo "🟢 النظام يعمل بنجاح"; echo "========================================="
+
+[[ -n "${CODESPACE_NAME:-}" ]] && echo -e "\n📌 Codespaces: استخدم منافذ الفوروارد في واجهة Codespaces."
+
+echo "========================================="
+echo "🟢 النظام يعمل بنجاح"
+echo "========================================="
 
 exit 0
