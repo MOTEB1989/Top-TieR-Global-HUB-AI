@@ -6,18 +6,10 @@ GitHub Secrets Validator
 
 import os
 import sys
-import logging
 import requests
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
-
-# Setup unified logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
-logger = logging.getLogger("check_github_secrets")
 
 # Load .env
 def load_env():
@@ -30,7 +22,6 @@ def load_env():
                     key, _, value = line.partition('=')
                     if key and value:
                         os.environ[key.strip()] = value.strip()
-        logger.info("Environment loaded from .env")
 
 load_env()
 
@@ -170,18 +161,17 @@ def check_local_vs_github() -> Dict[str, str]:
     
     return results
 
-def safe_main():
-    """الدالة الرئيسية wrapped in safe error handling"""
-    try:
-        logger.info("="*70)
-        logger.info("🔐 فحص أسرار GitHub (Secrets)")
-        logger.info("="*70)
-        
-        # 1. التحقق من GitHub Token
-        logger.info("1️⃣ التحقق من GitHub Token:")
-        logger.info("-" * 70)
-        is_valid, msg = check_github_token()
-        logger.info(f"   {msg}")
+def main():
+    """الدالة الرئيسية"""
+    print("\n" + "="*70)
+    print("🔐 فحص أسرار GitHub (Secrets)")
+    print("="*70 + "\n")
+    
+    # 1. التحقق من GitHub Token
+    print("1️⃣ التحقق من GitHub Token:")
+    print("-" * 70)
+    is_valid, msg = check_github_token()
+    print(f"   {msg}\n")
     
     if not is_valid:
         print("💡 للإصلاح:")
