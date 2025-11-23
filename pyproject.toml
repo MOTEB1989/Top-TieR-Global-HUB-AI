@@ -107,3 +107,12 @@ python_files = [
     "test_*.py",
     "*_test.py",
 ]
+norecursedirs = [
+    ".*",
+    "build",
+    "dist",
+    "*.egg",
+    "node_modules",
+]
+# Don't try to import root __init__.py
+pythonpath = ["scripts"]
