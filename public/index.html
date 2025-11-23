@@ -238,7 +238,11 @@
                 loading.classList.remove('active');
                 const errorMsg = document.createElement('div');
                 errorMsg.className = 'error';
-                errorMsg.textContent = `خطأ: ${error.message}`;
+                // Sanitize error message for user display
+                const userFriendlyMsg = error instanceof Error && error.message.includes('Failed to fetch')
+                    ? 'فشل الاتصال بالخادم. يرجى المحاولة مرة أخرى.'
+                    : 'حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى.';
+                errorMsg.textContent = userFriendlyMsg;
                 chatBox.appendChild(errorMsg);
             } finally {
                 sendBtn.disabled = false;
