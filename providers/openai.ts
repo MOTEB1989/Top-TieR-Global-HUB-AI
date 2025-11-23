@@ -1,5 +1,9 @@
 import axios from 'axios';
-import type { AIProvider, ChatMessage } from './ai';
+
+export type ChatMessage = { 
+  role: 'user' | 'assistant' | 'system'; 
+  content: string 
+};
 
 export interface InferOptions {
   model?: string;
@@ -8,7 +12,7 @@ export interface InferOptions {
   stream?: boolean;
 }
 
-export class OpenAIProvider implements AIProvider {
+export class OpenAIProvider {
   private apiKey: string;
   private baseURL: string;
   private defaultModel: string;
@@ -23,14 +27,7 @@ export class OpenAIProvider implements AIProvider {
     }
   }
 
-  // Legacy interface for AIProvider compatibility
-  async infer(messages: ChatMessage[], opts?: { model?: string; temperature?: number }): Promise<{ content: string }> {
-    const content = await this.inferText(messages, opts);
-    return { content };
-  }
-
-  // New comprehensive method
-  async inferText(
+  async infer(
     messages: ChatMessage[], 
     options?: InferOptions
   ): Promise<string> {
@@ -155,3 +152,5 @@ export class OpenAIProvider implements AIProvider {
     return this.defaultModel;
   }
 }
+
+export default OpenAIProvider;
