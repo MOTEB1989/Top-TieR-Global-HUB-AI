@@ -1,13 +1,40 @@
+version: "3.9"
 services:
-  core:
-    build: ./core
-    ports: ["8080:8080"]
+  rust_core:
+    build:
+      context: .
+      dockerfile: Dockerfile.rust
+    ports:
+      - "8080:8080"
     environment:
       RUST_LOG: info
-  api:
-    build: ./services/api
-    ports: ["3000:3000"]
+
+  node_gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
     env_file: .env
-    depends_on: [core]
+    depends_on:
+      - rust_core
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      CORE_URL: "${CORE_URL:-http://rust_core:8080}"
+      API_PORT: "${API_PORT:-3000}"
+
+  python_adapters:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    ports:
+      - "8000:8000"
+    environment:
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 8000
+
+  veritas_web:
+    build:
+      context: ./veritas-web
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"

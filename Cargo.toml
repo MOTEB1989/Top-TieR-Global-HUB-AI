@@ -3,6 +3,10 @@ name = "lexcode_core"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "lexcode_core"
+path = "main.rs"
+
 [dependencies]
 axum = { version = "0.7", features = ["json"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
