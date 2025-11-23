@@ -8,6 +8,7 @@ Tests the core logic and graceful degradation.
 import json
 import math
 import sys
+import tempfile
 from pathlib import Path
 
 # Add scripts directory to path for imports
@@ -90,23 +91,24 @@ def test_index_structure():
         }
     ]
     
-    # Save to temp file
-    test_path = Path("/tmp/test_index.json")
-    with test_path.open("w") as f:
+    # Save to temp file using tempfile for cross-platform compatibility
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(mock_index, f)
+        test_path = Path(f.name)
     
-    # Load it back
-    loaded = embed_search.load_index(test_path)
-    
-    assert len(loaded) == 1, "Should load one item"
-    assert loaded[0]["id"] == "abc123", "Should preserve ID"
-    assert loaded[0]["path"] == "test.py", "Should preserve path"
-    assert len(loaded[0]["embedding"]) == 3, "Should preserve embedding"
-    
-    # Clean up
-    test_path.unlink()
-    
-    print("✅ test_index_structure passed")
+    try:
+        # Load it back
+        loaded = embed_search.load_index(test_path)
+        
+        assert len(loaded) == 1, "Should load one item"
+        assert loaded[0]["id"] == "abc123", "Should preserve ID"
+        assert loaded[0]["path"] == "test.py", "Should preserve path"
+        assert len(loaded[0]["embedding"]) == 3, "Should preserve embedding"
+        
+        print("✅ test_index_structure passed")
+    finally:
+        # Clean up
+        test_path.unlink()
 
 
 def test_graceful_failure():

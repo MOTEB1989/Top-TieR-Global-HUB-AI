@@ -247,9 +247,17 @@ def create_embedding(text: str) -> List[float]:
 
 
 def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-    """Calculate cosine similarity between two vectors."""
+    """
+    Calculate cosine similarity between two vectors.
+    Handles edge cases: empty vectors, mismatched lengths.
+    """
     if not vec1 or not vec2:
         return 0.0
+    
+    # Handle mismatched lengths by using shorter length
+    min_len = min(len(vec1), len(vec2))
+    vec1 = vec1[:min_len]
+    vec2 = vec2[:min_len]
     
     dot_product = sum(a * b for a, b in zip(vec1, vec2))
     magnitude1 = math.sqrt(sum(a * a for a in vec1))
