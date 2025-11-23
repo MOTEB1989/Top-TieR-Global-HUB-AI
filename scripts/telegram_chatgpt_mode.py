@@ -22,6 +22,7 @@ telegram_chatgpt_mode.py
 """
 
 import os
+import sys
 import json
 import logging
 import textwrap
@@ -66,6 +67,13 @@ LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "analysis/ULTRA_REPORT.md")
 
 CHAT_HISTORY_PATH = Path(os.getenv("CHAT_HISTORY_PATH", "analysis/chat_sessions.json"))
 CHAT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# ---------------------- Validation ----------------------
+# Validate critical environment variables (should be done by verify_env.py in deployment)
+if not OPENAI_MODEL:
+    logger.error("❌ OPENAI_MODEL is required but not set!")
+    logger.error("Please run: python scripts/verify_env.py to validate your configuration")
+    sys.exit(1)
 
 # ---------------------- Allowlist ----------------------
 def parse_allowlist(raw: str):
