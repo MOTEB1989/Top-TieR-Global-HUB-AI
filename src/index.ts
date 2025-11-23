@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = Number(process.env.API_PORT || 3000);
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3000);
 const CORE_URL = process.env.CORE_URL || 'http://localhost:8080';
 
 // Simple health check
