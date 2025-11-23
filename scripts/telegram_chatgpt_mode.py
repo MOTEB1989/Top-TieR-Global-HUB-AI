@@ -16,7 +16,7 @@ telegram_chatgpt_mode.py
 - TELEGRAM_BOT_TOKEN
 - TELEGRAM_ALLOWLIST
 - OPENAI_API_KEY
-- OPENAI_MODEL (اختياري، افتراضي gpt-4o-mini)
+- OPENAI_MODEL (مطلوب، مثال: gpt-4o-mini)
 - GITHUB_REPO (اسم المستودع للعرض فقط)
 - ULTRA_PREFLIGHT_PATH / FULL_SCAN_SCRIPT / LOG_FILE_PATH (اختياري لدمج أعمق)
 """
@@ -55,7 +55,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ALLOWLIST_ENV = os.getenv("TELEGRAM_ALLOWLIST", "").strip()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 GITHUB_REPO = os.getenv("GITHUB_REPO", "MOTEB1989/Top-TieR-Global-HUB-AI")

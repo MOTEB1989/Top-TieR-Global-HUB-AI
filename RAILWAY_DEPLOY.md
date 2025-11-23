@@ -38,14 +38,14 @@ REDIS_URL=${{Redis.REDIS_URL}}
 
 ### 3. Telegram Bot (ChatGPT Mode)
 **Type:** Worker
-**Start Command:** `python scripts/telegram_chatgpt_mode.py`
+**Start Command:** `python scripts/verify_env.py && python scripts/telegram_chatgpt_mode.py`
 **Environment Variables:**
 ```
 TELEGRAM_BOT_TOKEN=<your-token>
 TELEGRAM_ALLOWLIST=8256840669,6090738107
 GITHUB_TOKEN=<your-token>
 OPENAI_API_KEY=<your-key>
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-4o-mini  # REQUIRED - specify model explicitly
 GITHUB_REPO=MOTEB1989/Top-TieR-Global-HUB-AI
 FULL_SCAN_SCRIPT=scripts/execute_full_scan.sh
 ULTRA_PREFLIGHT_PATH=scripts/ultra_preflight.sh
