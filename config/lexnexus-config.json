@@ -1,0 +1,17 @@
+{
+    "openai_api_key": "",
+    "telegram_token": "",
+    "telegram_chat_id": "",
+    "github_repo": "MOTEB1989/Top-TieR-Global-HUB-AI",
+    "github_token": "",
+    "custom_gpt_id": "g-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "lexnexus_mode": "leader",
+    "sub_models": {
+        "Saudi-Nexus": "g-68d85ae6a19881919a7699aede6f6366",
+        "Saudi-Banks": "g-68d83741405881918336c921a412c7c4"
+    },
+    "sync_interval": 3600,
+    "health_check_interval": 600,
+    "auto_healing": true,
+    "telegram_alerts": true
+}
