@@ -1,5 +1,16 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+#############################################################################
+# comprehensive_setup_and_test.sh - Complete setup and testing
+#
+# Purpose:
+#   Comprehensive setup, validation, and testing of the entire system
+#
+# Usage:
+#   ./scripts/comprehensive_setup_and_test.sh
+#############################################################################
 
 # ============ إعدادات الألوان ============
 GREEN='\033[0;32m'

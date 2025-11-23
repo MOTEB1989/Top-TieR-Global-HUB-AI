@@ -1,9 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
-set -e
+#############################################################################
+# check_environment.sh - Environment validation script
+#
+# Purpose:
+#   Validate presence of required files and tools for the repository
+#
+# Usage:
+#   ./scripts/check_environment.sh
+#############################################################################
 
+echo "=========================================="
 echo "***** فحص البيئة تلقائياً *****"
-echo "---"
+echo "=========================================="
 
 # 1. التأكد من وجود ملف docker-compose
 if [ -f docker-compose.yml ]; then

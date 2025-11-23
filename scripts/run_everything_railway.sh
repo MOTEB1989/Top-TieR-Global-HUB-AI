@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+IFS=$'\n\t'
+
+#############################################################################
+# run_everything_railway.sh - Railway deployment startup script
+#
+# Purpose:
+#   Start all services and run validation checks for Railway environment
+#
+# Usage:
+#   ./scripts/run_everything_railway.sh
+#############################################################################
 
 echo "======================================="
 echo "   🚀 Top-TieR Global HUB AI (Railway)"

@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
+#############################################################################
+# force_fix_railway.sh - Force fix Railway deployment issues
+#
+# Purpose:
+#   Apply critical fixes for Railway deployment configuration
+#
+# Usage:
+#   ./scripts/force_fix_railway.sh
+#############################################################################
+
+echo "=========================================="
 echo "🔧 دفع الإصلاحات الصحيحة لـ Railway"
+echo "=========================================="
 echo ""
 
 cd "$(dirname "$0")/.."
