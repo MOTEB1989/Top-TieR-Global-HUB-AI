@@ -1,9 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 telegram_chatgpt_mode.py
 
 بوت تيليجرام متقدم يعمل كـ ChatGPT داخل مستودع Top-TieR-Global-HUB-AI
+
+الميزات الجديدة:
+- نموذج OpenAI أساسي إلزامي (OPENAI_MODEL)
+- نموذج احتياطي اختياري (OPENAI_FALLBACK_MODEL) مع محاولة واحدة
+- تحديد معدل الرسائل (20 رسالة/مستخدم/دقيقة افتراضياً)
+- تنقية أسماء الملفات والتحقق من حجم الملف (2MB كحد أقصى)
+- أعلام سطر الأوامر: --dry-run, --mode=refactored, --force-fallback
+
+الأوامر:
 - /chat        : دردشة تفاعلية مع ذاكرة لكل مستخدم
 - /repo        : تحليل المستودع باستخدام تقارير ULTRA + ARCHITECTURE
 - /insights    : ملخص ذكي عن حالة المشروع
@@ -12,24 +21,30 @@ telegram_chatgpt_mode.py
 - /help        : مساعدة
 - /whoami      : معرفة Telegram ID لإضافته في Allowlist
 
-يعتمد على نفس الأسرار:
-- TELEGRAM_BOT_TOKEN
-- TELEGRAM_ALLOWLIST
-- OPENAI_API_KEY
-- OPENAI_MODEL (اختياري، افتراضي gpt-4o-mini)
-- GITHUB_REPO (اسم المستودع للعرض فقط)
-- ULTRA_PREFLIGHT_PATH / FULL_SCAN_SCRIPT / LOG_FILE_PATH (اختياري لدمج أعمق)
+المتغيرات البيئية:
+- TELEGRAM_BOT_TOKEN (إلزامي)
+- TELEGRAM_ALLOWLIST (اختياري)
+- OPENAI_API_KEY (إلزامي)
+- OPENAI_MODEL (إلزامي)
+- OPENAI_FALLBACK_MODEL (اختياري)
+- TELEGRAM_RATE_LIMIT_PER_MIN (اختياري، افتراضي 20)
+- GITHUB_REPO (اسم المستودع)
 """
 
 import os
+import sys
 import json
 import logging
 import textwrap
 import subprocess
+import argparse
+import asyncio
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
-import requests
+# Add scripts/lib to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+
 from telegram import Update, Document
 from telegram.ext import (
     Application,
@@ -43,6 +58,28 @@ from telegram.ext import (
 from dotenv import load_dotenv
 load_dotenv()
 
+# Import our common utilities
+try:
+    from lib.common import (
+        get_openai_models,
+        log_model_banner,
+        sanitize_filename,
+        validate_file_size,
+        RateLimiter,
+        safe_main,
+    )
+except ImportError:
+    # Fallback if lib not in path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from lib.common import (
+        get_openai_models,
+        log_model_banner,
+        sanitize_filename,
+        validate_file_size,
+        RateLimiter,
+        safe_main,
+    )
+
 # ---------------------- إعداد السجل ----------------------
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -55,7 +92,15 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ALLOWLIST_ENV = os.getenv("TELEGRAM_ALLOWLIST", "").strip()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+# Get models using common utility
+try:
+    PRIMARY_MODEL, FALLBACK_MODEL = get_openai_models()
+except RuntimeError as e:
+    logger.error(f"Failed to get OpenAI models: {e}")
+    PRIMARY_MODEL = "gpt-4o-mini"  # Fallback for legacy compatibility
+    FALLBACK_MODEL = None
+
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 GITHUB_REPO = os.getenv("GITHUB_REPO", "MOTEB1989/Top-TieR-Global-HUB-AI")
@@ -66,6 +111,13 @@ LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "analysis/ULTRA_REPORT.md")
 
 CHAT_HISTORY_PATH = Path(os.getenv("CHAT_HISTORY_PATH", "analysis/chat_sessions.json"))
 CHAT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# Rate limiting configuration
+RATE_LIMIT_PER_MIN = int(os.getenv("TELEGRAM_RATE_LIMIT_PER_MIN", "20"))
+
+# Global instances
+rate_limiter: Optional[RateLimiter] = None
+force_fallback_mode = False
 
 # ---------------------- Allowlist ----------------------
 def parse_allowlist(raw: str):
@@ -93,12 +145,38 @@ def is_authorized(update: Update) -> bool:
 
 
 async def reject_if_unauthorized(update: Update) -> bool:
+    """Check if user is unauthorized and send rejection message."""
     if is_authorized(update):
         return False
     await update.message.reply_text(
         "❌ غير مصرح لك باستخدام هذا الأمر.\n"
         "استخدم /whoami ثم اطلب إضافة معرفك إلى TELEGRAM_ALLOWLIST."
     )
+    return True
+
+
+async def check_rate_limit(update: Update) -> bool:
+    """
+    Check rate limit for user and send message if exceeded.
+    Returns False if rate limit exceeded, True otherwise.
+    """
+    global rate_limiter
+    
+    if rate_limiter is None:
+        return True  # No rate limiting active
+    
+    user_id = update.effective_user.id if update.effective_user else 0
+    
+    if not rate_limiter.is_allowed(user_id):
+        wait_time = rate_limiter.get_wait_time(user_id)
+        await update.message.reply_text(
+            f"⚠️ تجاوزت الحد الأقصى للرسائل ({RATE_LIMIT_PER_MIN} رسالة/دقيقة)\n"
+            f"Rate limit exceeded ({RATE_LIMIT_PER_MIN} messages/minute)\n"
+            f"⏱️ انتظر {wait_time} ثانية / Wait {wait_time} seconds"
+        )
+        logger.warning(f"Rate limit exceeded for user {user_id}")
+        return False
+    
     return True
 
 
@@ -145,6 +223,7 @@ def append_message(
 
 # ---------------------- استدعاء OpenAI ----------------------
 class OpenAIError(Exception):
+    """Custom exception for OpenAI API errors"""
     pass
 
 
@@ -153,15 +232,44 @@ def call_openai_chat(
     model: str = None,
     temperature: float = 0.4,
     max_tokens: int = 700,
+    use_fallback: bool = False,
 ) -> str:
+    """
+    Call OpenAI Chat API with automatic fallback support.
+    
+    Args:
+        messages: List of message dicts with 'role' and 'content'
+        model: Model name (uses PRIMARY_MODEL if None)
+        temperature: Sampling temperature
+        max_tokens: Maximum tokens in response
+        use_fallback: Force use of fallback model
+        
+    Returns:
+        Response content string
+        
+    Raises:
+        OpenAIError: On API errors after fallback attempt
+    """
+    global force_fallback_mode
+    
     if not OPENAI_API_KEY:
         raise OpenAIError("OPENAI_API_KEY غير موجود في المتغيرات البيئية")
 
-    model = model or OPENAI_MODEL
+    # Determine which model to use
+    if use_fallback or force_fallback_mode:
+        if not FALLBACK_MODEL:
+            logger.warning("Fallback requested but OPENAI_FALLBACK_MODEL not configured")
+            model_to_use = model or PRIMARY_MODEL
+        else:
+            model_to_use = FALLBACK_MODEL
+            logger.info(f"Using fallback model: {FALLBACK_MODEL}")
+    else:
+        model_to_use = model or PRIMARY_MODEL
+    
     url = f"{OPENAI_BASE_URL.rstrip('/')}/chat/completions"
 
     payload = {
-        "model": model,
+        "model": model_to_use,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
@@ -172,17 +280,53 @@ def call_openai_chat(
         "Content-Type": "application/json",
     }
 
-    resp = requests.post(url, json=payload, headers=headers, timeout=60)
-    if resp.status_code != 200:
-        logger.error("خطأ من OpenAI: %s - %s", resp.status_code, resp.text[:500])
-        raise OpenAIError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
-
-    data = resp.json()
     try:
-        return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        logger.error("استجابة غير متوقعة من OpenAI: %s | %s", e, data)
-        raise OpenAIError("Unexpected OpenAI response structure")
+        # Try with primary/requested model
+        resp = requests.post(url, json=payload, headers=headers, timeout=60)
+        
+        if resp.status_code != 200:
+            error_text = resp.text[:500]
+            logger.error(f"خطأ من OpenAI: {resp.status_code} - {error_text}")
+            
+            # Check if we should try fallback
+            if not use_fallback and FALLBACK_MODEL and not force_fallback_mode:
+                # Model error codes that warrant fallback: 404 (model not found), 400 (invalid model)
+                if resp.status_code in (400, 404):
+                    logger.info(f"Attempting fallback to {FALLBACK_MODEL}")
+                    return call_openai_chat(
+                        messages, 
+                        model=FALLBACK_MODEL,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        use_fallback=True  # Prevent recursive fallback
+                    )
+            
+            raise OpenAIError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
+
+        data = resp.json()
+        try:
+            content = data["choices"][0]["message"]["content"]
+            logger.debug(f"Response from model {model_to_use}: {len(content)} chars")
+            return content
+        except (KeyError, IndexError, TypeError) as e:
+            logger.error(f"استجابة غير متوقعة من OpenAI: {e} | {data}")
+            raise OpenAIError("Unexpected OpenAI response structure")
+            
+    except requests.RequestException as e:
+        logger.error(f"Request error calling OpenAI: {e}")
+        
+        # Try fallback on network/request errors
+        if not use_fallback and FALLBACK_MODEL and not force_fallback_mode:
+            logger.info(f"Network error, attempting fallback to {FALLBACK_MODEL}")
+            return call_openai_chat(
+                messages,
+                model=FALLBACK_MODEL,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                use_fallback=True
+            )
+        
+        raise OpenAIError(f"Network error calling OpenAI: {e}")
 
 
 def make_system_prompt() -> str:
@@ -353,6 +497,10 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def cmd_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if await reject_if_unauthorized(update):
         return
+    
+    # Check rate limit
+    if not await check_rate_limit(update):
+        return
 
     if not OPENAI_API_KEY:
         await update.message.reply_text("❌ لا يمكن استخدام /chat لأن OPENAI_API_KEY غير مهيأ.")
@@ -474,24 +622,45 @@ async def cmd_insights(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """استقبال ملف من المستخدم وتحليله مبدئياً."""
+    """
+    استقبال ملف من المستخدم وتحليله مبدئياً.
+    Includes filename sanitization and size validation.
+    """
     if await reject_if_unauthorized(update):
+        return
+    
+    # Check rate limit
+    if not check_rate_limit(update):
         return
 
     message = update.message
     doc: Document = message.document
     if not doc:
         return
+    
+    # Validate file size (2MB max)
+    is_valid, error_msg = validate_file_size(doc.file_size, max_size_mb=2)
+    if not is_valid:
+        await message.reply_text(f"❌ {error_msg}")
+        logger.warning(f"File too large: {doc.file_name} ({doc.file_size} bytes)")
+        return
+
+    # Sanitize filename to prevent path traversal
+    safe_filename = sanitize_filename(doc.file_name)
+    if safe_filename != doc.file_name:
+        logger.info(f"Sanitized filename: {doc.file_name} -> {safe_filename}")
 
     # تنزيل الملف مؤقتاً
     try:
         file = await doc.get_file()
         tmp_path = Path("analysis/uploads")
         tmp_path.mkdir(parents=True, exist_ok=True)
-        local_file = tmp_path / f"{doc.file_unique_id}_{doc.file_name}"
+        local_file = tmp_path / f"{doc.file_unique_id}_{safe_filename}"
         await file.download_to_drive(str(local_file))
+        logger.info(f"Downloaded file: {local_file} ({doc.file_size} bytes)")
     except Exception as e:
         await message.reply_text(f"❌ تعذر تنزيل الملف من تيليجرام: {e}")
+        logger.error(f"File download error: {e}")
         return
 
     # قراءة المحتوى النصي إذا أمكن
@@ -505,8 +674,9 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
     else:
         await message.reply_text(
-            f"📁 تم تنزيل الملف: {local_file.name}\n"
-            f"النوع: {suffix or 'غير معروف'}\n\n"
+            f"📁 تم تنزيل الملف: {safe_filename}\n"
+            f"النوع: {suffix or 'غير معروف'}\n"
+            f"الحجم: {doc.file_size / 1024:.1f} KB\n\n"
             "حالياً لا أدعم إلا الملفات النصية البسيطة (txt, md, log, json, yaml, py, ts, sh)."
         )
         return
@@ -553,6 +723,10 @@ async def fallback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     text = update.message.text or ""
     if not text.strip():
         return
+    
+    # Check rate limit for text messages
+    if not await check_rate_limit(update):
+        return
 
     # تعامل معها كرسالة دردشة قصيرة
     if not OPENAI_API_KEY:
@@ -582,20 +756,86 @@ async def fallback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 # ---------------------- main ----------------------
-def main() -> None:
+@safe_main
+def main() -> int:
+    """
+    Main entry point with CLI argument support.
+    
+    Returns:
+        Exit code (0 for success)
+    """
+    global rate_limiter, force_fallback_mode
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Advanced Telegram ChatGPT Bot for Top-TieR-Global-HUB-AI"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate configuration and exit without starting bot"
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["legacy", "refactored"],
+        default="refactored",
+        help="Operation mode (default: refactored)"
+    )
+    parser.add_argument(
+        "--force-fallback",
+        action="store_true",
+        help="Force use of fallback model for testing"
+    )
+    
+    args = parser.parse_args()
+    
+    # Set force fallback mode
+    if args.force_fallback:
+        force_fallback_mode = True
+        logger.info("⚠️ Force fallback mode enabled")
+    
+    # Validate required environment variables
     if not TELEGRAM_TOKEN:
-        raise RuntimeError("❌ TELEGRAM_BOT_TOKEN غير موجود في المتغيرات البيئية")
-
+        logger.error("❌ TELEGRAM_BOT_TOKEN غير موجود في المتغيرات البيئية")
+        return 1
+    
+    if not OPENAI_API_KEY:
+        logger.error("❌ OPENAI_API_KEY غير موجود في المتغيرات البيئية")
+        return 1
+    
+    # Log startup configuration
+    print("=" * 60)
+    print(f"🤖 Telegram ChatGPT Bot - Mode: {args.mode}")
+    print("=" * 60)
     logger.info("بدء تشغيل Telegram ChatGPT Mode Bot ...")
+    logger.info(f"Operation Mode: {args.mode}")
     logger.info("المستودع: %s", GITHUB_REPO)
+    
+    # Log model configuration
+    log_model_banner(PRIMARY_MODEL, FALLBACK_MODEL)
+    
+    # Log allowlist status
     if USER_ALLOWLIST:
-        logger.info("Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
+        logger.info("🔐 Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
     else:
-        logger.warning("Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
-
+        logger.warning("⚠️ Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
+    
+    # Initialize rate limiter
+    rate_limiter = RateLimiter(messages_per_minute=RATE_LIMIT_PER_MIN)
+    logger.info(f"⏱️ Rate limiting: {RATE_LIMIT_PER_MIN} messages/user/minute")
+    
+    # Dry run mode - validate and exit
+    if args.dry_run:
+        print("=" * 60)
+        print("✅ Dry run successful - configuration valid")
+        print("=" * 60)
+        logger.info("Dry run mode - exiting without starting bot")
+        return 0
+    
+    # Build and configure application
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # أوامر
+    # Register command handlers
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("whoami", cmd_whoami))
@@ -604,16 +844,26 @@ def main() -> None:
     app.add_handler(CommandHandler("repo", cmd_repo))
     app.add_handler(CommandHandler("insights", cmd_insights))
 
-    # استقبال ملفات
+    # Register document handler
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
-    # fallback للنصوص العادية
+    # Register fallback handler for plain text
     app.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler)
     )
 
-    app.run_polling()
+    logger.info("✅ Bot handlers registered successfully")
+    logger.info("🚀 Starting bot polling...")
+    print("=" * 60)
+    
+    try:
+        app.run_polling()
+    except KeyboardInterrupt:
+        logger.info("⚠️ Bot stopped by user")
+        return 0
+    
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

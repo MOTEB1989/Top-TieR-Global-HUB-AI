@@ -193,12 +193,16 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"HTTP client initialization failed: {e}")
     
-    # Initialize encryption
+    # Initialize encryption with deterministic key derivation
     if settings.ENABLE_ENCRYPTION:
         try:
-            key = Fernet.generate_key() if settings.SECRET_KEY == "dev-key-change-in-production" else settings.SECRET_KEY.encode()[:32].ljust(32, b'0')
-            cipher_suite = Fernet(Fernet.generate_key())  # Use generated key for demo
-            logger.info("Encryption initialized")
+            import hashlib
+            import base64
+            # Derive deterministic Fernet key from SECRET_KEY using SHA-256
+            hash_digest = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+            fernet_key = base64.urlsafe_b64encode(hash_digest)
+            cipher_suite = Fernet(fernet_key)
+            logger.info("Encryption initialized with deterministic key derivation")
         except Exception as e:
             logger.warning(f"Encryption initialization failed: {e}")
     
