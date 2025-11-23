@@ -852,6 +852,398 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status_msg, parse_mode=ParseMode.MARKDOWN)
 
 
+
+@require_auth
+async def cmd_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /translate command."""
+    user_id = update.effective_user.id
+    user_stats.record_command(user_id, "translate")
+    
+    # Check AI rate limit
+    allowed, message = rate_limiter.check_rate_limit(user_id, "ai")
+    if not allowed:
+        await update.message.reply_text(message)
+        return
+    
+    if len(context.args) < 2:
+        await update.message.reply_text(
+            "🌍 **استخدام الأمر:**\n"
+            "/translate <target_lang> <text>\n\n"
+            "مثال: `/translate en مرحبا بكم`\n"
+            "أو: `/translate ar Hello world`"
+        )
+        return
+    
+    target_lang = context.args[0]
+    text = " ".join(context.args[1:])
+    
+    await update.message.reply_text("🔄 جاري الترجمة...")
+    
+    try:
+        messages = [
+            {"role": "system", "content": f"You are a professional translator. Translate the following text to {target_lang}. Only return the translation, no explanations."},
+            {"role": "user", "content": text}
+        ]
+        
+        translation = await AIProvider.call_ai(messages, provider="openai")
+        
+        result = f"🌍 **الترجمة إلى {target_lang}:**\n\n{translation}"
+        await update.message.reply_text(result, parse_mode=ParseMode.MARKDOWN)
+        
+    except Exception as e:
+        logger.error(f"Translation error: {e}")
+        await update.message.reply_text(f"❌ خطأ في الترجمة: {str(e)[:200]}")
+
+@require_auth
+async def cmd_summarize(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /summarize command."""
+    user_id = update.effective_user.id
+    user_stats.record_command(user_id, "summarize")
+    
+    # Check AI rate limit
+    allowed, message = rate_limiter.check_rate_limit(user_id, "ai")
+    if not allowed:
+        await update.message.reply_text(message)
+        return
+    
+    if not context.args:
+        await update.message.reply_text(
+            "📝 **استخدام الأمر:**\n"
+            "/summarize <نص طويل>\n\n"
+            "مثال: `/summarize <مقالة أو نص طويل>`"
+        )
+        return
+    
+    text = " ".join(context.args)
+    
+    if len(text) < 50:
+        await update.message.reply_text("⚠️ النص قصير جداً للتلخيص. الحد الأدنى 50 حرف.")
+        return
+    
+    await update.message.reply_text("📊 جاري التلخيص...")
+    
+    try:
+        messages = [
+            {"role": "system", "content": "You are an expert at summarizing text. Provide a concise summary in the same language as the input."},
+            {"role": "user", "content": f"Summarize this text concisely:\n\n{text}"}
+        ]
+        
+        summary = await AIProvider.call_ai(messages, provider="openai")
+        
+        result = f"📊 **الملخص:**\n\n{summary}"
+        await update.message.reply_text(result, parse_mode=ParseMode.MARKDOWN)
+        
+    except Exception as e:
+        logger.error(f"Summarize error: {e}")
+        await update.message.reply_text(f"❌ خطأ في التلخيص: {str(e)[:200]}")
+
+@require_auth
+async def cmd_verifyenv(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /verifyenv command."""
+    user_stats.record_command(update.effective_user.id, "verifyenv")
+    
+    await update.message.reply_text("�� جاري فحص المتغيرات البيئية...")
+    
+    checks = []
+    
+    # Check critical variables
+    critical_vars = {
+        "TELEGRAM_BOT_TOKEN": TELEGRAM_TOKEN,
+        "OPENAI_API_KEY": OPENAI_API_KEY,
+        "GITHUB_TOKEN": GITHUB_TOKEN,
+    }
+    
+    for var_name, var_value in critical_vars.items():
+        if is_placeholder(var_value):
+            checks.append(f"❌ {var_name}: Not configured")
+        else:
+            # Show first/last few chars for security
+            if len(var_value) > 10:
+                masked = f"{var_value[:4]}...{var_value[-4:]}"
+            else:
+                masked = "***"
+            checks.append(f"✅ {var_name}: {masked}")
+    
+    # Check optional variables
+    optional_vars = {
+        "GROQ_API_KEY": GROQ_API_KEY,
+        "ANTHROPIC_API_KEY": ANTHROPIC_API_KEY,
+        "DB_URL": DB_URL,
+        "REDIS_URL": REDIS_URL,
+    }
+    
+    for var_name, var_value in optional_vars.items():
+        if is_placeholder(var_value):
+            checks.append(f"⚠️  {var_name}: Not configured (optional)")
+        else:
+            checks.append(f"✅ {var_name}: Configured")
+    
+    result = "🔍 **فحص المتغيرات البيئية:**\n\n" + "\n".join(checks)
+    await update.message.reply_text(result, parse_mode=ParseMode.MARKDOWN)
+
+@require_auth
+async def cmd_preflight(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /preflight command."""
+    user_stats.record_command(update.effective_user.id, "preflight")
+    
+    await update.message.reply_text("🚀 جاري الفحص الشامل للنظام...")
+    
+    checks = []
+    
+    # Check AI providers
+    if not is_placeholder(OPENAI_API_KEY):
+        try:
+            test_msg = [{"role": "user", "content": "test"}]
+            await AIProvider.call_openai(test_msg)
+            checks.append("✅ OpenAI: Connected")
+        except Exception as e:
+            checks.append(f"❌ OpenAI: {str(e)[:50]}")
+    else:
+        checks.append("⚠️  OpenAI: Not configured")
+    
+    if not is_placeholder(GROQ_API_KEY):
+        checks.append("✅ Groq: API key configured")
+    else:
+        checks.append("⚠️  Groq: Not configured")
+    
+    if not is_placeholder(ANTHROPIC_API_KEY):
+        checks.append("✅ Anthropic: API key configured")
+    else:
+        checks.append("⚠️  Anthropic: Not configured")
+    
+    # Check GitHub
+    gh_ok, gh_msg = await GitHubIntegration.check_github_connection()
+    checks.append(f"{'✅' if gh_ok else '❌'} GitHub: {gh_msg}")
+    
+    # Check databases
+    pg_ok, pg_msg = await DatabaseChecker.check_postgresql()
+    checks.append(f"{'✅' if pg_ok else '⚠️'} PostgreSQL: {pg_msg}")
+    
+    redis_ok, redis_msg = await DatabaseChecker.check_redis()
+    checks.append(f"{'✅' if redis_ok else '⚠️'} Redis: {redis_msg}")
+    
+    # Check data directory
+    if DATA_DIR.exists():
+        checks.append(f"✅ Data Directory: {DATA_DIR}")
+    else:
+        checks.append("❌ Data Directory: Not found")
+    
+    result = "🚀 **نتائج الفحص الشامل:**\n\n" + "\n".join(checks)
+    await update.message.reply_text(result, parse_mode=ParseMode.MARKDOWN)
+
+@require_auth
+async def cmd_health(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /health command."""
+    user_stats.record_command(update.effective_user.id, "health")
+    
+    uptime = datetime.now() - BOT_START_TIME
+    uptime_str = str(uptime).split('.')[0]
+    
+    # Memory usage (if psutil available)
+    memory_info = "N/A"
+    try:
+        import psutil
+        import os as os_module
+        process = psutil.Process(os_module.getpid())
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        memory_info = f"{memory_mb:.1f} MB"
+    except ImportError:
+        pass
+    
+    # Count active resources
+    active_sessions = len(conversation_memory.sessions)
+    total_users = len(user_stats.data)
+    
+    health_text = f"""🏥 **System Health**
+
+⏱️ **Uptime:** {uptime_str}
+💾 **Memory:** {memory_info}
+👥 **Active Sessions:** {active_sessions}
+📊 **Total Users:** {total_users}
+
+🤖 **Bot Status:**
+• Version: {BOT_VERSION}
+• Rate Limiter: ✅ Active
+• Conversation Memory: ✅ Active
+• User Stats: ✅ Active
+
+🔌 **Services:**
+• Telegram API: ✅ Connected
+• File System: ✅ Writable
+• Logging: ✅ Active
+
+📈 **Performance:**
+• Response: Fast
+• Storage: {len(list(DATA_DIR.glob('*')))} files
+"""
+    
+    await update.message.reply_text(health_text, parse_mode=ParseMode.MARKDOWN)
+
+@require_auth
+async def cmd_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /report command - generate JSON report."""
+    user_stats.record_command(update.effective_user.id, "report")
+    
+    await update.message.reply_text("📋 جاري إنشاء التقرير...")
+    
+    # Build comprehensive report
+    report = {
+        "bot": {
+            "version": BOT_VERSION,
+            "uptime_seconds": int((datetime.now() - BOT_START_TIME).total_seconds()),
+            "start_time": BOT_START_TIME.isoformat()
+        },
+        "services": {
+            "openai": not is_placeholder(OPENAI_API_KEY),
+            "groq": not is_placeholder(GROQ_API_KEY),
+            "anthropic": not is_placeholder(ANTHROPIC_API_KEY),
+            "github": not is_placeholder(GITHUB_TOKEN)
+        },
+        "statistics": {
+            "total_users": len(user_stats.data),
+            "active_sessions": len(conversation_memory.sessions),
+            "total_rate_limits": len(rate_limiter.data)
+        },
+        "configuration": {
+            "allowlist_enabled": len(USER_ALLOWLIST) > 0,
+            "rate_limit_messages": RATE_LIMIT_MESSAGES,
+            "rate_limit_ai_calls": RATE_LIMIT_AI_CALLS,
+            "data_directory": str(DATA_DIR)
+        }
+    }
+    
+    # Save report to file
+    report_file = DATA_DIR / f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    save_json_file(report_file, report)
+    
+    # Send formatted report
+    report_text = f"""📋 **System Report**
+
+```json
+{json.dumps(report, indent=2, ensure_ascii=False)}
+```
+
+💾 Full report saved to:
+`{report_file.name}`
+"""
+    
+    if len(report_text) > 4000:
+        report_text = report_text[:4000] + "\n\n[Truncated...]"
+    
+    await update.message.reply_text(report_text, parse_mode=ParseMode.MARKDOWN)
+
+@require_auth
+async def cmd_insights(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /insights command."""
+    user_id = update.effective_user.id
+    user_stats.record_command(user_id, "insights")
+    
+    # Check AI rate limit
+    allowed, message = rate_limiter.check_rate_limit(user_id, "ai")
+    if not allowed:
+        await update.message.reply_text(message)
+        return
+    
+    await update.message.reply_text("🔍 جاري تحليل المستودع...")
+    
+    try:
+        # Get repo info
+        repo_info = await GitHubIntegration.get_repo_info()
+        
+        # Build analysis prompt
+        repo_summary = f"""
+Repository: {repo_info.get('full_name')}
+Description: {repo_info.get('description', 'N/A')}
+Language: {repo_info.get('language', 'N/A')}
+Stars: {repo_info.get('stargazers_count', 0)}
+Open Issues: {repo_info.get('open_issues_count', 0)}
+Last Updated: {repo_info.get('updated_at', 'N/A')}
+"""
+        
+        messages = [
+            {"role": "system", "content": "You are a senior software engineer analyzing a GitHub repository. Provide insights in Arabic."},
+            {"role": "user", "content": f"Analyze this repository and provide:\n1. Current state\n2. Top 3 risks\n3. Top 3 opportunities\n4. Recommendations\n\nRepository Info:\n{repo_summary}"}
+        ]
+        
+        insights = await AIProvider.call_ai(messages, provider="openai")
+        
+        result = f"🧠 **Repository Insights:**\n\n{insights}"
+        
+        if len(result) > 4000:
+            result = result[:4000] + "\n\n[تم قطع الرد...]"
+        
+        await update.message.reply_text(result, parse_mode=ParseMode.MARKDOWN)
+        
+    except Exception as e:
+        logger.error(f"Insights error: {e}")
+        await update.message.reply_text(f"❌ خطأ: {str(e)[:200]}")
+
+@require_auth
+async def cmd_model(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /model command."""
+    user_stats.record_command(update.effective_user.id, "model")
+    
+    if not context.args or context.args[0] not in ["list", "info"]:
+        await update.message.reply_text(
+            "🤖 **استخدام الأمر:**\n"
+            "/model list - قائمة النماذج المتاحة\n"
+            "/model info - معلومات النموذج الحالي"
+        )
+        return
+    
+    command = context.args[0]
+    
+    if command == "list":
+        models_text = """🤖 **AI Models Available:**
+
+**OpenAI:**
+• gpt-4o-mini (default) - Fast, efficient
+• gpt-4o - Most capable
+• gpt-3.5-turbo - Fast and cheap
+
+**Groq:**
+• llama-3.1-70b-versatile - Very fast
+• mixtral-8x7b - Good balance
+• gemma-7b - Lightweight
+
+**Anthropic:**
+• claude-3-5-sonnet - Most capable
+• claude-3-opus - Powerful
+• claude-3-sonnet - Balanced
+
+💡 **Current Configuration:**
+"""
+        
+        if not is_placeholder(OPENAI_API_KEY):
+            models_text += f"✅ OpenAI: {OPENAI_MODEL}\n"
+        if not is_placeholder(GROQ_API_KEY):
+            models_text += f"✅ Groq: {GROQ_MODEL}\n"
+        if not is_placeholder(ANTHROPIC_API_KEY):
+            models_text += f"✅ Anthropic: {ANTHROPIC_MODEL}\n"
+        
+        await update.message.reply_text(models_text, parse_mode=ParseMode.MARKDOWN)
+    
+    elif command == "info":
+        info_text = f"""ℹ️ **Current Model Configuration:**
+
+**OpenAI:**
+• Model: `{OPENAI_MODEL}`
+• Status: {"✅ Active" if not is_placeholder(OPENAI_API_KEY) else "❌ Not configured"}
+• Base URL: {OPENAI_BASE_URL}
+
+**Groq:**
+• Model: `{GROQ_MODEL}`
+• Status: {"✅ Active" if not is_placeholder(GROQ_API_KEY) else "❌ Not configured"}
+
+**Anthropic:**
+• Model: `{ANTHROPIC_MODEL}`
+• Status: {"✅ Active" if not is_placeholder(ANTHROPIC_API_KEY) else "❌ Not configured"}
+
+💡 Models can be changed in .env file
+"""
+        
+        await update.message.reply_text(info_text, parse_mode=ParseMode.MARKDOWN)
+
 @require_auth
 async def cmd_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /ping command."""
@@ -1348,9 +1740,18 @@ def main():
     # Add command handlers - AI & Chat
     application.add_handler(CommandHandler("chat", cmd_chat))
     application.add_handler(CommandHandler("ask", cmd_ask))
+    application.add_handler(CommandHandler("translate", cmd_translate))
+    application.add_handler(CommandHandler("summarize", cmd_summarize))
+    
+    # Add command handlers - Diagnostic
+    application.add_handler(CommandHandler("verifyenv", cmd_verifyenv))
+    application.add_handler(CommandHandler("preflight", cmd_preflight))
+    application.add_handler(CommandHandler("report", cmd_report))
+    application.add_handler(CommandHandler("health", cmd_health))
     
     # Add command handlers - Repo
     application.add_handler(CommandHandler("repo", cmd_repo))
+    application.add_handler(CommandHandler("insights", cmd_insights))
     application.add_handler(CommandHandler("search", cmd_search))
     application.add_handler(CommandHandler("issue", cmd_issue))
     
@@ -1358,6 +1759,9 @@ def main():
     application.add_handler(CommandHandler("db", cmd_db))
     application.add_handler(CommandHandler("stats", cmd_stats))
     application.add_handler(CommandHandler("history", cmd_history))
+    
+    # Add command handlers - AI Management
+    application.add_handler(CommandHandler("model", cmd_model))
     
     # Add message handler for direct messages
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

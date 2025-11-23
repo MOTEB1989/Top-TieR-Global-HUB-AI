@@ -8,9 +8,20 @@ The **Unified Telegram Bot** is an advanced, feature-rich bot that provides:
 - ✅ Bidirectional GitHub repository integration
 - ✅ Multi-database connectivity
 - ✅ Smart conversation with memory
-- ✅ 30+ specialized commands
+- ✅ **24 specialized commands + direct messaging**
 - ✅ Rate limiting and user quotas
 - ✅ Comprehensive error handling and logging
+
+### 📊 Command Summary
+
+- **Basic Commands**: 7 commands (start, help, whoami, status, ping, version, about)
+- **AI & Chat**: 5 commands (chat, ask, translate, summarize, + direct messages)
+- **Diagnostic**: 4 commands (verifyenv, preflight, report, health)
+- **Repository**: 4 commands (repo, insights, search, issue)
+- **Database**: 4 commands (db status/test, stats, history)
+- **AI Management**: 1 command (model list/info)
+
+**Total: 24 commands** providing comprehensive bot functionality
 
 ## 🚀 Quick Start
 
@@ -62,53 +73,48 @@ python3 scripts/test_unified_bot.py
 | `/version` | Bot version + last update | `/version` |
 | `/about` | Project information | `/about` |
 
-### 🔹 AI & Chat Commands
+### 🔹 AI & Chat Commands (5 commands)
 
 | Command | Description | Example |
 |---------|-------------|---------|
 | Direct message | Smart auto-reply with memory | `Hello, how are you?` |
 | `/chat <message>` | Chat with conversation memory | `/chat What is Docker?` |
 | `/ask <question>` | Direct question without memory | `/ask Explain Kubernetes` |
-| `/translate <lang> <text>` | Translate text | `/translate en مرحبا` |
-| `/summarize <text>` | Summarize text | `/summarize <long text>` |
+| `/translate <lang> <text>` | Translate text to target language | `/translate en مرحبا` |
+| `/summarize <text>` | Summarize long text concisely | `/summarize <long text>` |
 
-### 🔹 Diagnostic Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/verifyenv` | Check environment variables | `/verifyenv` |
-| `/preflight` | Comprehensive connection checks | `/preflight` |
-| `/report` | Full JSON system report | `/report` |
-| `/health` | System health status | `/health` |
-
-### 🔹 Repository Commands
+### 🔹 Diagnostic Commands (4 commands)
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `/repo` | General repository analysis | `/repo` |
-| `/insights` | Smart summary with risks/opportunities | `/insights` |
-| `/file <path>` | Read file from repository | `/file README.md` |
-| `/search <query>` | Search in code | `/search def main` |
-| `/analyze <path>` | Analyze file/folder | `/analyze scripts/` |
+| `/verifyenv` | Check environment variables status | `/verifyenv` |
+| `/preflight` | Comprehensive system connection checks | `/preflight` |
+| `/report` | Generate full JSON system report | `/report` |
+| `/health` | Display system health metrics | `/health` |
+
+### 🔹 Repository Commands (4 commands)
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/repo` | General repository analysis with stats | `/repo` |
+| `/insights` | AI-powered smart summary with risks/opportunities | `/insights` |
+| `/search <query>` | Search code in repository | `/search def main` |
 | `/issue <title>` | Create GitHub Issue | `/issue Fix login bug` |
-| `/pr <title>` | Create Pull Request | `/pr Add new feature` |
 
-### 🔹 Database Commands
+### 🔹 Database Commands (3 commands)
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `/db status` | All databases status | `/db status` |
+| `/db status` | Check all databases status | `/db status` |
 | `/db test` | Test database connections | `/db test` |
-| `/stats` | Usage statistics | `/stats` |
-| `/history` | Last 20 conversations | `/history` |
-| `/export` | Export user data | `/export` |
+| `/stats` | Bot usage statistics | `/stats` |
+| `/history` | View last 20 conversations | `/history` |
 
-### 🔹 AI Management Commands
+### 🔹 AI Management Commands (1 command)
 
 | Command | Description | Example |
 |---------|-------------|---------|
 | `/model list` | List available AI models | `/model list` |
-| `/model switch <model>` | Switch AI model | `/model switch gpt-4` |
 | `/model info` | Current model information | `/model info` |
 
 ## ⚙️ Configuration
