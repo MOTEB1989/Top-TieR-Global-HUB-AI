@@ -2,6 +2,8 @@
 """
 @LexnexuxBot - Full Featured Telegram Bot
 بوت Telegram متكامل مع AI ودعم GitHub
+
+Aligned with refactored security standards.
 """
 
 import os
@@ -12,27 +14,16 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
+# Load .env file early
+from dotenv import load_dotenv
+load_dotenv()
+
 # Setup logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-# Load .env file
-def load_env():
-    """تحميل ملف .env"""
-    env_path = Path(__file__).parent.parent / ".env"
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    key, _, value = line.partition('=')
-                    if key and value:
-                        os.environ[key.strip()] = value.strip()
-
-load_env()
 
 # Check dependencies
 try:
@@ -45,16 +36,34 @@ except ImportError:
 
 # Configuration
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-ALLOWLIST = os.getenv("TELEGRAM_ALLOWLIST", "").split(",")
-ALLOWLIST = [int(id.strip()) for id in ALLOWLIST if id.strip().isdigit()]
+ALLOWLIST_ENV = os.getenv("TELEGRAM_ALLOWLIST", "").strip()
+# Parse allowlist
+ALLOWLIST = []
+if ALLOWLIST_ENV:
+    for item in ALLOWLIST_ENV.split(","):
+        item = item.strip()
+        if item.isdigit():
+            ALLOWLIST.append(int(item))
+
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")  # Now uses OPENAI_MODEL
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = os.getenv("GITHUB_REPO")
+GITHUB_REPO = os.getenv("GITHUB_REPO", "MOTEB1989/Top-TieR-Global-HUB-AI")
 
 # Validate configuration
 if not BOT_TOKEN or BOT_TOKEN.startswith("PASTE_"):
     logger.error("❌ TELEGRAM_BOT_TOKEN غير مُعدّ بشكل صحيح في .env")
     sys.exit(1)
+
+# Log startup with safe masking
+logger.info("🚀 Starting Telegram Bot...")
+logger.info(f"Repository: {GITHUB_REPO}")
+if OPENAI_KEY and not OPENAI_KEY.startswith("${{"):
+    logger.info(f"OpenAI Model: {OPENAI_MODEL}")
+if ALLOWLIST:
+    logger.info(f"🔐 Allowlist enabled with {len(ALLOWLIST)} authorized user(s)")
+else:
+    logger.warning("⚠️ Allowlist is empty - all users allowed")
 
 def is_authorized(user_id: int) -> bool:
     """التحقق من صلاحية المستخدم"""
