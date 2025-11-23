@@ -107,3 +107,6 @@ yarn-error.log*
 *.bak
 *.backup
 *.old
+
+# Generated repository structure
+repo_structure.json
