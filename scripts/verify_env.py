@@ -10,6 +10,7 @@ REQUIRED_NON_EMPTY = [
 
 OPTIONAL_SHOW = [
     "OPENAI_MODEL",
+    "OPENAI_FALLBACK_MODEL",
     "TELEGRAM_ALLOWLIST",
     "OPENAI_BASE_URL",
 ]
@@ -47,6 +48,14 @@ def main():
         if v is None:
             continue
         print(f"{k} = {mask(v, k)}")
+    
+    # Display fallback model note if configured
+    fallback_model = os.getenv("OPENAI_FALLBACK_MODEL")
+    if fallback_model:
+        print("\n💡 ملاحظة: تم تكوين نموذج احتياطي (Fallback Model)")
+        print(f"   سيتم استخدام '{fallback_model}' تلقائياً إذا فشل النموذج الأساسي")
+        print(f"   بسبب حدود السعر أو عدم التوفر المؤقت.")
+    
     print("====================================")
 
 if __name__ == "__main__":
