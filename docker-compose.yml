@@ -1,10 +1,9 @@
 version: '3.8'
 
 services:
-  # Rust Core Service
   core:
     build:
-      context: ./core
+      context: .
       dockerfile: Dockerfile
     container_name: core_service
     ports:
@@ -16,10 +15,9 @@ services:
       - neo4j
     restart: on-failure
 
-  # API Gateway (Node.js)
   api:
     build:
-      context: ./services/api
+      context: .
       dockerfile: Dockerfile
     container_name: api_gateway
     ports:
@@ -33,7 +31,6 @@ services:
       - neo4j
     restart: always
 
-  # Neo4j Database
   neo4j:
     image: neo4j:4.4
     container_name: neo4j_db
@@ -47,9 +44,8 @@ services:
       - NEO4J_AUTH=neo4j/password
     restart: always
 
-  # Redis Cache
   redis:
-    image: redis:6.2-alpine
+    image: redis:7-alpine
     container_name: redis_cache
     ports:
       - "6379:6379"
@@ -57,7 +53,6 @@ services:
       - ./data/redis:/data
     restart: always
 
-  # NEW: Qdrant Vector Database
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant_db
