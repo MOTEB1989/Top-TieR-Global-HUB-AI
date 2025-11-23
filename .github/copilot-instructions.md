@@ -3,6 +3,16 @@
 ## Overview
 This document outlines the policies and best practices for using GitHub Copilot within the Top-TieR-Global-HUB-AI project. These guidelines ensure consistent code quality, security, and adherence to project standards.
 
+For comprehensive best practices on using GitHub Copilot coding agent, refer to: https://gh.io/copilot-coding-agent-tips
+
+## Project Context
+This is an OSINT (Open Source Intelligence) platform with a hybrid architecture:
+- **Python (FastAPI)**: AI engine and OSINT data processing
+- **Node.js/TypeScript**: API Gateway and service orchestration
+- **Rust**: Core performance services
+- **Deployment**: Primarily Railway.app for cloud deployment
+- **Databases**: Redis for caching, PostgreSQL for data storage
+
 ## Copilot Policies
 
 ### 1. Code Quality Standards
@@ -70,6 +80,16 @@ This document outlines the policies and best practices for using GitHub Copilot 
 - **Error responses**: Return meaningful error messages for API endpoints
 - **Exception handling**: Use specific exception types rather than broad catch-all exceptions
 - **Monitoring compatibility**: Ensure error handling works with existing monitoring systems
+
+### 11. Railway Deployment Considerations
+- **Environment variables**: Use Railway's environment variable system, avoid hardcoding configuration
+- **Port binding**: Always use `PORT` environment variable provided by Railway: `os.environ.get("PORT", 3000)`
+- **Start commands**: Ensure start commands in `railway.json` match the actual entry points
+- **Service references**: Use Railway's service reference syntax: `${{ServiceName.VARIABLE}}`
+- **Health checks**: Implement `/health` endpoints for all services
+- **Resource limits**: Be mindful of Railway's free tier limits ($5/month credit)
+- **Logs**: Structure logs for easy debugging in Railway's log viewer
+- **Dependencies**: Keep `requirements.txt` and `package.json` up to date for reliable builds
 
 ## Best Practices for Copilot Usage
 
@@ -142,11 +162,16 @@ For questions about these guidelines or Copilot usage in the project:
 - Refer to GitHub's official Copilot documentation
 - Consult security team for security-related questions
 
+## Deployment Documentation
+
+For detailed Railway deployment instructions, see: [RAILWAY_DEPLOY.md](../RAILWAY_DEPLOY.md)
+
 ## Version History
 
+- v1.1 - Added Railway deployment guidelines and project context (November 2025)
 - v1.0 - Initial Copilot guidelines for Top-TieR-Global-HUB-AI project
-- Last updated: [Current Date]
-- Next review: [Quarterly]
+- Last updated: November 23, 2025
+- Next review: February 2025 (Quarterly)
 
 ---
 
