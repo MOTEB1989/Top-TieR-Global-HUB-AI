@@ -12,12 +12,22 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
-# Setup logging
+# Setup unified logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+# Import verify_env for environment validation
+try:
+    sys.path.insert(0, str(Path(__file__).parent))
+    from verify_env import check_variables, REQUIRED_NON_EMPTY
+except ImportError:
+    logger.warning("Could not import verify_env, skipping validation")
+    def check_variables(required):
+        return [], []
+    REQUIRED_NON_EMPTY = []
 
 # Load .env file
 def load_env():
@@ -31,6 +41,9 @@ def load_env():
                     key, _, value = line.partition('=')
                     if key and value:
                         os.environ[key.strip()] = value.strip()
+        logger.info("Environment variables loaded from .env")
+    else:
+        logger.warning("No .env file found")
 
 load_env()
 
@@ -308,31 +321,50 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⚠️ حدث خطأ في معالجة طلبك. جاري المحاولة مرة أخرى..."
         )
 
+def safe_main():
+    """الدالة الرئيسية wrapped in safe error handling"""
+    try:
+        # Verify critical environment variables
+        critical_vars = ["TELEGRAM_BOT_TOKEN"]
+        for var in critical_vars:
+            value = os.getenv(var)
+            if not value or value.startswith("PASTE_"):
+                logger.error(f"❌ {var} غير مُعدّ بشكل صحيح في .env")
+                return 1
+        
+        logger.info("🚀 بدء تشغيل @LexnexuxBot...")
+        logger.info("✅ Environment variables validated")
+        
+        # Create application
+        application = Application.builder().token(BOT_TOKEN).build()
+        
+        # Add handlers
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("status", status))
+        application.add_handler(CommandHandler("preflight", preflight))
+        application.add_handler(CommandHandler("keys", check_keys))
+        application.add_handler(CommandHandler("secrets", check_secrets))
+        application.add_handler(CommandHandler("ai", ai_chat))
+        application.add_handler(CommandHandler("help", help_command))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        
+        # Add error handler
+        application.add_error_handler(error_handler)
+        
+        # Start bot
+        logger.info("✅ البوت يعمل الآن! اضغط Ctrl+C للإيقاف.")
+        logger.info(f"🔐 المستخدمون المصرح لهم: {ALLOWLIST if ALLOWLIST else 'الجميع'}")
+        
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+        return 0
+        
+    except Exception as e:
+        logger.error(f"❌ خطأ فادح في التشغيل: {e}", exc_info=True)
+        return 1
+
 def main():
-    """الدالة الرئيسية"""
-    logger.info("🚀 بدء تشغيل @LexnexuxBot...")
-    
-    # Create application
-    application = Application.builder().token(BOT_TOKEN).build()
-    
-    # Add handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("status", status))
-    application.add_handler(CommandHandler("preflight", preflight))
-    application.add_handler(CommandHandler("keys", check_keys))
-    application.add_handler(CommandHandler("secrets", check_secrets))
-    application.add_handler(CommandHandler("ai", ai_chat))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
-    # Add error handler
-    application.add_error_handler(error_handler)
-    
-    # Start bot
-    logger.info("✅ البوت يعمل الآن! اضغط Ctrl+C للإيقاف.")
-    logger.info(f"🔐 المستخدمون المصرح لهم: {ALLOWLIST if ALLOWLIST else 'الجميع'}")
-    
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    """Entry point for the script"""
+    sys.exit(safe_main())
 
 if __name__ == "__main__":
     try:
@@ -340,6 +372,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("\n⚠️ تم إيقاف البوت")
         sys.exit(0)
-    except Exception as e:
-        logger.error(f"❌ خطأ فادح: {e}")
-        sys.exit(1)
