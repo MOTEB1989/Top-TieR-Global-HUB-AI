@@ -1,0 +1,528 @@
+{
+  "mode": "full-scan",
+  "root": "/workspace/Top-TieR-Global-HUB-AI",
+  "generated_at": "2025-11-23T00:16:45.941873Z",
+  "git": {
+    "branch": "work",
+    "commit": "604d042e55d005019e885a1eff5210a9ab76d91a",
+    "status": "?? reports/\n?? self_heal.sh\n?? ultra_agent_os.py"
+  },
+  "stats": {
+    "total_files": 122,
+    "total_dirs": 25,
+    "by_extension": {
+      ".zip": 6,
+      ".py": 27,
+      ".sh": 20,
+      ".toml": 2,
+      ".yml": 16,
+      ".ts": 3,
+      ".rs": 1,
+      "<none>": 12,
+      ".md": 17,
+      ".save": 1,
+      ".json": 4,
+      ".example": 3,
+      ".txt": 3,
+      ".cql": 1,
+      ".yaml": 6
+    }
+  },
+  "issues": [
+    {
+      "message": "Repository has uncommitted changes",
+      "file": null,
+      "severity": "warning"
+    }
+  ],
+  "files": [
+    {
+      "path": "veritas-nexus-v2.zip",
+      "size_bytes": 3029
+    },
+    {
+      "path": "providers.py",
+      "size_bytes": 577
+    },
+    {
+      "path": "setup_veritas.sh",
+      "size_bytes": 18511
+    },
+    {
+      "path": "pyproject.toml",
+      "size_bytes": 2132
+    },
+    {
+      "path": "docker-compose.yml",
+      "size_bytes": 262
+    },
+    {
+      "path": "openai.ts",
+      "size_bytes": 999
+    },
+    {
+      "path": "index.ts",
+      "size_bytes": 1877
+    },
+    {
+      "path": "do_all_now.sh",
+      "size_bytes": 369
+    },
+    {
+      "path": "main.rs",
+      "size_bytes": 1312
+    },
+    {
+      "path": "veritas_workflows_addon",
+      "size_bytes": 191
+    },
+    {
+      "path": "validate_security_improvements.sh",
+      "size_bytes": 4815
+    },
+    {
+      "path": "run_codex_full.sh",
+      "size_bytes": 2003
+    },
+    {
+      "path": "README_COMMENT_TASK.md",
+      "size_bytes": 2530
+    },
+    {
+      "path": "Dockerfile",
+      "size_bytes": 184
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 993
+    },
+    {
+      "path": "bluetooth-open-diagnostics.zip",
+      "size_bytes": 7743
+    },
+    {
+      "path": "SECURITY_GOVERNANCE.md",
+      "size_bytes": 8134
+    },
+    {
+      "path": "example.py",
+      "size_bytes": 182
+    },
+    {
+      "path": ".dockerignore",
+      "size_bytes": 1401
+    },
+    {
+      "path": "test_gpt_connection.py",
+      "size_bytes": 1070
+    },
+    {
+      "path": "Owner",
+      "size_bytes": 23924
+    },
+    {
+      "path": "bluetooth-open-diagnostics2.zip",
+      "size_bytes": 397
+    },
+    {
+      "path": "committee_service.py",
+      "size_bytes": 5079
+    },
+    {
+      "path": "topTireAI-quality-pack.zip",
+      "size_bytes": 281
+    },
+    {
+      "path": "test_gpt_connection.py.save",
+      "size_bytes": 1772
+    },
+    {
+      "path": "harden_repo.sh",
+      "size_bytes": 803
+    },
+    {
+      "path": "gpt_client.py",
+      "size_bytes": 3066
+    },
+    {
+      "path": "issues_plan.md",
+      "size_bytes": 13545
+    },
+    {
+      "path": "SECURITY.md",
+      "size_bytes": 4454
+    },
+    {
+      "path": "LEXCODE_MANIFESTO.md",
+      "size_bytes": 363
+    },
+    {
+      "path": "ai.ts",
+      "size_bytes": 232
+    },
+    {
+      "path": "package.json",
+      "size_bytes": 432
+    },
+    {
+      "path": "demo_features.sh",
+      "size_bytes": 2563
+    },
+    {
+      "path": "ultra_agent_os.py",
+      "size_bytes": 6509
+    },
+    {
+      "path": "LexCode-Hybrid-Starter-AI-Infer.zip",
+      "size_bytes": 7651
+    },
+    {
+      "path": "top-tier-base-files.zip",
+      "size_bytes": 1895
+    },
+    {
+      "path": "PR6_COMMENT.md",
+      "size_bytes": 1571
+    },
+    {
+      "path": ".env.example",
+      "size_bytes": 327
+    },
+    {
+      "path": "REVIEWER_TEST.md",
+      "size_bytes": 558
+    },
+    {
+      "path": "Cargo.toml",
+      "size_bytes": 408
+    },
+    {
+      "path": "CHECKLIST.md",
+      "size_bytes": 3056
+    },
+    {
+      "path": "verify_repo_link.sh",
+      "size_bytes": 2309
+    },
+    {
+      "path": "setup_neo4j_security.sh",
+      "size_bytes": 4789
+    },
+    {
+      "path": ".gitignore",
+      "size_bytes": 1069
+    },
+    {
+      "path": "TopTireAI",
+      "size_bytes": 6716
+    },
+    {
+      "path": "upgrade_veritas.sh",
+      "size_bytes": 1411
+    },
+    {
+      "path": "requirements.txt",
+      "size_bytes": 269
+    },
+    {
+      "path": "package-lock.json",
+      "size_bytes": 101
+    },
+    {
+      "path": "tsconfig.json",
+      "size_bytes": 236
+    },
+    {
+      "path": ".yamllint.yml",
+      "size_bytes": 156
+    },
+    {
+      "path": "self_heal.sh",
+      "size_bytes": 1286
+    },
+    {
+      "path": "FAST",
+      "size_bytes": 3731
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "size_bytes": 1594
+    },
+    {
+      "path": "__init__.py",
+      "size_bytes": 166
+    },
+    {
+      "path": ".env.neo4j.example",
+      "size_bytes": 708
+    },
+    {
+      "path": "data/.gitignore",
+      "size_bytes": 86
+    },
+    {
+      "path": "utils/graph_ingestor.py",
+      "size_bytes": 1
+    },
+    {
+      "path": "utils/ai_trace.py",
+      "size_bytes": 1050
+    },
+    {
+      "path": "api_server/__init__.py",
+      "size_bytes": 3528
+    },
+    {
+      "path": "db/neo4j/init_graph.cql",
+      "size_bytes": 9965
+    },
+    {
+      "path": "policies/guardrails.yaml",
+      "size_bytes": 654
+    },
+    {
+      "path": "scripts/convert_thread_messages.py",
+      "size_bytes": 2026
+    },
+    {
+      "path": "scripts/bot_run_all.sh",
+      "size_bytes": 9055
+    },
+    {
+      "path": "scripts/close_github_items.py",
+      "size_bytes": 10760
+    },
+    {
+      "path": "scripts/housekeeping_prs.sh",
+      "size_bytes": 907
+    },
+    {
+      "path": "scripts/generate_repo_structure.py",
+      "size_bytes": 2819
+    },
+    {
+      "path": "scripts/collect_context_for_claude.sh",
+      "size_bytes": 2782
+    },
+    {
+      "path": "scripts/snap_osint_query.sh",
+      "size_bytes": 8369
+    },
+    {
+      "path": "scripts/comment-on-pr6.sh",
+      "size_bytes": 4292
+    },
+    {
+      "path": "scripts/generate_env_and_patch_workflows.py",
+      "size_bytes": 2409
+    },
+    {
+      "path": "scripts/run_everything.sh",
+      "size_bytes": 9050
+    },
+    {
+      "path": "scripts/generate_repo_summary.sh",
+      "size_bytes": 1245
+    },
+    {
+      "path": "scripts/diagnose_external_apis.py",
+      "size_bytes": 2627
+    },
+    {
+      "path": "scripts/status/collect_status.sh",
+      "size_bytes": 3897
+    },
+    {
+      "path": "scripts/ci/disable_health_auto.sh",
+      "size_bytes": 5048
+    },
+    {
+      "path": "scripts/connectors/add_connectors.sh",
+      "size_bytes": 1219
+    },
+    {
+      "path": "reports/ultra_report.md",
+      "size_bytes": 5171
+    },
+    {
+      "path": "reports/ultra_report.json",
+      "size_bytes": 10262
+    },
+    {
+      "path": "tests/test_gpt_client.py",
+      "size_bytes": 6706
+    },
+    {
+      "path": "tests/test_policy_load.py",
+      "size_bytes": 1091
+    },
+    {
+      "path": "tests/policy/policy.yaml",
+      "size_bytes": 2139
+    },
+    {
+      "path": "docs/banking_README.md",
+      "size_bytes": 569
+    },
+    {
+      "path": "docs/safety-belt-post-merge.md",
+      "size_bytes": 1516
+    },
+    {
+      "path": "docs/architecture/data-foundation.md",
+      "size_bytes": 9963
+    },
+    {
+      "path": "k8s/osint-deployment.yaml",
+      "size_bytes": 2079
+    },
+    {
+      "path": "k8s/core-deployment.yaml",
+      "size_bytes": 2016
+    },
+    {
+      "path": "k8s/README.md",
+      "size_bytes": 3116
+    },
+    {
+      "path": "k8s/pdb.yaml",
+      "size_bytes": 328
+    },
+    {
+      "path": "k8s/secrets.yaml.example",
+      "size_bytes": 739
+    },
+    {
+      "path": "k8s/neo4j.yaml",
+      "size_bytes": 2090
+    },
+    {
+      "path": ".github/labels.yml",
+      "size_bytes": 1669
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "size_bytes": 2131
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "size_bytes": 886
+    },
+    {
+      "path": ".github/CODEOWNERS",
+      "size_bytes": 475
+    },
+    {
+      "path": ".github/auto-assign.yml",
+      "size_bytes": 84
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "size_bytes": 7504
+    },
+    {
+      "path": ".github/workflows/cleanup.yml",
+      "size_bytes": 5628
+    },
+    {
+      "path": ".github/workflows/auto-assign-reviewer.yml",
+      "size_bytes": 1667
+    },
+    {
+      "path": ".github/workflows/codeql.yml",
+      "size_bytes": 2407
+    },
+    {
+      "path": ".github/workflows/generate-repo-summary.yml",
+      "size_bytes": 1085
+    },
+    {
+      "path": ".github/workflows/CI.yml",
+      "size_bytes": 4303
+    },
+    {
+      "path": ".github/workflows/Immutable-Release.yml",
+      "size_bytes": 2515
+    },
+    {
+      "path": ".github/workflows/context-collector.yml",
+      "size_bytes": 1180
+    },
+    {
+      "path": ".github/workflows/post_merge_validation.yml",
+      "size_bytes": 1557
+    },
+    {
+      "path": ".github/workflows/sync-labels.yml",
+      "size_bytes": 976
+    },
+    {
+      "path": ".github/workflows/external-api-diagnosis.yml",
+      "size_bytes": 2862
+    },
+    {
+      "path": ".github/workflows/comment-on-pr6.yml",
+      "size_bytes": 4506
+    },
+    {
+      "path": "veritas-mini-web/Dockerfile",
+      "size_bytes": 995
+    },
+    {
+      "path": "veritas-mini-web/app.py",
+      "size_bytes": 15411
+    },
+    {
+      "path": "veritas-mini-web/requirements.txt",
+      "size_bytes": 199
+    },
+    {
+      "path": "feature/llm-failover",
+      "size_bytes": 13188
+    },
+    {
+      "path": "app/__init__.py",
+      "size_bytes": 88
+    },
+    {
+      "path": "app/ingestion/utils.py",
+      "size_bytes": 1655
+    },
+    {
+      "path": "app/ingestion/cli.py",
+      "size_bytes": 1926
+    },
+    {
+      "path": "app/ingestion/registry.py",
+      "size_bytes": 622
+    },
+    {
+      "path": "app/ingestion/__init__.py",
+      "size_bytes": 110
+    },
+    {
+      "path": "app/ingestion/base.py",
+      "size_bytes": 1237
+    },
+    {
+      "path": "app/ingestion/sources/sama.py",
+      "size_bytes": 3910
+    },
+    {
+      "path": "app/ingestion/sources/__init__.py",
+      "size_bytes": 110
+    },
+    {
+      "path": "veritas-web/Dockerfile",
+      "size_bytes": 995
+    },
+    {
+      "path": "veritas-web/app.py",
+      "size_bytes": 15411
+    },
+    {
+      "path": "veritas-web/requirements.txt",
+      "size_bytes": 199
+    }
+  ]
+}
