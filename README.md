@@ -39,6 +39,8 @@ npm run dev
 ```
 Open http://localhost:3000
 
+**Note:** Next.js dev server uses port 3000 by default. If the main API Gateway is running on port 3000, either stop it or configure Next.js to use a different port with `npm run dev -- -p 3001`
+
 ### 2. Vue.js
 Vue 3 with Composition API and Vite.
 ```bash

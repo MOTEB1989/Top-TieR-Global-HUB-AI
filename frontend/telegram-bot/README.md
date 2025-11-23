@@ -32,4 +32,10 @@ RAILWAY_API_URL=https://top-tier-global-hub-ai-production.up.railway.app/v1/ai/i
 
 ## Commands
 - `/start` - Start the bot and get welcome message
+- `/clear` - Clear conversation history and start fresh
 - Just send any text message to chat with the AI
+
+## Features Details
+- **Conversation History**: The bot maintains conversation context per user, allowing for coherent multi-turn conversations
+- **Async HTTP**: Uses httpx for non-blocking API calls
+- **Error Handling**: Gracefully handles API errors and timeouts
