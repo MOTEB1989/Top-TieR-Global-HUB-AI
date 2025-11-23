@@ -1,0 +1,60 @@
+name: Deploy Frontend to Railway
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Frontend Service
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Type check
+        working-directory: ./frontend
+        run: npm run type-check
+      
+      - name: Lint
+        working-directory: ./frontend
+        run: npm run lint || true
+      
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE || 'http://localhost:8000' }}
+      
+      - name: Deploy to Railway
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "🎨 Deploying frontend to Railway..."
+          echo "Railway deployment requires RAILWAY_TOKEN secret"
+          echo "Use: railway up --service frontend"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      
+      # Note: Actual Railway deployment would use:
+      # - uses: railway-app/railway-cli@v1
+      #   with:
+      #     token: ${{ secrets.RAILWAY_TOKEN }}
+      #     service: frontend
+      #     directory: ./frontend

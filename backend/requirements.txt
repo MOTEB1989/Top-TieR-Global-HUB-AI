@@ -1,0 +1,28 @@
+# FastAPI Backend Dependencies
+# تبعيات الخلفية FastAPI
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP Client
+httpx==0.25.1
+
+# Data Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Optional: Database (uncomment when needed)
+# sqlalchemy==2.0.23
+# alembic==1.12.1
+# asyncpg==0.29.0  # For PostgreSQL
+
+# Optional: Redis (uncomment when needed)
+# redis==5.0.1
+
+# Optional: Authentication (uncomment when needed)
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4

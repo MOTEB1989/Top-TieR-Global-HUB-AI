@@ -93,6 +93,11 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.next/
+out/
+.cache/
+.vercel/
+*.tsbuildinfo
 
 # Jupyter Notebook
 .ipynb_checkpoints
