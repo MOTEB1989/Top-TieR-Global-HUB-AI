@@ -320,6 +320,8 @@ class ConversationMemory:
     def __init__(self, max_messages: int = 30):
         self.max_messages = max_messages
         self.sessions = load_json_file(CHAT_HISTORY_FILE, {})
+        self._dirty = False
+        self._save_counter = 0
     
     def get_user_key(self, user_id: int) -> str:
         """Generate unique key for user."""
@@ -341,7 +343,13 @@ class ConversationMemory:
         if len(self.sessions[key]) > self.max_messages:
             self.sessions[key] = self.sessions[key][-self.max_messages:]
         
-        save_json_file(CHAT_HISTORY_FILE, self.sessions)
+        # Batch save: save every 5 messages or mark dirty
+        self._save_counter += 1
+        self._dirty = True
+        if self._save_counter >= 5:
+            save_json_file(CHAT_HISTORY_FILE, self.sessions)
+            self._save_counter = 0
+            self._dirty = False
     
     def get_history(self, user_id: int, limit: int = 20) -> List[Dict]:
         """Get conversation history for user."""
@@ -355,6 +363,14 @@ class ConversationMemory:
         if key in self.sessions:
             del self.sessions[key]
             save_json_file(CHAT_HISTORY_FILE, self.sessions)
+            self._dirty = False
+    
+    def flush(self):
+        """Force save any pending changes."""
+        if self._dirty:
+            save_json_file(CHAT_HISTORY_FILE, self.sessions)
+            self._save_counter = 0
+            self._dirty = False
 
 conversation_memory = ConversationMemory()
 
@@ -613,7 +629,7 @@ class DatabaseChecker:
             import psycopg2
             # Parse connection string
             conn = await asyncio.to_thread(psycopg2.connect, DB_URL)
-            await asyncio.to_thread(conn.close)
+            await asyncio.to_thread(conn.close())
             return True, "Connected"
         except ImportError:
             return False, "psycopg2 not installed"
@@ -1778,7 +1794,11 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         logger.info("\n⚠️  Bot stopped by user")
+        # Flush any pending conversation memory
+        conversation_memory.flush()
         sys.exit(0)
     except Exception as e:
         logger.error("❌ Fatal error: %s", e)
+        # Flush any pending conversation memory
+        conversation_memory.flush()
         sys.exit(1)
