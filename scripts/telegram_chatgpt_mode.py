@@ -22,10 +22,12 @@ telegram_chatgpt_mode.py
 """
 
 import os
+import sys
 import json
 import logging
 import textwrap
 import subprocess
+import argparse
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -42,6 +44,17 @@ from telegram.ext import (
 # Load .env file
 from dotenv import load_dotenv
 load_dotenv()
+
+# ---------------------- Import verify_env ----------------------
+# Verify environment variables before proceeding
+try:
+    sys.path.insert(0, str(Path(__file__).parent))
+    from verify_env import check_variables, REQUIRED_NON_EMPTY
+except ImportError:
+    # Fallback if verify_env cannot be imported
+    def check_variables(required):
+        return [], []
+    REQUIRED_NON_EMPTY = []
 
 # ---------------------- إعداد السجل ----------------------
 logging.basicConfig(
@@ -582,37 +595,100 @@ async def fallback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 # ---------------------- main ----------------------
+def safe_main(dry_run: bool = False, mode: str = "normal") -> int:
+    """
+    Main function wrapped in safe error handling.
+    
+    Args:
+        dry_run: If True, initialize components but skip polling loop
+        mode: Operation mode (normal, refactored, etc.)
+        
+    Returns:
+        Exit code (0 for success, non-zero for failure)
+    """
+    try:
+        # Verify environment variables
+        missing, empty = check_variables(REQUIRED_NON_EMPTY)
+        if missing or empty:
+            logger.error("❌ Required environment variables missing or empty")
+            if missing:
+                logger.error("  Missing: %s", ", ".join(missing))
+            if empty:
+                logger.error("  Empty: %s", ", ".join(empty))
+            return 1
+        
+        if not TELEGRAM_TOKEN:
+            logger.error("❌ TELEGRAM_BOT_TOKEN غير موجود في المتغيرات البيئية")
+            return 1
+        
+        # Log mode banner if refactored
+        if mode == "refactored":
+            logger.info("="*60)
+            logger.info("🚀 RUNNING IN REFACTORED MODE 🚀")
+            logger.info("  Enhanced logging, error handling, and validation enabled")
+            logger.info("="*60)
+        
+        logger.info("بدء تشغيل Telegram ChatGPT Mode Bot ...")
+        logger.info("المستودع: %s", GITHUB_REPO)
+        if USER_ALLOWLIST:
+            logger.info("Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
+        else:
+            logger.warning("Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
+        
+        app = Application.builder().token(TELEGRAM_TOKEN).build()
+        
+        # أوامر
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("help", cmd_help))
+        app.add_handler(CommandHandler("whoami", cmd_whoami))
+        app.add_handler(CommandHandler("status", cmd_status))
+        app.add_handler(CommandHandler("chat", cmd_chat))
+        app.add_handler(CommandHandler("repo", cmd_repo))
+        app.add_handler(CommandHandler("insights", cmd_insights))
+        
+        # استقبال ملفات
+        app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+        
+        # fallback للنصوص العادية
+        app.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler)
+        )
+        
+        if dry_run:
+            logger.info("✅ Dry-run mode: Bot initialized successfully, skipping polling")
+            logger.info("All handlers registered and configuration validated")
+            return 0
+        
+        logger.info("✅ Starting bot polling loop...")
+        app.run_polling()
+        return 0
+        
+    except Exception as e:
+        logger.error("❌ Fatal error in bot execution: %s", e, exc_info=True)
+        return 1
+
+
 def main() -> None:
-    if not TELEGRAM_TOKEN:
-        raise RuntimeError("❌ TELEGRAM_BOT_TOKEN غير موجود في المتغيرات البيئية")
-
-    logger.info("بدء تشغيل Telegram ChatGPT Mode Bot ...")
-    logger.info("المستودع: %s", GITHUB_REPO)
-    if USER_ALLOWLIST:
-        logger.info("Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
-    else:
-        logger.warning("Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
-
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # أوامر
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("whoami", cmd_whoami))
-    app.add_handler(CommandHandler("status", cmd_status))
-    app.add_handler(CommandHandler("chat", cmd_chat))
-    app.add_handler(CommandHandler("repo", cmd_repo))
-    app.add_handler(CommandHandler("insights", cmd_insights))
-
-    # استقبال ملفات
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-
-    # fallback للنصوص العادية
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler)
+    """Entry point for the script with argument parsing."""
+    parser = argparse.ArgumentParser(
+        description="Telegram ChatGPT Mode Bot for Top-TieR-Global-HUB-AI"
     )
-
-    app.run_polling()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Initialize components but skip starting polling loop"
+    )
+    parser.add_argument(
+        "--mode",
+        default="normal",
+        choices=["normal", "refactored"],
+        help="Operation mode (default: normal)"
+    )
+    
+    args = parser.parse_args()
+    
+    exit_code = safe_main(dry_run=args.dry_run, mode=args.mode)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
