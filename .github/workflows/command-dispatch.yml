@@ -1,0 +1,191 @@
+name: Command Dispatch (/auto-merge, /scan-now)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  dispatch:
+    if: >-
+      startsWith(github.event.comment.body, '/auto-merge') ||
+      startsWith(github.event.comment.body, '/scan-now')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify actor authorization
+        id: auth
+        run: |
+          ALLOWED_USER="MOTEB1989"
+          ACTOR="${{ github.actor }}"
+          if [[ "$ACTOR" != "$ALLOWED_USER" ]]; then
+            echo "Actor $ACTOR not authorized. Skipping command handling." > auth.log
+            echo "authorized=false" >> $GITHUB_OUTPUT
+          else
+            echo "authorized=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Early exit if unauthorized
+        if: steps.auth.outputs.authorized == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info('Unauthorized actor – no action taken.')
+            // Optionally add a reaction
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'confused'
+            })
+      - name: Checkout repository
+        if: steps.auth.outputs.authorized == 'true'
+        uses: actions/checkout@v4
+      - name: Install dependencies (gh + jq + python)
+        if: steps.auth.outputs.authorized == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install gh -y
+      - name: Parse command
+        if: steps.auth.outputs.authorized == 'true'
+        id: parse
+        run: |
+          RAW_CMD="${{ github.event.comment.body }}"
+          RAW_CMD_TRIM=$(echo "$RAW_CMD" | tr -d '\r' | sed 's/[[:space:]]*$//')
+          MODE="unknown"
+          TARGET_PR=""
+          if [[ "$RAW_CMD_TRIM" == "/auto-merge" ]]; then
+            MODE="plan"
+          elif [[ "$RAW_CMD_TRIM" == "/auto-merge confirm" ]]; then
+            MODE="execute"
+          elif [[ "$RAW_CMD_TRIM" =~ ^/scan-now ]]; then
+            MODE="scan"
+            TARGET_PR=$(echo "$RAW_CMD_TRIM" | awk '{print $2}')
+          fi
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+          echo "target_pr=$TARGET_PR" >> $GITHUB_OUTPUT
+      - name: Auto-merge plan (dry run)
+        if: steps.parse.outputs.mode == 'plan'
+        run: |
+          echo "Generating auto-merge plan (dry run)..."
+          DRY_RUN=true MAX_MERGE=10 REQUIRE_SUCCESS_CHECKS=true bash scripts/auto_merge_prs_safe.sh || true
+          echo "--- Plan Log (tail) ---"
+          tail -n 200 logs/auto_merge_*.log > plan.log || true
+      - name: Post plan comment
+        if: steps.parse.outputs.mode == 'plan'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const logFile = fs.readdirSync('logs').filter(f => f.startsWith('auto_merge_')).sort().pop();
+            let log = '';
+            if (logFile) {
+              log = fs.readFileSync(path.join('logs', logFile),'utf8');
+            }
+            const body = [
+              '### 🤖 Auto-Merge Plan (Dry Run)',
+              'Command: /auto-merge',
+              'To execute merging, comment: `/auto-merge confirm`,
+              '',
+              '````text',
+              log.slice(-6000),
+              '````'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body
+            });
+      - name: Auto-merge execute
+        if: steps.parse.outputs.mode == 'execute'
+        run: |
+          echo "Executing staged auto-merge (limited)..."
+          DRY_RUN=false MAX_MERGE=${MAX_MERGE:-5} REQUIRE_SUCCESS_CHECKS=true bash scripts/auto_merge_prs_safe.sh || true
+      - name: Post execute comment
+        if: steps.parse.outputs.mode == 'execute'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const logFile = fs.readdirSync('logs').filter(f => f.startsWith('auto_merge_')).sort().pop();
+            let log = '';
+            if (logFile) {
+              log = fs.readFileSync(path.join('logs', logFile),'utf8');
+            }
+            const body = [
+              '### ✅ Auto-Merge Execution Result',
+              'Command: /auto-merge confirm',
+              '',
+              '````text',
+              log.slice(-6000),
+              '````'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body
+            });
+      - name: Scan Now (dry run)
+        if: steps.parse.outputs.mode == 'scan' && steps.parse.outputs.target_pr != ''
+        run: |
+          echo "Running repository structure scan (dry run) for PR #${{ steps.parse.outputs.target_pr }}";
+          DRY_RUN=true MAX_CLOSE=0 FORCE_FULL_CLOSE=false TARGET_PR=${{ steps.parse.outputs.target_pr }} bash scripts/execute_full_scan.sh || true
+      - name: Scan Now (missing target)
+        if: steps.parse.outputs.mode == 'scan' && steps.parse.outputs.target_pr == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '⚠️ أمر /scan-now يحتاج رقم PR: مثال `/scan-now 1090`'
+            });
+      - name: Post scan comment
+        if: steps.parse.outputs.mode == 'scan' && steps.parse.outputs.target_pr != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const logFile = fs.readdirSync('logs').filter(f => f.startsWith('scan_run_')).sort().pop();
+            let log = '';
+            if (logFile) {
+              log = fs.readFileSync(path.join('logs', logFile),'utf8');
+            }
+            const body = [
+              `### 🧪 Scan Result (Dry Run) for PR #${{ steps.parse.outputs.target_pr }}`,
+              'Command: /scan-now',
+              '',
+              '````text',
+              log.slice(-6000),
+              '````'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body
+            });
+      - name: Unknown command fallback
+        if: steps.parse.outputs.mode == 'unknown'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: 'ℹ️ أمر غير معروف. الأوامر المدعومة: `/auto-merge`, `/auto-merge confirm`, `/scan-now <prNumber>`'
+            });
