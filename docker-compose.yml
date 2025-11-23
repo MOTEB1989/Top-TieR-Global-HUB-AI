@@ -1,13 +1,73 @@
+version: '3.8'
+
 services:
+  # Rust Core Service
   core:
-    build: ./core
-    ports: ["8080:8080"]
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    container_name: core_service
+    ports:
+      - "8080:8080"
     environment:
-      RUST_LOG: info
+      - RUST_LOG=info
+      - DATABASE_URL=bolt://neo4j:7687
+    depends_on:
+      - neo4j
+    restart: on-failure
+
+  # API Gateway (Node.js)
   api:
-    build: ./services/api
-    ports: ["3000:3000"]
-    env_file: .env
-    depends_on: [core]
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "3000:3000"
     environment:
-      CORE_URL: ${CORE_URL:-http://core:8080}
+      - NODE_ENV=development
+      - CORE_SERVICE_URL=http://core:8080
+      - NEO4J_URI=bolt://neo4j:7687
+    depends_on:
+      - core
+      - neo4j
+    restart: always
+
+  # Neo4j Database
+  neo4j:
+    image: neo4j:4.4
+    container_name: neo4j_db
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - ./data/neo4j/data:/data
+      - ./data/neo4j/logs:/logs
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    restart: always
+
+  # Redis Cache
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    restart: always
+
+  # NEW: Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant_db
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./data/qdrant_storage:/qdrant/storage:z
+    restart: always
+
+networks:
+  default:
+    driver: bridge
