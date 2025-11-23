@@ -107,3 +107,8 @@ yarn-error.log*
 *.bak
 *.backup
 *.old
+# Backend build artifacts
+target/
+backend/rust-core/target/
+backend/node-gateway/dist/
+backend/node-gateway/node_modules/
