@@ -1,1 +1,17 @@
-{"name": "api-gateway","version": "1.0.0","description": "API Gateway for Top-Tier Global HUB AI","main": "index.js","type": "module","scripts": {"start": "node index.js"},"dependencies": {"express": "^4.19.2","@qdrant/js-client-rest": "^1.7.0","axios": "^1.7.2","dotenv": "^16.4.5"}}
+{
+  "name": "api-gateway",
+  "version": "1.0.0",
+  "description": "API Gateway for Top-Tier Global HUB AI",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@qdrant/js-client-rest": "^1.7.0",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "openai": "^4.20.0"
+  }
+}
