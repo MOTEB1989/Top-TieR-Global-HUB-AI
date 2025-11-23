@@ -83,7 +83,10 @@ This is an OSINT (Open Source Intelligence) platform with a hybrid architecture:
 
 ### 11. Railway Deployment Considerations
 - **Environment variables**: Use Railway's environment variable system, avoid hardcoding configuration
-- **Port binding**: Always use `PORT` environment variable provided by Railway: `os.environ.get("PORT", 3000)`
+- **Port binding**: Always use `PORT` environment variable provided by Railway
+  - Python: `os.environ.get("PORT", 3000)`
+  - Node.js: `process.env.PORT || 3000`
+  - Rust: `std::env::var("PORT").unwrap_or_else(|_| "3000".to_string())`
 - **Start command**: Ensure `startCommand` in `railway.json` matches the actual entry point
 - **Service references**: Use Railway's service reference syntax: `${{ServiceName.VARIABLE}}`
 - **Health checks**: Implement `/health` endpoints for all services
