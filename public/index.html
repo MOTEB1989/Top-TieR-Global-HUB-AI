@@ -55,13 +55,13 @@
         .user-message {
             background: #667eea;
             color: white;
-            margin-left: auto;
+            margin-inline-start: auto;
             border-bottom-right-radius: 5px;
         }
         .ai-message {
             background: #e0e0e0;
             color: #333;
-            margin-right: auto;
+            margin-inline-end: auto;
             border-bottom-left-radius: 5px;
         }
         .input-area {
@@ -83,7 +83,7 @@
             border-color: #764ba2;
         }
         #sendBtn {
-            margin-left: 10px;
+            margin-inline-start: 10px;
             padding: 12px 25px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -175,12 +175,13 @@
                 const data = await response.json();
                 loadingDiv.remove();
                 
-                const aiResponse = data.content || data.message?.content || 'لم أتمكن من معالجة طلبك.';
+                const aiResponse = data.content || 'لم أتمكن من معالجة طلبك.';
                 addMessage('AI', aiResponse, 'ai-message');
 
             } catch (error) {
                 loadingDiv.remove();
-                addMessage('خطأ', '⚠️ فشل الاتصال بالخادم. تأكد من أن الـ API يعمل.', 'error');
+                const errorMsg = error.message ? `⚠️ خطأ: ${error.message}` : '⚠️ فشل الاتصال بالخادم. تأكد من أن الـ API يعمل.';
+                addMessage('خطأ', errorMsg, 'error');
                 console.error('Error:', error);
             } finally {
                 sendBtn.disabled = false;
