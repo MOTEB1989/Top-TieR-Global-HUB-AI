@@ -33,7 +33,8 @@ class SafetyFilter:
             (r'[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com', "Google OAuth"),
             (r'sq0[a-z]{3}-[0-9A-Za-z\-_]{22,}', "Square OAuth Secret"),
             (r'-----BEGIN [A-Z]+ PRIVATE KEY-----', "Private Key"),
-            (r'bearer\s+[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+', "JWT Token"),
+            (r'bearer\s+[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+', "JWT Token"),
+            (r'eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+', "JWT Token (base64)"),
         ]
         
         logger.info(f"[safety_filter] Initialized with {len(self.secret_patterns)} patterns")

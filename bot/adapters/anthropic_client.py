@@ -105,6 +105,11 @@ class AnthropicClient:
                 raise AnthropicError(error_msg)
             
             data = response.json()
+            
+            # Validate response structure
+            if "content" not in data or not data["content"]:
+                raise AnthropicError("استجابة غير متوقعة: لا توجد content - No content in response")
+            
             content = data["content"][0]["text"]
             
             # Log usage

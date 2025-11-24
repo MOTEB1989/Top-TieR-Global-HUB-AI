@@ -261,17 +261,20 @@ async def cmd_provider(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         lines = ["**الموفرون المتاحون:**\n"]
         
-        if bot_data.get("openai_client", {}).is_available():
+        openai_client = bot_data.get("openai_client")
+        if openai_client and openai_client.is_available():
             lines.append("✅ `openai` - OpenAI (GPT models)")
         else:
             lines.append("❌ `openai` - غير مهيأ")
         
-        if bot_data.get("anthropic_client", {}).is_available():
+        anthropic_client = bot_data.get("anthropic_client")
+        if anthropic_client and anthropic_client.is_available():
             lines.append("✅ `anthropic` - Anthropic (Claude models)")
         else:
             lines.append("❌ `anthropic` - غير مهيأ")
         
-        if bot_data.get("groq_client", {}).is_available():
+        groq_client = bot_data.get("groq_client")
+        if groq_client and groq_client.is_available():
             lines.append("✅ `groq` - Groq (Fast inference)")
         else:
             lines.append("❌ `groq` - غير مهيأ")

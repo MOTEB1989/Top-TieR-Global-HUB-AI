@@ -91,6 +91,11 @@ class GroqClient:
                 raise GroqError(error_msg)
             
             data = response.json()
+            
+            # Validate response structure
+            if "choices" not in data or not data["choices"]:
+                raise GroqError("استجابة غير متوقعة: لا توجد choices - No choices in response")
+            
             content = data["choices"][0]["message"]["content"]
             
             # Log usage

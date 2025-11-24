@@ -119,15 +119,10 @@ async def reject_if_unauthorized(update: Update) -> bool:
     return True
 
 
-# ==================== Middleware ====================
+# ==================== Helper Functions ====================
 
-async def authorization_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Authorization middleware for all handlers."""
-    if update.message and not is_authorized(update):
-        await reject_if_unauthorized(update)
-        return
-    
-    # Initialize user data if needed
+def initialize_user_defaults(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Initialize default user data if not present."""
     if "current_session" not in context.user_data:
         context.user_data["current_session"] = "default"
     if "provider" not in context.user_data:
@@ -136,6 +131,27 @@ async def authorization_middleware(update: Update, context: ContextTypes.DEFAULT
         context.user_data["model"] = "gpt-4o-mini"
     if "persona" not in context.user_data:
         context.user_data["persona"] = BOT_PERSONA
+
+
+# ==================== Decorators ====================
+
+from functools import wraps
+
+def with_authorization(func):
+    """Decorator to check authorization and initialize user data."""
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        # Check authorization
+        if await reject_if_unauthorized(update):
+            return
+        
+        # Initialize user defaults
+        initialize_user_defaults(context)
+        
+        # Call the actual handler
+        return await func(update, context)
+    
+    return wrapper
 
 
 # ==================== Initialize Components ====================
@@ -236,43 +252,37 @@ def main() -> None:
     # Initialize components
     initialize_components(app)
     
-    # Add middleware (pre-process all updates)
-    app.add_handler(
-        MessageHandler(filters.ALL, authorization_middleware),
-        group=-1  # Run before other handlers
-    )
-    
     # Register command handlers
     logger.info("[bot] Registering command handlers...")
     
     # Meta commands
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("whoami", cmd_whoami))
-    app.add_handler(CommandHandler("status", cmd_status))
-    app.add_handler(CommandHandler("model", cmd_model))
-    app.add_handler(CommandHandler("provider", cmd_provider))
-    app.add_handler(CommandHandler("persona", cmd_persona))
+    app.add_handler(CommandHandler("start", with_authorization(cmd_start)))
+    app.add_handler(CommandHandler("help", with_authorization(cmd_help)))
+    app.add_handler(CommandHandler("whoami", with_authorization(cmd_whoami)))
+    app.add_handler(CommandHandler("status", with_authorization(cmd_status)))
+    app.add_handler(CommandHandler("model", with_authorization(cmd_model)))
+    app.add_handler(CommandHandler("provider", with_authorization(cmd_provider)))
+    app.add_handler(CommandHandler("persona", with_authorization(cmd_persona)))
     
     # Session commands
-    app.add_handler(CommandHandler("sessions", cmd_sessions))
-    app.add_handler(CommandHandler("new", cmd_new))
-    app.add_handler(CommandHandler("switch", cmd_switch))
-    app.add_handler(CommandHandler("clear", cmd_clear))
-    app.add_handler(CommandHandler("export", cmd_export))
+    app.add_handler(CommandHandler("sessions", with_authorization(cmd_sessions)))
+    app.add_handler(CommandHandler("new", with_authorization(cmd_new)))
+    app.add_handler(CommandHandler("switch", with_authorization(cmd_switch)))
+    app.add_handler(CommandHandler("clear", with_authorization(cmd_clear)))
+    app.add_handler(CommandHandler("export", with_authorization(cmd_export)))
     
     # Chat commands
-    app.add_handler(CommandHandler("chat", cmd_chat))
+    app.add_handler(CommandHandler("chat", with_authorization(cmd_chat)))
     
     # Advanced commands
-    app.add_handler(CommandHandler("summarize", cmd_summarize))
-    app.add_handler(CommandHandler("continue", cmd_continue))
-    app.add_handler(CommandHandler("regen", cmd_regen))
-    app.add_handler(CommandHandler("share", cmd_share))
+    app.add_handler(CommandHandler("summarize", with_authorization(cmd_summarize)))
+    app.add_handler(CommandHandler("continue", with_authorization(cmd_continue)))
+    app.add_handler(CommandHandler("regen", with_authorization(cmd_regen)))
+    app.add_handler(CommandHandler("share", with_authorization(cmd_share)))
     
     # Fallback text handler
     app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, with_authorization(handle_text_message))
     )
     
     logger.info("[bot] ✅ All handlers registered")

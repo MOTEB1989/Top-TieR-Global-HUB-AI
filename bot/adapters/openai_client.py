@@ -92,6 +92,11 @@ class OpenAIClient:
                 raise OpenAIError(error_msg)
             
             data = response.json()
+            
+            # Validate response structure
+            if "choices" not in data or not data["choices"]:
+                raise OpenAIError("استجابة غير متوقعة: لا توجد choices - No choices in response")
+            
             content = data["choices"][0]["message"]["content"]
             
             # Log usage
