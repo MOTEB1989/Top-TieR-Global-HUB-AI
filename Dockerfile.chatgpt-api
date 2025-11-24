@@ -1,0 +1,34 @@
+# ChatGPT-to-API Service Dockerfile
+# This Dockerfile correctly fetches a specific commit from the ChatGPT-to-API repository
+FROM golang:1.21-alpine AS builder
+
+WORKDIR /build
+
+# Install git
+RUN apk add --no-cache git
+
+# Clone ChatGPT-to-API repository at specific commit
+# Using the correct approach: init + fetch + checkout instead of shallow clone + reset
+RUN git init /cta \
+ && cd /cta \
+ && git remote add origin https://github.com/xqdoo00o/ChatGPT-to-API.git \
+ && git fetch --depth=1 origin c4f8a420e40a5ff434d9f8a9b91803155a0c97c5 \
+ && git checkout -q c4f8a420e40a5ff434d9f8a9b91803155a0c97c5
+
+# Build the application
+WORKDIR /cta
+RUN go mod download && go build -o chatgpt-api
+
+# Runtime stage
+FROM alpine:latest
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /cta/chatgpt-api /app/
+
+# Expose default port (adjust as needed)
+EXPOSE 8080
+
+# Run the application
+CMD ["./chatgpt-api"]
