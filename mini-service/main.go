@@ -25,6 +25,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		resp := Health{
 			Status:  "ok",
@@ -32,7 +36,9 @@ func main() {
 			Version: "1.0.0",
 			Uptime:  time.Since(start).String(),
 		}
-		_ = json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("failed to encode response: %v", err)
+		}
 	})
 
 	log.Printf("[mini-service] listening on :%s (non-root)", port)
