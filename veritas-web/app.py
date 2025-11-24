@@ -504,7 +504,11 @@ async def gemini_generate(request: GeminiRequest):
         candidate = response.candidates[0]
         if hasattr(candidate, 'finish_reason') and candidate.finish_reason:
             # Finish reasons: STOP (normal), MAX_TOKENS, SAFETY, RECITATION, OTHER
-            finish_reason_name = getattr(candidate.finish_reason, 'name', str(candidate.finish_reason))
+            try:
+                finish_reason_name = getattr(candidate.finish_reason, 'name', str(candidate.finish_reason))
+            except Exception:
+                finish_reason_name = 'UNKNOWN'
+            
             if finish_reason_name not in ['STOP', 'MAX_TOKENS']:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
