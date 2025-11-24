@@ -1,0 +1,158 @@
+name: Comment on PR #264 - Arabic Testing Instructions
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_comment:
+        description: 'Force add comment even if one exists'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  add-arabic-testing-comment:
+    runs-on: ubuntu-latest
+    name: Add Arabic Testing Instructions to PR #264
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check if comment already exists
+        id: check_comment
+        if: ${{ !github.event.inputs.force_comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 264
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('تعليمات اختبار التغييرات')
+            );
+            
+            if (existingComment) {
+              core.setOutput('exists', 'true');
+              console.log('Arabic testing comment already exists');
+            } else {
+              core.setOutput('exists', 'false');
+              console.log('No existing Arabic testing comment found');
+            }
+      
+      - name: Read comment content from file
+        if: ${{ steps.check_comment.outputs.exists == 'false' || github.event.inputs.force_comment }}
+        id: read_comment
+        run: |
+          # Create the comment content
+          cat > comment.md << 'EOF'
+          # 🧪 تعليمات اختبار التغييرات - Arabic Testing Instructions
+
+          السلام عليكم! مرحباً بكم في تعليمات اختبار شاملة لـ PR #264 🎯
+
+          ## نظرة سريعة على التغييرات
+          هذا الـ PR يضيف نظام تنظيف متطور للمستودع مع:
+          - **سكريپت Python محسن** لإغلاق Issues/PRs  
+          - **GitHub Actions Workflow** مع واجهة عربية
+          - **نظام أمان متقدم** مع تصفية ذكية
+
+          ## ⚡ اختبار سريع (5 دقائق)
+
+          ### 1. اختبار السكريپت محلياً - الوضع الآمن ✅
+          ```bash
+          # إعداد البيئة
+          export GITHUB_TOKEN="your_token_here"
+          pip install requests
+
+          # اختبار أساسي آمن
+          python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI --dry-run --yes
+
+          # اختبار مع تصفية
+          python scripts/close_github_items.py MOTEB1989/Top-TieR-Global-HUB-AI \
+            --dry-run --yes --before 2024-01-01 --exclude 264
+          ```
+
+          ### 2. اختبار GitHub Actions Workflow 🔄
+
+          **انتقل إلى:** [Actions Tab](https://github.com/MOTEB1989/Top-TieR-Global-HUB-AI/actions)
+
+          **اختبر الواجهة العربية:**
+          - `وضع التشغيل (dry-run = لا يغلق فعلياً)` ✅
+          - `تخطي إغلاق الـ Issues` ✅  
+          - `تخطي إغلاق الـ Pull Requests` ✅
+          - `أغلق العناصر الأقدم من هذا التاريخ فقط (YYYY-MM-DD)` 📅
+          - `أرقام Issues/PRs مستثناة (مثال: 123 456 789)` 🔢
+          - `استثناء العناصر التي تحتوي على هذه التسميات` 🏷️
+
+          ## 🔗 للتعليمات الكاملة
+
+          انظر الملفات التالية للحصول على تعليمات مفصلة:
+
+          📄 **`PR264_ARABIC_TESTING_INSTRUCTIONS.md`** - تعليمات شاملة باللغة العربية
+          🔧 **`scripts/comment-on-pr264.sh`** - سكريپت نشر التعليقات
+          📚 **`README_PR264_ARABIC_TESTING.md`** - وثائق المهمة
+
+          ## 🚨 تحذيرات مهمة
+
+          ### ❌ لا تفعل:
+          - استخدام `execute` mode بدون مراجعة دقيقة
+          - تشغيل السكريپت بدون `--exclude` للـ PRs المهمة
+          - اختبار على مستودعات production مباشرة
+
+          ### ✅ افعل:
+          - ابدأ بـ `--dry-run` دائماً
+          - راجع قائمة العناصر قبل التنفيذ
+          - استخدم `--exclude 264` لحماية هذا الـ PR
+
+          ## 📋 قائمة تحقق سريعة
+
+          - [ ] السكريپت يعمل في الوضع الآمن (dry-run) ✅
+          - [ ] الواجهة العربية تظهر في GitHub Actions ✅
+          - [ ] نظام التصفية يعمل بشكل صحيح ✅
+          - [ ] معالجة الأخطاء سليمة ✅
+          - [ ] تحذيرات الأمان واضحة ✅
+
+          ---
+
+          **للمساعدة:** افتح issue جديد مع تسمية `testing` أو `arabic-support`
+
+          **Happy Testing! 🎉 / اختبار موفق!**
+          EOF
+
+      - name: Post Arabic testing instructions comment
+        if: ${{ steps.check_comment.outputs.exists == 'false' || github.event.inputs.force_comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const commentBody = fs.readFileSync('comment.md', 'utf8');
+
+            const response = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 264,
+              body: commentBody
+            });
+            
+            console.log('✅ Arabic testing instructions comment posted successfully!');
+            console.log(`Comment URL: ${response.data.html_url}`);
+            
+            core.summary
+              .addHeading('🧪 Arabic Testing Instructions Posted')
+              .addRaw('تم نشر تعليمات الاختبار باللغة العربية بنجاح!')
+              .addBreak()
+              .addLink('View Comment', response.data.html_url)
+              .write();
+      
+      - name: Skip comment (already exists)
+        if: ${{ steps.check_comment.outputs.exists == 'true' && !github.event.inputs.force_comment }}
+        run: |
+          echo "⚠️ Arabic testing comment already exists on PR #264"
+          echo "Use 'force_comment: true' to add another comment"
