@@ -1,0 +1,266 @@
+# Testing Configuration
+# Settings for integration, load, and security testing
+
+# General Test Settings
+general:
+  environment: "test"
+  parallel_execution: true
+  max_workers: 4
+  timeout_seconds: 30
+  retry_attempts: 3
+  retry_delay_seconds: 1
+
+# Integration Test Configuration
+integration_tests:
+  enabled: true
+  
+  # OpenAI Integration
+  openai:
+    enabled: true
+    use_real_api: true  # Set to false for mocked tests
+    test_model: "gpt-3.5-turbo"
+    max_tokens: 100
+    timeout_seconds: 30
+    expected_response_time_ms: 2000
+  
+  # Telegram Integration
+  telegram:
+    enabled: true
+    use_real_api: true
+    test_commands:
+      - "/start"
+      - "/status"
+      - "/help"
+    timeout_seconds: 10
+    expected_response_time_ms: 500
+  
+  # GitHub Integration
+  github:
+    enabled: true
+    use_real_api: true
+    test_operations:
+      - "get_repo"
+      - "list_issues"
+      - "create_comment"
+    timeout_seconds: 15
+    expected_response_time_ms: 1000
+  
+  # Database Integration
+  database:
+    enabled: true
+    
+    postgresql:
+      enabled: true
+      test_url: "${TEST_DB_URL}"
+      connection_pool_size: 5
+      timeout_seconds: 5
+    
+    redis:
+      enabled: true
+      test_url: "${TEST_REDIS_URL}"
+      timeout_seconds: 5
+    
+    neo4j:
+      enabled: true
+      test_uri: "${TEST_NEO4J_URI}"
+      timeout_seconds: 10
+
+# End-to-End Tests
+e2e_tests:
+  enabled: true
+  
+  workflows:
+    - name: "complete_chat_flow"
+      steps:
+        - "user_sends_message"
+        - "bot_processes_message"
+        - "openai_generates_response"
+        - "bot_sends_response"
+      timeout_seconds: 60
+    
+    - name: "error_handling_flow"
+      steps:
+        - "trigger_error_condition"
+        - "verify_error_handling"
+        - "check_alert_sent"
+      timeout_seconds: 30
+  
+  # Test data
+  test_users:
+    - user_id: 123456
+      username: "test_user_1"
+    - user_id: 789012
+      username: "test_user_2"
+
+# Load Testing
+load_tests:
+  enabled: true
+  
+  # Test scenarios
+  scenarios:
+    light_load:
+      duration_seconds: 60
+      users: 10
+      requests_per_second: 5
+      ramp_up_seconds: 10
+    
+    normal_load:
+      duration_seconds: 300
+      users: 50
+      requests_per_second: 20
+      ramp_up_seconds: 30
+    
+    peak_load:
+      duration_seconds: 600
+      users: 200
+      requests_per_second: 100
+      ramp_up_seconds: 60
+    
+    stress_test:
+      duration_seconds: 300
+      users: 500
+      requests_per_second: 250
+      ramp_up_seconds: 30
+  
+  # Performance thresholds
+  thresholds:
+    max_response_time_ms: 2000
+    max_error_rate: 0.01  # 1%
+    min_throughput_rps: 50
+  
+  # Request distribution
+  request_types:
+    - endpoint: "/api/chat"
+      weight: 0.7  # 70% of requests
+    - endpoint: "/api/status"
+      weight: 0.2  # 20% of requests
+    - endpoint: "/health"
+      weight: 0.1  # 10% of requests
+
+# Security Testing
+security_tests:
+  enabled: true
+  
+  # Vulnerability scanning
+  vulnerability_scan:
+    enabled: true
+    tools:
+      - "bandit"  # Python security linter
+      - "safety"  # Dependency checker
+      - "trivy"   # Container scanner
+  
+  # Penetration testing
+  penetration_tests:
+    enabled: true
+    
+    sql_injection:
+      enabled: true
+      test_payloads:
+        - "' OR '1'='1"
+        - "'; DROP TABLE users--"
+        - "1' UNION SELECT NULL--"
+    
+    xss_attacks:
+      enabled: true
+      test_payloads:
+        - "<script>alert('XSS')</script>"
+        - "<img src=x onerror=alert('XSS')>"
+        - "javascript:alert('XSS')"
+    
+    rate_limit_bypass:
+      enabled: true
+      requests_count: 1000
+      concurrent_connections: 50
+    
+    authentication_bypass:
+      enabled: true
+      test_invalid_tokens: true
+      test_expired_tokens: true
+  
+  # API security
+  api_security:
+    enabled: true
+    
+    tests:
+      - "test_authentication_required"
+      - "test_authorization_checks"
+      - "test_input_validation"
+      - "test_output_sanitization"
+      - "test_rate_limiting"
+      - "test_cors_policy"
+      - "test_security_headers"
+
+# Test Data Management
+test_data:
+  # Use mock data or real data
+  use_mock_data: false
+  
+  # Mock responses
+  mocks:
+    openai:
+      enabled: false
+      response: "This is a mocked response from OpenAI"
+    
+    telegram:
+      enabled: false
+      bot_info:
+        id: 123456789
+        username: "test_bot"
+  
+  # Test fixtures
+  fixtures_path: "tests/fixtures/"
+  
+  # Cleanup after tests
+  cleanup:
+    enabled: true
+    delete_test_data: true
+    reset_state: true
+
+# Test Reporting
+reporting:
+  enabled: true
+  
+  formats:
+    - "junit"
+    - "html"
+    - "json"
+  
+  output_directory: "test-reports/"
+  
+  coverage:
+    enabled: true
+    min_coverage_percent: 80
+    fail_under: 70
+  
+  # Performance reports
+  performance_report:
+    enabled: true
+    include_graphs: true
+    format: "html"
+
+# Continuous Integration
+ci:
+  enabled: true
+  
+  # Run on PR
+  run_on_pr: true
+  
+  # Run on merge
+  run_on_merge: true
+  
+  # Test stages
+  stages:
+    - "unit_tests"
+    - "integration_tests"
+    - "security_tests"
+    - "load_tests"
+  
+  # Failure handling
+  fail_fast: false
+  continue_on_error: false
+  
+  # Notifications
+  notifications:
+    enabled: true
+    on_failure: true
+    on_success: false

@@ -1,0 +1,215 @@
+# Monitoring & Observability Configuration
+# Production-ready monitoring settings
+
+# Structured Logging
+logging:
+  enabled: true
+  format: "json"  # Options: json, text
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  
+  # Output destinations
+  outputs:
+    console:
+      enabled: true
+      level: "INFO"
+    
+    file:
+      enabled: true
+      level: "DEBUG"
+      path: "/var/log/telegram-bot/app.log"
+      max_size_mb: 100
+      backup_count: 5
+      rotation: "daily"  # Options: daily, size-based
+    
+    syslog:
+      enabled: false
+      host: "localhost"
+      port: 514
+  
+  # Fields to include
+  include_fields:
+    - "timestamp"
+    - "level"
+    - "service"
+    - "logger"
+    - "message"
+    - "trace_id"
+    - "user_id"
+
+# Health Checks
+health_checks:
+  enabled: true
+  
+  # Endpoints
+  endpoints:
+    liveness: "/health/live"
+    readiness: "/health/ready"
+    status: "/health/status"
+  
+  # Check intervals
+  check_interval_seconds: 30
+  timeout_seconds: 10
+  
+  # Services to check
+  checks:
+    - name: "openai"
+      type: "api"
+      enabled: true
+      critical: true
+    
+    - name: "telegram"
+      type: "api"
+      enabled: true
+      critical: true
+    
+    - name: "github"
+      type: "api"
+      enabled: true
+      critical: false
+    
+    - name: "database"
+      type: "connection"
+      enabled: true
+      critical: true
+    
+    - name: "redis"
+      type: "connection"
+      enabled: true
+      critical: false
+
+# Metrics Collection
+metrics:
+  enabled: true
+  namespace: "telegram_bot"
+  
+  # Prometheus endpoint
+  prometheus:
+    enabled: true
+    endpoint: "/metrics"
+    port: 9090
+  
+  # Metric types
+  collect:
+    - "request_count"
+    - "request_duration"
+    - "error_rate"
+    - "active_users"
+    - "queue_size"
+    - "memory_usage"
+    - "cpu_usage"
+  
+  # Aggregation intervals
+  intervals:
+    push_interval_seconds: 60
+    aggregation_window_seconds: 300
+
+# Distributed Tracing
+tracing:
+  enabled: true
+  sample_rate: 1.0  # Sample 100% of requests (reduce in production)
+  
+  # Trace propagation
+  propagate_context: true
+  trace_id_header: "X-Trace-ID"
+  
+  # Trace retention
+  retention_hours: 24
+  cleanup_interval_hours: 6
+  
+  # What to trace
+  trace_operations:
+    - "http_requests"
+    - "database_queries"
+    - "api_calls"
+    - "message_processing"
+
+# Alerting
+alerting:
+  enabled: true
+  
+  # Alert channels
+  channels:
+    slack:
+      enabled: false
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      min_level: "warning"
+    
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      from: "${ALERT_EMAIL_FROM}"
+      to:
+        - "${ALERT_EMAIL_TO}"
+      min_level: "error"
+    
+    webhook:
+      enabled: false
+      url: "${ALERT_WEBHOOK_URL}"
+      min_level: "info"
+  
+  # Alert rules
+  rules:
+    - name: "high_error_rate"
+      condition: "error_rate > 0.05"  # 5% error rate
+      severity: "critical"
+      window_minutes: 5
+    
+    - name: "slow_response"
+      condition: "avg_response_time > 5000"  # 5 seconds
+      severity: "warning"
+      window_minutes: 5
+    
+    - name: "service_down"
+      condition: "health_check_failed"
+      severity: "critical"
+      window_minutes: 1
+    
+    - name: "high_memory"
+      condition: "memory_usage > 0.9"  # 90% memory usage
+      severity: "warning"
+      window_minutes: 10
+  
+  # Alert deduplication
+  deduplication:
+    enabled: true
+    window_seconds: 300  # 5 minutes
+
+# Performance Monitoring
+performance:
+  enabled: true
+  
+  # Thresholds
+  thresholds:
+    response_time_warning_ms: 1000
+    response_time_error_ms: 5000
+    memory_warning_percent: 80
+    memory_critical_percent: 90
+    cpu_warning_percent: 80
+    cpu_critical_percent: 90
+  
+  # Profiling
+  profiling:
+    enabled: false  # Enable for debugging
+    sample_rate: 0.01  # 1% of requests
+    output_path: "/var/log/telegram-bot/profiles/"
+
+# Dashboard Integration
+dashboards:
+  grafana:
+    enabled: false
+    url: "${GRAFANA_URL}"
+    api_key: "${GRAFANA_API_KEY}"
+    dashboard_id: "telegram-bot-monitoring"
+  
+  datadog:
+    enabled: false
+    api_key: "${DATADOG_API_KEY}"
+    site: "datadoghq.com"
+
+# Service Information
+service:
+  name: "telegram-bot"
+  version: "2.0.0"
+  environment: "production"  # Options: development, staging, production
+  deployment_id: "${DEPLOYMENT_ID}"

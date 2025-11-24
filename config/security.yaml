@@ -1,0 +1,114 @@
+# Security Configuration for Top-TieR-Global-HUB-AI
+# Production-ready security settings
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  algorithm: "token_bucket"  # Options: token_bucket, sliding_window, fixed_window
+  
+  # Token Bucket settings
+  token_bucket:
+    capacity: 100  # Maximum tokens in bucket
+    refill_rate: 10.0  # Tokens per second
+  
+  # Sliding Window settings
+  sliding_window:
+    max_requests: 100  # Max requests per window
+    window_seconds: 60  # Window size in seconds
+  
+  # Per-endpoint overrides
+  endpoints:
+    "/api/chat":
+      capacity: 50
+      refill_rate: 5.0
+    "/api/health":
+      capacity: 1000
+      refill_rate: 100.0
+
+# Encryption Settings
+encryption:
+  algorithm: "fernet"  # Symmetric encryption
+  key_rotation_days: 90  # Rotate keys every 90 days
+  at_rest: true  # Encrypt data at rest
+  in_transit: true  # Enforce TLS/HTTPS
+
+# Secret Management
+secrets:
+  storage_path: "~/.top-tier-secrets/secrets.enc"
+  auto_rotate: true
+  rotation_days: 90
+  backup_enabled: true
+  backup_path: "~/.top-tier-secrets/backups/"
+
+# Input Validation
+validation:
+  max_input_length: 10000  # Maximum input size in characters
+  sanitize_html: true
+  detect_sql_injection: true
+  detect_xss: true
+  allowed_file_types: ["txt", "pdf", "json", "csv"]
+  max_file_size_mb: 10
+
+# Security Headers
+security_headers:
+  enabled: true
+  content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+  x_content_type_options: "nosniff"
+  x_frame_options: "DENY"
+  x_xss_protection: "1; mode=block"
+  strict_transport_security:
+    enabled: true
+    max_age: 31536000  # 1 year
+    include_subdomains: true
+    preload: true
+  referrer_policy: "strict-origin-when-cross-origin"
+
+# CORS Configuration
+cors:
+  enabled: true
+  allowed_origins:
+    - "https://example.com"
+    - "https://app.example.com"
+  allowed_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+  allowed_headers:
+    - "Content-Type"
+    - "Authorization"
+  max_age: 3600
+
+# Authentication
+authentication:
+  required: true
+  telegram_allowlist_enabled: true
+  api_key_validation: true
+  session_timeout_minutes: 60
+
+# DDoS Protection
+ddos_protection:
+  enabled: true
+  max_connections_per_ip: 100
+  connection_timeout_seconds: 30
+  blacklist_duration_minutes: 60
+
+# Audit Logging
+audit:
+  enabled: true
+  log_failed_auth: true
+  log_suspicious_activity: true
+  retention_days: 90
+
+# SSL/TLS
+tls:
+  enforce_https: true
+  min_version: "TLSv1.2"
+  certificate_pinning: false  # Enable in production
+
+# Request Validation
+request_validation:
+  enabled: true
+  max_content_length_mb: 10
+  check_user_agent: true
+  block_suspicious_patterns: true
