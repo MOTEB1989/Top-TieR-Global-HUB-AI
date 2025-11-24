@@ -35,7 +35,7 @@ jobs:
           ./scripts/generate_repo_summary.sh
 
       - name: Upload repo_summary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: repo_summary.txt
           path: repo_summary.txt
