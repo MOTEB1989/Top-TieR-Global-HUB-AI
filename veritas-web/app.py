@@ -14,7 +14,7 @@ import os
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from contextlib import asynccontextmanager
 
 import httpx
@@ -33,6 +33,18 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Import Google Generative AI for Gemini support
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None  # type: ignore
+    logger.warning("google-generativeai not installed. Gemini features will be disabled.")
+
+if TYPE_CHECKING and GEMINI_AVAILABLE:
+    from google.generativeai import GenerativeModel
 
 # Configuration
 class Settings:
@@ -53,6 +65,10 @@ class Settings:
     NEO4J_USER: str = os.getenv("NEO4J_USER", "neo4j")
     NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "password")
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    
+    # AI API Keys
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-pro")
     
     # Feature flags
     ENABLE_CACHE: bool = os.getenv("ENABLE_CACHE", "true").lower() == "true"
@@ -94,11 +110,30 @@ class SystemStats(BaseModel):
     average_response_time: float = Field(..., description="Average response time in ms")
     memory_usage: Dict[str, Any] = Field(..., description="Memory usage statistics")
 
+class GeminiChatRequest(BaseModel):
+    """Gemini chat request model"""
+    message: str = Field(..., description="User message to send to Gemini")
+    temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="Temperature for response generation")
+    max_tokens: int = Field(default=1024, ge=1, le=8192, description="Maximum tokens in response")
+    system_prompt: Optional[str] = Field(default=None, description="Optional system prompt")
+
+class GeminiChatResponse(BaseModel):
+    """Gemini chat response model"""
+    response: str = Field(..., description="Gemini's response")
+    model: str = Field(..., description="Model used")
+    timestamp: datetime = Field(..., description="Response timestamp")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+
 # Global variables
 start_time = datetime.now(timezone.utc)
 redis_client: Optional[redis.Redis] = None
 http_client: Optional[httpx.AsyncClient] = None
 cipher_suite: Optional[Fernet] = None
+# Type annotation for gemini_model - use string annotation for forward compatibility
+if TYPE_CHECKING:
+    gemini_model: Optional["GenerativeModel"] = None
+else:
+    gemini_model: Optional[Any] = None
 
 # Security
 security = HTTPBearer()
@@ -169,7 +204,7 @@ async def cache_set(key: str, value: str, expire: int = 300) -> bool:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global redis_client, http_client, cipher_suite
+    global redis_client, http_client, cipher_suite, gemini_model
     
     logger.info("Starting Veritas Mini-Web Service...")
     
@@ -201,6 +236,21 @@ async def lifespan(app: FastAPI):
             logger.info("Encryption initialized")
         except Exception as e:
             logger.warning(f"Encryption initialization failed: {e}")
+    
+    # Initialize Gemini AI
+    if GEMINI_AVAILABLE and settings.GEMINI_API_KEY:
+        try:
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
+            logger.info(f"Gemini AI initialized with model: {settings.GEMINI_MODEL}")
+        except Exception as e:
+            logger.warning(f"Gemini AI initialization failed: {e}")
+            gemini_model = None
+    else:
+        if not GEMINI_AVAILABLE:
+            logger.info("Gemini AI not available - google-generativeai not installed")
+        elif not settings.GEMINI_API_KEY:
+            logger.info("Gemini AI not configured - GEMINI_API_KEY not set")
     
     logger.info("Veritas Mini-Web Service started successfully")
     
@@ -401,13 +451,101 @@ async def get_config():
         "features": {
             "cache": settings.ENABLE_CACHE,
             "monitoring": settings.ENABLE_MONITORING,
-            "encryption": settings.ENABLE_ENCRYPTION
+            "encryption": settings.ENABLE_ENCRYPTION,
+            "gemini": GEMINI_AVAILABLE and bool(settings.GEMINI_API_KEY)
         },
         "endpoints": {
             "main_api": settings.MAIN_API_URL,
             "neo4j": settings.NEO4J_URL.replace(settings.NEO4J_PASSWORD, "***") if settings.NEO4J_PASSWORD in settings.NEO4J_URL else settings.NEO4J_URL
         }
     }
+
+@app.post("/gemini/chat", response_model=GeminiChatResponse, dependencies=[Depends(verify_token)])
+async def gemini_chat(request: GeminiChatRequest):
+    """
+    Chat with Google Gemini AI
+    
+    This endpoint allows authenticated users to interact with Google's Gemini AI model.
+    """
+    # Check if Gemini is available
+    if not GEMINI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI not available - google-generativeai package not installed"
+        )
+    
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI not configured - GEMINI_API_KEY not set"
+        )
+    
+    if gemini_model is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI model not initialized"
+        )
+    
+    try:
+        # Build the prompt with system prompt if provided
+        if request.system_prompt:
+            full_message = f"{request.system_prompt}\n\nUser: {request.message}"
+        else:
+            full_message = request.message
+        
+        # Prepare generation config (Pydantic already validated the ranges)
+        generation_config = {
+            "temperature": request.temperature,
+            "max_output_tokens": request.max_tokens,
+        }
+        
+        # Generate response using Gemini
+        response = gemini_model.generate_content(
+            full_message,
+            generation_config=generation_config
+        )
+        
+        # Extract the response text with proper error handling
+        try:
+            response_text = response.text
+        except (AttributeError, ValueError) as e:
+            # Handle cases where response.text is not available
+            # or when content is blocked by safety filters
+            logger.warning(f"Could not extract text from Gemini response: {e}")
+            
+            # Try to extract text from candidates
+            response_text = None
+            if hasattr(response, 'candidates') and response.candidates:
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        parts_text = ' '.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+                        if parts_text:
+                            response_text = parts_text
+                            break
+            
+            if not response_text:
+                response_text = "Unable to generate response. Content may have been blocked by safety filters."
+        
+        return GeminiChatResponse(
+            response=response_text,
+            model=settings.GEMINI_MODEL,
+            timestamp=datetime.now(timezone.utc),
+            metadata={
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens,
+                "has_system_prompt": bool(request.system_prompt)
+            }
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Gemini chat error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gemini AI error: {str(e)}"
+        )
 
 # Error handlers
 @app.exception_handler(HTTPException)
