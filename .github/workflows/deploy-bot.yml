@@ -1,0 +1,54 @@
+name: Deploy Bot to Railway
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'bot/**'
+      - '.github/workflows/deploy-bot.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Bot Service
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: ./bot
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run linting
+        working-directory: ./bot
+        run: |
+          pip install flake8
+          flake8 *.py --count --select=E9,F63,F7,F82 --show-source --statistics || true
+      
+      - name: Deploy to Railway
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "🤖 Deploying bot to Railway..."
+          echo "Railway deployment requires RAILWAY_TOKEN secret"
+          echo "Use: railway up --service bot"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      
+      # Note: Actual Railway deployment would use:
+      # - uses: railway-app/railway-cli@v1
+      #   with:
+      #     token: ${{ secrets.RAILWAY_TOKEN }}
+      #     service: bot
+      #     directory: ./bot

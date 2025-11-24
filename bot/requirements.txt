@@ -1,0 +1,15 @@
+# Telegram Bot Dependencies
+# تبعيات بوت تيليجرام
+
+# Telegram Bot Framework
+aiogram==3.1.1
+
+# HTTP Client
+httpx==0.25.1
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Optional: For future enhancements
+# redis==5.0.1  # For caching and state management
+# aiofiles==23.2.1  # For async file operations
