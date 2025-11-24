@@ -27,6 +27,13 @@ from pydantic import BaseModel, Field
 from cryptography.fernet import Fernet
 import uvicorn
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Import Google Generative AI for Gemini support
 try:
     import google.generativeai as genai
@@ -34,13 +41,6 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
     logger.warning("google-generativeai not installed. Gemini features will be disabled.")
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Configuration
 class Settings:
