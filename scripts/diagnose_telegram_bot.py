@@ -2,7 +2,7 @@
 """
 diagnose_telegram_bot.py
 
-سكربت تشخيصي شامل لفحص جميع متطلبات تشغيل بوت Telegram:
+سكريبت تشخيصي شامل لفحص جميع متطلبات تشغيل بوت Telegram:
 - فحص المتغيرات البيئية المطلوبة
 - اختبار الاتصال بـ OpenAI API
 - اختبار الاتصال بـ Telegram Bot API
@@ -40,6 +40,9 @@ except ImportError:
 # ============================================================================
 # Constants and Configuration
 # ============================================================================
+
+# Report output directory
+REPORT_DIR = "analysis"
 
 REQUIRED_ENV_VARS = [
     "TELEGRAM_BOT_TOKEN",
@@ -444,7 +447,7 @@ def generate_summary_report(results: Dict[str, Any]) -> str:
 def save_json_report(data: Dict[str, Any], filename: str = "diagnostic_report.json") -> None:
     """Save diagnostic report as JSON file"""
     try:
-        report_dir = Path("analysis")
+        report_dir = Path(REPORT_DIR)
         report_dir.mkdir(parents=True, exist_ok=True)
         
         report_path = report_dir / filename
