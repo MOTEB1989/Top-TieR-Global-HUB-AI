@@ -27,6 +27,14 @@ from pydantic import BaseModel, Field
 from cryptography.fernet import Fernet
 import uvicorn
 
+# Gemini AI support
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    logger.warning("google-generativeai not installed. Gemini features will be disabled.")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -54,10 +62,15 @@ class Settings:
     NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "password")
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/1")
     
+    # AI Service API Keys
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-pro")
+    
     # Feature flags
     ENABLE_CACHE: bool = os.getenv("ENABLE_CACHE", "true").lower() == "true"
     ENABLE_MONITORING: bool = os.getenv("ENABLE_MONITORING", "true").lower() == "true"
     ENABLE_ENCRYPTION: bool = os.getenv("ENABLE_ENCRYPTION", "false").lower() == "true"
+    ENABLE_GEMINI: bool = os.getenv("ENABLE_GEMINI", "true").lower() == "true"
 
 settings = Settings()
 
@@ -94,11 +107,28 @@ class SystemStats(BaseModel):
     average_response_time: float = Field(..., description="Average response time in ms")
     memory_usage: Dict[str, Any] = Field(..., description="Memory usage statistics")
 
+# Gemini-specific models
+class GeminiRequest(BaseModel):
+    """Gemini AI request model"""
+    prompt: str = Field(..., description="User prompt for Gemini")
+    max_tokens: Optional[int] = Field(default=1024, ge=1, le=8192, description="Maximum tokens to generate")
+    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=1.0, description="Temperature for response generation")
+    top_p: Optional[float] = Field(default=0.95, ge=0.0, le=1.0, description="Top-p sampling parameter")
+    top_k: Optional[int] = Field(default=40, ge=1, le=100, description="Top-k sampling parameter")
+
+class GeminiResponse(BaseModel):
+    """Gemini AI response model"""
+    response: str = Field(..., description="Generated response from Gemini")
+    model: str = Field(..., description="Model used for generation")
+    timestamp: datetime = Field(..., description="Response timestamp")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+
 # Global variables
 start_time = datetime.now(timezone.utc)
 redis_client: Optional[redis.Redis] = None
 http_client: Optional[httpx.AsyncClient] = None
 cipher_suite: Optional[Fernet] = None
+gemini_model: Optional[Any] = None  # Gemini generative model instance
 
 # Security
 security = HTTPBearer()
@@ -169,7 +199,7 @@ async def cache_set(key: str, value: str, expire: int = 300) -> bool:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global redis_client, http_client, cipher_suite
+    global redis_client, http_client, cipher_suite, gemini_model
     
     logger.info("Starting Veritas Mini-Web Service...")
     
@@ -201,6 +231,21 @@ async def lifespan(app: FastAPI):
             logger.info("Encryption initialized")
         except Exception as e:
             logger.warning(f"Encryption initialization failed: {e}")
+    
+    # Initialize Gemini AI
+    if settings.ENABLE_GEMINI and GEMINI_AVAILABLE:
+        try:
+            if settings.GEMINI_API_KEY:
+                genai.configure(api_key=settings.GEMINI_API_KEY)
+                gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
+                logger.info(f"Gemini AI initialized with model: {settings.GEMINI_MODEL}")
+            else:
+                logger.warning("Gemini API key not configured. Gemini features will be disabled.")
+        except Exception as e:
+            logger.warning(f"Gemini initialization failed: {e}")
+            gemini_model = None
+    elif settings.ENABLE_GEMINI and not GEMINI_AVAILABLE:
+        logger.warning("Gemini enabled but google-generativeai not installed")
     
     logger.info("Veritas Mini-Web Service started successfully")
     
@@ -401,13 +446,80 @@ async def get_config():
         "features": {
             "cache": settings.ENABLE_CACHE,
             "monitoring": settings.ENABLE_MONITORING,
-            "encryption": settings.ENABLE_ENCRYPTION
+            "encryption": settings.ENABLE_ENCRYPTION,
+            "gemini": settings.ENABLE_GEMINI and GEMINI_AVAILABLE and gemini_model is not None
         },
         "endpoints": {
             "main_api": settings.MAIN_API_URL,
             "neo4j": settings.NEO4J_URL.replace(settings.NEO4J_PASSWORD, "***") if settings.NEO4J_PASSWORD in settings.NEO4J_URL else settings.NEO4J_URL
         }
     }
+
+@app.post("/gemini/generate", response_model=GeminiResponse, dependencies=[Depends(verify_token)])
+async def gemini_generate(request: GeminiRequest):
+    """Generate text using Google Gemini AI"""
+    
+    # Check if Gemini is available
+    if not settings.ENABLE_GEMINI:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI is disabled"
+        )
+    
+    if not GEMINI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI library not installed"
+        )
+    
+    if gemini_model is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI not configured. Please set GEMINI_API_KEY"
+        )
+    
+    try:
+        # Configure generation parameters
+        generation_config = genai.types.GenerationConfig(
+            max_output_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            top_k=request.top_k
+        )
+        
+        # Generate content
+        response = gemini_model.generate_content(
+            request.prompt,
+            generation_config=generation_config
+        )
+        
+        # Extract text from response
+        if not response.text:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gemini returned empty response"
+            )
+        
+        logger.info(f"Gemini generation successful for prompt: {request.prompt[:50]}...")
+        
+        return GeminiResponse(
+            response=response.text,
+            model=settings.GEMINI_MODEL,
+            timestamp=datetime.now(timezone.utc),
+            metadata={
+                "prompt_length": len(request.prompt),
+                "response_length": len(response.text),
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Gemini generation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gemini AI error: {str(e)}"
+        )
 
 # Error handlers
 @app.exception_handler(HTTPException)
