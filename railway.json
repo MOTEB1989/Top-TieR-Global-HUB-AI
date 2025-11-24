@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node dist/index.js",
+    "startCommand": "python3 scripts/verify_env.py && python3 scripts/telegram_chatgpt_mode.py",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",

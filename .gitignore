@@ -54,6 +54,11 @@ coverage.xml
 *.log
 logs/
 
+# Analysis reports (generated)
+analysis/diagnostic_report.json
+analysis/chat_sessions.json
+analysis/uploads/
+
 # Database
 *.db
 *.sqlite3
