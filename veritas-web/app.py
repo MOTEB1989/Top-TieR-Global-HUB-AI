@@ -531,6 +531,9 @@ async def gemini_generate(request: GeminiRequest):
             }
         )
         
+    except HTTPException:
+        # Re-raise HTTPException to preserve status codes
+        raise
     except Exception as e:
         logger.error(f"Gemini generation error: {e}")
         # Sanitize error message to avoid leaking sensitive information
