@@ -125,7 +125,12 @@ start_time = datetime.now(timezone.utc)
 redis_client: Optional[redis.Redis] = None
 http_client: Optional[httpx.AsyncClient] = None
 cipher_suite: Optional[Fernet] = None
-gemini_model: Optional[Any] = None
+# Use Any for gemini_model since genai.GenerativeModel may not be available
+# when google-generativeai is not installed
+if GEMINI_AVAILABLE:
+    gemini_model: Optional["genai.GenerativeModel"] = None
+else:
+    gemini_model: Optional[Any] = None
 
 # Security
 security = HTTPBearer()
@@ -485,33 +490,51 @@ async def gemini_chat(request: GeminiChatRequest):
         else:
             full_message = request.message
         
-        # Generate response using Gemini
-        generation_config = {
-            "temperature": request.temperature,
-            "max_output_tokens": request.max_tokens,
-        }
+        # Validate and prepare generation config
+        # Gemini API expects specific parameter ranges
+        generation_config = {}
         
+        # Temperature should be between 0.0 and 1.0 (already validated by Pydantic)
+        generation_config["temperature"] = max(0.0, min(1.0, request.temperature))
+        
+        # max_output_tokens should be positive and within reasonable limits
+        # Gemini Pro supports up to 8192 tokens (already validated by Pydantic)
+        generation_config["max_output_tokens"] = max(1, min(8192, request.max_tokens))
+        
+        # Generate response using Gemini
         response = gemini_model.generate_content(
             full_message,
             generation_config=generation_config
         )
         
-        # Extract the response text
-        response_text = response.text if hasattr(response, 'text') else str(response)
+        # Extract the response text with proper error handling
+        try:
+            response_text = response.text
+        except (AttributeError, ValueError) as e:
+            # Handle cases where response.text is not available
+            # or when content is blocked
+            logger.warning(f"Could not extract text from Gemini response: {e}")
+            if hasattr(response, 'candidates') and response.candidates:
+                response_text = str(response.candidates[0])
+            else:
+                response_text = "Unable to generate response. Content may have been blocked."
         
         return GeminiChatResponse(
             response=response_text,
             model=settings.GEMINI_MODEL,
             timestamp=datetime.now(timezone.utc),
             metadata={
-                "temperature": request.temperature,
-                "max_tokens": request.max_tokens,
+                "temperature": generation_config["temperature"],
+                "max_tokens": generation_config["max_output_tokens"],
                 "has_system_prompt": bool(request.system_prompt)
             }
         )
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        logger.error(f"Gemini chat error: {e}")
+        logger.error(f"Gemini chat error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gemini AI error: {str(e)}"
