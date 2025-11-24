@@ -29,15 +29,22 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		resp := Health{
 			Status:  "ok",
 			Service: "mini-safe",
 			Version: "1.0.0",
 			Uptime:  time.Since(start).String(),
 		}
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			log.Printf("failed to encode response: %v", err)
+		data, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			log.Printf("failed to marshal response: %v", err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write(data); err != nil {
+			log.Printf("failed to write response: %v", err)
 		}
 	})
 
