@@ -1,0 +1,124 @@
+# Docker Compose for Testing Environment
+# Includes all services needed for integration and E2E testing
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Testing
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: top-tier-postgres-test
+    environment:
+      POSTGRES_DB: motebai_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: motebai_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # Redis Cache for Testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: top-tier-redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-test-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # Neo4j Graph Database for Testing
+  neo4j-test:
+    image: neo4j:5-community
+    container_name: top-tier-neo4j-test
+    environment:
+      NEO4J_AUTH: neo4j/motebai_test
+      NEO4J_dbms_memory_heap_max__size: 512M
+      NEO4J_dbms_memory_pagecache_size: 256M
+    ports:
+      - "7475:7474"  # HTTP
+      - "7688:7687"  # Bolt
+    volumes:
+      - neo4j-test-data:/data
+      - neo4j-test-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - test-network
+
+  # Test Runner Container
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: top-tier-test-runner
+    environment:
+      # Test environment
+      ENVIRONMENT: test
+      
+      # Database connections (test instances)
+      DB_URL: postgresql://postgres:motebai_test@postgres-test:5432/motebai_test
+      REDIS_URL: redis://redis-test:6379
+      NEO4J_URI: bolt://neo4j-test:7687
+      NEO4J_AUTH: neo4j/motebai_test
+      
+      # API Keys (from host environment or CI secrets)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITHUB_REPO: ${GITHUB_REPO:-MOTEB1989/Top-TieR-Global-HUB-AI}
+      
+      # Test configuration
+      PYTEST_ARGS: ${PYTEST_ARGS:--v -s}
+      TEST_TIMEOUT: ${TEST_TIMEOUT:-300}
+    volumes:
+      - ./tests:/app/tests
+      - ./scripts:/app/scripts
+      - ./test-reports:/app/test-reports
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      neo4j-test:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '🚀 Waiting for services to be ready...' &&
+        sleep 10 &&
+        echo '✓ Services ready' &&
+        echo '📦 Installing test dependencies...' &&
+        pip install -q pytest pytest-asyncio pytest-cov aiohttp &&
+        echo '🧪 Running tests...' &&
+        pytest tests/ $$PYTEST_ARGS --cov=scripts --cov-report=html --cov-report=term &&
+        echo '✅ Tests complete!'
+      "
+    networks:
+      - test-network
+
+volumes:
+  postgres-test-data:
+  redis-test-data:
+  neo4j-test-data:
+  neo4j-test-logs:
+
+networks:
+  test-network:
+    driver: bridge
