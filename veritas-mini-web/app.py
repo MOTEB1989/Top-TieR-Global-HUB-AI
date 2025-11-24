@@ -502,12 +502,13 @@ async def gemini_generate(request: GeminiRequest):
         
         # Check finish reason
         candidate = response.candidates[0]
-        if hasattr(candidate, 'finish_reason'):
+        if hasattr(candidate, 'finish_reason') and candidate.finish_reason:
             # Finish reasons: STOP (normal), MAX_TOKENS, SAFETY, RECITATION, OTHER
-            if candidate.finish_reason and candidate.finish_reason.name not in ['STOP', 'MAX_TOKENS']:
+            finish_reason_name = getattr(candidate.finish_reason, 'name', str(candidate.finish_reason))
+            if finish_reason_name not in ['STOP', 'MAX_TOKENS']:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Content generation stopped: {candidate.finish_reason.name}. The content may have violated safety guidelines."
+                    detail=f"Content generation stopped: {finish_reason_name}. The content may have violated safety guidelines."
                 )
         
         # Extract text from response
