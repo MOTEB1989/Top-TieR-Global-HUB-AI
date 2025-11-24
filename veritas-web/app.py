@@ -517,7 +517,7 @@ async def gemini_generate(request: GeminiRequest):
                 detail="Gemini returned empty response"
             )
         
-        logger.info(f"Gemini generation successful for prompt: {request.prompt[:50]}...")
+        logger.info(f"Gemini generation successful - prompt length: {len(request.prompt)} chars, response length: {len(response.text)} chars")
         
         return GeminiResponse(
             response=response.text,
