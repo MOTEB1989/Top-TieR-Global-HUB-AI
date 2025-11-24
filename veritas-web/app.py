@@ -493,6 +493,23 @@ async def gemini_generate(request: GeminiRequest):
             generation_config=generation_config
         )
         
+        # Check for blocked content or safety filters
+        if not response.candidates:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Content generation blocked. The prompt may have triggered safety filters."
+            )
+        
+        # Check finish reason
+        candidate = response.candidates[0]
+        if hasattr(candidate, 'finish_reason'):
+            # Finish reasons: STOP (normal), MAX_TOKENS, SAFETY, RECITATION, OTHER
+            if candidate.finish_reason and candidate.finish_reason.name not in ['STOP', 'MAX_TOKENS']:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Content generation stopped: {candidate.finish_reason.name}. The content may have violated safety guidelines."
+                )
+        
         # Extract text from response
         if not response.text:
             raise HTTPException(
