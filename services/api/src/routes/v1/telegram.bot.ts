@@ -58,6 +58,9 @@ if (bot) {
   });
 
   bot.command('status', async ctx => {
+    if (!userAllowed(ctx.from?.id)) {
+      return ctx.reply('🚫 غير مسموح لك باستخدام هذا الأمر.');
+    }
     const model = await chooseModel();
     await ctx.reply(
       `⚙️ *حالة النظام*\n` +
@@ -134,7 +137,7 @@ router.post('/webhook', async (req, res) => {
     return res.status(503).json({ error: 'bot_inactive' });
   }
   if (WEBHOOK_SECRET) {
-    const provided = req.headers['x-telegram-secret'] || req.query.secret;
+    const provided = req.headers['x-telegram-secret'];
     if (provided !== WEBHOOK_SECRET) {
       return res.status(403).json({ error: 'forbidden' });
     }
