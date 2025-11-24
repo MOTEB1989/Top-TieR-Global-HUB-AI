@@ -111,7 +111,7 @@ class SystemStats(BaseModel):
 class GeminiRequest(BaseModel):
     """Gemini AI request model"""
     prompt: str = Field(..., description="User prompt for Gemini")
-    max_tokens: Optional[int] = Field(default=1024, ge=1, le=8192, description="Maximum tokens to generate")
+    max_tokens: Optional[int] = Field(default=1024, ge=1, le=32768, description="Maximum tokens to generate (Gemini Pro supports up to 32768)")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=1.0, description="Temperature for response generation")
     top_p: Optional[float] = Field(default=0.95, ge=0.0, le=1.0, description="Top-p sampling parameter")
     top_k: Optional[int] = Field(default=40, ge=1, le=100, description="Top-k sampling parameter")
@@ -533,9 +533,15 @@ async def gemini_generate(request: GeminiRequest):
         
     except Exception as e:
         logger.error(f"Gemini generation error: {e}")
+        # Sanitize error message to avoid leaking sensitive information
+        error_message = "Gemini AI service error. Please try again later."
+        if "quota" in str(e).lower():
+            error_message = "Gemini API quota exceeded. Please try again later."
+        elif "authentication" in str(e).lower() or "api key" in str(e).lower():
+            error_message = "Gemini API authentication error. Please check configuration."
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Gemini AI error: {str(e)}"
+            detail=error_message
         )
 
 # Error handlers
