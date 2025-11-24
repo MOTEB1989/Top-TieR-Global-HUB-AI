@@ -14,7 +14,7 @@ import os
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from contextlib import asynccontextmanager
 
 import httpx
@@ -40,7 +40,11 @@ try:
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
+    genai = None  # type: ignore
     logger.warning("google-generativeai not installed. Gemini features will be disabled.")
+
+if TYPE_CHECKING and GEMINI_AVAILABLE:
+    from google.generativeai import GenerativeModel
 
 # Configuration
 class Settings:
@@ -125,10 +129,9 @@ start_time = datetime.now(timezone.utc)
 redis_client: Optional[redis.Redis] = None
 http_client: Optional[httpx.AsyncClient] = None
 cipher_suite: Optional[Fernet] = None
-# Use Any for gemini_model since genai.GenerativeModel may not be available
-# when google-generativeai is not installed
-if GEMINI_AVAILABLE:
-    gemini_model: Optional["genai.GenerativeModel"] = None
+# Type annotation for gemini_model - use string annotation for forward compatibility
+if TYPE_CHECKING:
+    gemini_model: Optional["GenerativeModel"] = None
 else:
     gemini_model: Optional[Any] = None
 
@@ -490,16 +493,11 @@ async def gemini_chat(request: GeminiChatRequest):
         else:
             full_message = request.message
         
-        # Validate and prepare generation config
-        # Gemini API expects specific parameter ranges
-        generation_config = {}
-        
-        # Temperature should be between 0.0 and 1.0 (already validated by Pydantic)
-        generation_config["temperature"] = max(0.0, min(1.0, request.temperature))
-        
-        # max_output_tokens should be positive and within reasonable limits
-        # Gemini Pro supports up to 8192 tokens (already validated by Pydantic)
-        generation_config["max_output_tokens"] = max(1, min(8192, request.max_tokens))
+        # Prepare generation config (Pydantic already validated the ranges)
+        generation_config = {
+            "temperature": request.temperature,
+            "max_output_tokens": request.max_tokens,
+        }
         
         # Generate response using Gemini
         response = gemini_model.generate_content(
@@ -512,20 +510,29 @@ async def gemini_chat(request: GeminiChatRequest):
             response_text = response.text
         except (AttributeError, ValueError) as e:
             # Handle cases where response.text is not available
-            # or when content is blocked
+            # or when content is blocked by safety filters
             logger.warning(f"Could not extract text from Gemini response: {e}")
+            
+            # Try to extract text from candidates
+            response_text = None
             if hasattr(response, 'candidates') and response.candidates:
-                response_text = str(response.candidates[0])
-            else:
-                response_text = "Unable to generate response. Content may have been blocked."
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        parts_text = ' '.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+                        if parts_text:
+                            response_text = parts_text
+                            break
+            
+            if not response_text:
+                response_text = "Unable to generate response. Content may have been blocked by safety filters."
         
         return GeminiChatResponse(
             response=response_text,
             model=settings.GEMINI_MODEL,
             timestamp=datetime.now(timezone.utc),
             metadata={
-                "temperature": generation_config["temperature"],
-                "max_tokens": generation_config["max_output_tokens"],
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens,
                 "has_system_prompt": bool(request.system_prompt)
             }
         )
