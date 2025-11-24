@@ -10,7 +10,7 @@ from typing import Optional, Union
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class DataEncryptor:
@@ -54,7 +54,7 @@ class DataEncryptor:
         if salt is None:
             salt = b"top-tier-global-hub-ai-salt"  # Should be stored securely in production
         
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
