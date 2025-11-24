@@ -29,6 +29,10 @@ dependencies = [
     "beautifulsoup4>=4.12.2",
     "PyMuPDF>=1.23.8",
     "python-dotenv>=1.0.0",
+    "fastapi-limiter>=0.1.6",
+    "redis>=5.0.4",
+    "prometheus-fastapi-instrumentator>=6.1.0",
+    "hvac>=1.2.3",
 ]
 
 [project.optional-dependencies]

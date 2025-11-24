@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'fastapi-services'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - gateway:3000
+          - llm-api:8000
+          - runner:8001
+          - dashboard:8088
+  - job_name: 'self'
+    static_configs:
+      - targets:
+          - localhost:9090
