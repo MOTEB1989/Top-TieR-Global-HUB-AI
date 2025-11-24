@@ -9,8 +9,9 @@ FROM alpine:3.20
 WORKDIR /app
 # Add non-root user first (always succeeds)
 RUN adduser -D -u 10001 appuser
-# CA certs (optional future HTTPS) - best effort
-RUN apk add --no-cache ca-certificates || true
+# CA certs (optional for future HTTPS/external APIs)
+# Using || true to allow build to succeed even if network/repository issues occur
+RUN apk add --no-cache ca-certificates 2>/dev/null || echo "Warning: ca-certificates not installed"
 COPY --from=build /out/mini-server /app/mini-server
 USER appuser
 ENV PORT=8080
