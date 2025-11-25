@@ -22,10 +22,12 @@ telegram_chatgpt_mode.py
 """
 
 import os
+import sys
 import json
 import logging
 import textwrap
 import subprocess
+import argparse
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -43,6 +45,9 @@ from telegram.ext import (
 from dotenv import load_dotenv
 load_dotenv()
 
+# Import model selection utilities
+from lib.common import select_model, should_retry_with_fallback
+
 # ---------------------- إعداد السجل ----------------------
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -55,8 +60,11 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ALLOWLIST_ENV = os.getenv("TELEGRAM_ALLOWLIST", "").strip()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL, OPENAI_FALLBACK_MODEL = select_model()
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+
+# Global flag for testing fallback behavior
+FORCE_FALLBACK = False
 
 GITHUB_REPO = os.getenv("GITHUB_REPO", "MOTEB1989/Top-TieR-Global-HUB-AI")
 
@@ -148,16 +156,13 @@ class OpenAIError(Exception):
     pass
 
 
-def call_openai_chat(
+def _do_openai_request(
+    model: str,
     messages: List[Dict[str, str]],
-    model: str = None,
     temperature: float = 0.4,
     max_tokens: int = 700,
 ) -> str:
-    if not OPENAI_API_KEY:
-        raise OpenAIError("OPENAI_API_KEY غير موجود في المتغيرات البيئية")
-
-    model = model or OPENAI_MODEL
+    """Internal function to make OpenAI API request with specific model."""
     url = f"{OPENAI_BASE_URL.rstrip('/')}/chat/completions"
 
     payload = {
@@ -183,6 +188,51 @@ def call_openai_chat(
     except Exception as e:
         logger.error("استجابة غير متوقعة من OpenAI: %s | %s", e, data)
         raise OpenAIError("Unexpected OpenAI response structure")
+
+
+def call_openai_chat(
+    messages: List[Dict[str, str]],
+    model: str = None,
+    temperature: float = 0.4,
+    max_tokens: int = 700,
+) -> str:
+    if not OPENAI_API_KEY:
+        raise OpenAIError("OPENAI_API_KEY غير موجود في المتغيرات البيئية")
+
+    model = model or OPENAI_MODEL
+    
+    # If force-fallback flag is set, simulate primary failure
+    if FORCE_FALLBACK and OPENAI_FALLBACK_MODEL:
+        logger.warning("⚠️ FORCE_FALLBACK enabled - simulating primary model failure for testing")
+        raise OpenAIError("OpenAI error 429: rate limit exceeded")
+    
+    # Try primary model first
+    try:
+        logger.debug(f"Attempting request with primary model: {model}")
+        return _do_openai_request(model, messages, temperature, max_tokens)
+    except OpenAIError as e:
+        # Check if we should retry with fallback
+        if OPENAI_FALLBACK_MODEL and should_retry_with_fallback(e):
+            logger.warning(
+                f"⚠️ Primary model '{model}' failed: {e}. "
+                f"Attempting fallback to '{OPENAI_FALLBACK_MODEL}'..."
+            )
+            try:
+                result = _do_openai_request(
+                    OPENAI_FALLBACK_MODEL, messages, temperature, max_tokens
+                )
+                logger.info(f"✅ Successfully completed request using fallback model '{OPENAI_FALLBACK_MODEL}'")
+                return result
+            except OpenAIError as fallback_error:
+                logger.error(
+                    f"❌ Fallback model '{OPENAI_FALLBACK_MODEL}' also failed: {fallback_error}"
+                )
+                raise fallback_error
+        else:
+            # No fallback available or error doesn't warrant retry
+            if OPENAI_FALLBACK_MODEL:
+                logger.debug(f"Error does not warrant fallback retry: {e}")
+            raise e
 
 
 def make_system_prompt() -> str:
@@ -324,7 +374,11 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # OpenAI
     if OPENAI_API_KEY:
         parts.append("🧠 OpenAI: ✅ مضبوط (OPENAI_API_KEY موجود)")
-        parts.append(f"   • النموذج: `{OPENAI_MODEL}`")
+        parts.append(f"   • النموذج الأساسي: `{OPENAI_MODEL}`")
+        if OPENAI_FALLBACK_MODEL:
+            parts.append(f"   • النموذج الاحتياطي: `{OPENAI_FALLBACK_MODEL}` ✅")
+        else:
+            parts.append("   • النموذج الاحتياطي: غير مهيأ")
     else:
         parts.append("🧠 OpenAI: ❌ مفقود (OPENAI_API_KEY غير موجود)")
 
@@ -583,15 +637,43 @@ async def fallback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 # ---------------------- main ----------------------
 def main() -> None:
+    global FORCE_FALLBACK
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Telegram ChatGPT Mode Bot with fallback model support"
+    )
+    parser.add_argument(
+        "--force-fallback",
+        action="store_true",
+        help="Force fallback model for testing (simulates primary model failure)"
+    )
+    args = parser.parse_args()
+    
+    FORCE_FALLBACK = args.force_fallback
+    
     if not TELEGRAM_TOKEN:
         raise RuntimeError("❌ TELEGRAM_BOT_TOKEN غير موجود في المتغيرات البيئية")
 
-    logger.info("بدء تشغيل Telegram ChatGPT Mode Bot ...")
-    logger.info("المستودع: %s", GITHUB_REPO)
-    if USER_ALLOWLIST:
-        logger.info("Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
+    logger.info("=" * 60)
+    logger.info("🤖 بدء تشغيل Telegram ChatGPT Mode Bot")
+    logger.info("=" * 60)
+    logger.info("📦 المستودع: %s", GITHUB_REPO)
+    logger.info("🧠 Primary Model: %s", OPENAI_MODEL)
+    if OPENAI_FALLBACK_MODEL:
+        logger.info("🔄 Fallback Model Enabled: %s", OPENAI_FALLBACK_MODEL)
+        logger.info("   ↳ Will auto-switch on rate limits or model unavailability")
     else:
-        logger.warning("Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
+        logger.info("⚠️  No fallback model configured (OPENAI_FALLBACK_MODEL not set)")
+    
+    if FORCE_FALLBACK:
+        logger.warning("🧪 TESTING MODE: --force-fallback enabled (will simulate primary failure)")
+    
+    if USER_ALLOWLIST:
+        logger.info("🔐 Allowlist مفعّل للمستخدمين: %s", USER_ALLOWLIST)
+    else:
+        logger.warning("⚠️  Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً")
+    logger.info("=" * 60)
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 

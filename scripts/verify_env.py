@@ -10,9 +10,15 @@ REQUIRED_NON_EMPTY = [
 
 OPTIONAL_SHOW = [
     "OPENAI_MODEL",
+    "OPENAI_FALLBACK_MODEL",
     "TELEGRAM_ALLOWLIST",
     "OPENAI_BASE_URL",
 ]
+
+# Message constants (Arabic for project consistency)
+MSG_FALLBACK_NOTE = "💡 ملاحظة: تم تكوين نموذج احتياطي (Fallback Model)"
+MSG_FALLBACK_USAGE = "   سيتم استخدام '{0}' تلقائياً إذا فشل النموذج الأساسي"
+MSG_FALLBACK_REASON = "   بسبب حدود السعر أو عدم التوفر المؤقت."
 
 def mask(value: str, key: str) -> str:
     if key.endswith("_TOKEN") or key.endswith("_KEY"):
@@ -47,6 +53,14 @@ def main():
         if v is None:
             continue
         print(f"{k} = {mask(v, k)}")
+    
+    # Display fallback model note if configured
+    fallback_model = os.getenv("OPENAI_FALLBACK_MODEL")
+    if fallback_model:
+        print(f"\n{MSG_FALLBACK_NOTE}")
+        print(MSG_FALLBACK_USAGE.format(fallback_model))
+        print(MSG_FALLBACK_REASON)
+    
     print("====================================")
 
 if __name__ == "__main__":
