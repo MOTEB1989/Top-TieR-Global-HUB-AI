@@ -18,7 +18,7 @@ docker compose up --build
 ضع مفتاحك في `.env`:
 ```
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini  # اختياري
+OPENAI_MODEL=gpt-4o-mini  # مطلوب
 OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```
 اختبر:

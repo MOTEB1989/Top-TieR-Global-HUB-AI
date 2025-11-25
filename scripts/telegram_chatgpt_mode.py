@@ -16,12 +16,13 @@ telegram_chatgpt_mode.py
 - TELEGRAM_BOT_TOKEN
 - TELEGRAM_ALLOWLIST
 - OPENAI_API_KEY
-- OPENAI_MODEL (اختياري، افتراضي gpt-4o-mini)
+- OPENAI_MODEL (مطلوب، مثال: gpt-4o-mini)
 - GITHUB_REPO (اسم المستودع للعرض فقط)
 - ULTRA_PREFLIGHT_PATH / FULL_SCAN_SCRIPT / LOG_FILE_PATH (اختياري لدمج أعمق)
 """
 
 import os
+import sys
 import json
 import logging
 import textwrap
@@ -55,7 +56,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ALLOWLIST_ENV = os.getenv("TELEGRAM_ALLOWLIST", "").strip()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 GITHUB_REPO = os.getenv("GITHUB_REPO", "MOTEB1989/Top-TieR-Global-HUB-AI")
@@ -66,6 +67,13 @@ LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "analysis/ULTRA_REPORT.md")
 
 CHAT_HISTORY_PATH = Path(os.getenv("CHAT_HISTORY_PATH", "analysis/chat_sessions.json"))
 CHAT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# ---------------------- Validation ----------------------
+# Validate critical environment variables (should be done by verify_env.py in deployment)
+if not OPENAI_MODEL:
+    logger.error("❌ OPENAI_MODEL is required but not set!")
+    logger.error("Please run: python scripts/verify_env.py to validate your configuration")
+    sys.exit(1)
 
 # ---------------------- Allowlist ----------------------
 def parse_allowlist(raw: str):
