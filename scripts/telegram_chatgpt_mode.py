@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 telegram_chatgpt_mode.py
 
@@ -21,26 +20,26 @@ telegram_chatgpt_mode.py
 - ULTRA_PREFLIGHT_PATH / FULL_SCAN_SCRIPT / LOG_FILE_PATH (اختياري لدمج أعمق)
 """
 
-import os
 import json
 import logging
-import textwrap
+import os
 import subprocess
+import textwrap
 from pathlib import Path
-from typing import Dict, List, Any
 
 import requests
-from telegram import Update, Document
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
 
 # Load .env file
 from dotenv import load_dotenv
+from telegram import Document, Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
+
 load_dotenv()
 
 # ---------------------- إعداد السجل ----------------------
@@ -103,7 +102,7 @@ async def reject_if_unauthorized(update: Update) -> bool:
 
 
 # ---------------------- إدارة الذاكرة (التاريخ) ----------------------
-def load_sessions() -> Dict[str, List[Dict[str, str]]]:
+def load_sessions() -> dict[str, list[dict[str, str]]]:
     if not CHAT_HISTORY_PATH.exists():
         return {}
     try:
@@ -114,7 +113,7 @@ def load_sessions() -> Dict[str, List[Dict[str, str]]]:
         return {}
 
 
-def save_sessions(sessions: Dict[str, List[Dict[str, str]]]) -> None:
+def save_sessions(sessions: dict[str, list[dict[str, str]]]) -> None:
     try:
         with CHAT_HISTORY_PATH.open("w", encoding="utf-8") as f:
             json.dump(sessions, f, ensure_ascii=False, indent=2)
@@ -129,7 +128,7 @@ def get_user_key(update: Update) -> str:
 
 
 def append_message(
-    sessions: Dict[str, List[Dict[str, str]]],
+    sessions: dict[str, list[dict[str, str]]],
     user_key: str,
     role: str,
     content: str,
@@ -149,7 +148,7 @@ class OpenAIError(Exception):
 
 
 def call_openai_chat(
-    messages: List[Dict[str, str]],
+    messages: list[dict[str, str]],
     model: str = None,
     temperature: float = 0.4,
     max_tokens: int = 700,
@@ -182,7 +181,7 @@ def call_openai_chat(
         return data["choices"][0]["message"]["content"]
     except Exception as e:
         logger.error("استجابة غير متوقعة من OpenAI: %s | %s", e, data)
-        raise OpenAIError("Unexpected OpenAI response structure")
+        raise OpenAIError("Unexpected OpenAI response structure") from e
 
 
 def make_system_prompt() -> str:
@@ -279,6 +278,14 @@ HELP_TEXT = textwrap.dedent(
       • تحليل سريع للمستودع اعتماداً على ARCHITECTURE/SECURITY/ULTRA_REPORT
     /insights
       • ملخص ذكي عن حالة المشروع (مخاطر، فرص تحسين، أولويات)
+
+    🔧 أوامر التشخيص:
+    /verifyenv
+      • فحص المتغيرات البيئية الحرجة (TELEGRAM_BOT_TOKEN, OPENAI_API_KEY...)
+    /preflight
+      • تشغيل فحص شامل للاتصالات والخدمات
+    /report
+      • إرسال تقرير check_connections.json كمرفق
 
     📂 تحليل ملفات:
     أرسل ملفاً نصياً (txt/md/json/log) أو سكربت، وسيقوم البوت بتحليل مبدئي له.
@@ -520,7 +527,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     prompt = textwrap.dedent(
-        f"""
+        """
         تم تزويدك بمحتوى ملف من مستودع برمجي.
 
         المطلوب:
@@ -594,6 +601,11 @@ def main() -> None:
         logger.warning("Allowlist فارغ - جميع المستخدمين مسموح لهم حالياً.")
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # ربط أوامر التشخيص
+    from scripts.bot_diagnostics import register_diag_handlers
+    register_diag_handlers(app)
+    logger.info("✅ تم تسجيل أوامر التشخيص: /verifyenv, /preflight, /report")
 
     # أوامر
     app.add_handler(CommandHandler("start", cmd_start))
