@@ -1,0 +1,33 @@
+name: AI Gateway Validation
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "gateway/**"
+      - "scripts/validate_gateway_providers.py"
+      - ".github/workflows/ai-gateway-validation.yml"
+
+jobs:
+  validate-gateway:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install gateway dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai groq python-dotenv
+
+      - name: Validate AI gateway providers
+        run: |
+          python scripts/validate_gateway_providers.py
