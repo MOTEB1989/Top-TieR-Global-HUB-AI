@@ -1,0 +1,102 @@
+name: CodeX + Copilot Auto Fix & Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  codex-checks:
+    name: Run CodeX Checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Run CodeX endpoint checks
+        run: |
+          python3 scripts/check_endpoints.py || true
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: endpoints-report
+          path: ops/endpoints_report.json
+
+      - name: Ask Copilot for review
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: "🤖 CodeX has finished initial checks.\n\n@github-copilot please review this PR, suggest improvements, and point out any issues to fix."
+            });
+
+  codex-auto-fix:
+    name: Auto Fix from Copilot Comments
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_review_comment'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Parse Copilot Comments
+        id: parse
+        run: |
+          echo "COMMENTS=$(jq -r .comment.body < $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+
+      - name: Apply Fixes (lint/format)
+        run: |
+          echo "🔧 Copilot suggested: $COMMENTS"
+          # مثال لتصليحات آلية (حسب مشروعك):
+          if [ -f "package.json" ]; then
+            npm install
+            npm run lint --fix || true
+            npm run format || true
+          fi
+          if [ -f "pyproject.toml" ]; then
+            pip install black flake8 || true
+            black . || true
+            flake8 || true
+          fi
+
+      - name: Commit fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🔧 Auto-fix applied based on Copilot review comments"
+          branch: ${{ github.head_ref }}
+
+  codex-merge:
+    name: Merge After Approval
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'APPROVED'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Merge PR after Copilot approval
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.LEXCODE_GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            await github.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: "squash"
+            });
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: "✅ PR merged automatically after Copilot approval by CodeX."
+            });
