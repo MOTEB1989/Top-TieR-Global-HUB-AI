@@ -25,3 +25,18 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # اختياري
 ```bash
 curl -X POST http://localhost:3000/v1/ai/infer \  -H "Content-Type: application/json" \  -d '{ "messages": [ { "role": "user", "content": "عرّف LexCode في جملة واحدة." } ] }'
 ```
+
+## WhatsApp-style Streamlit Chat UI
+A lightweight WhatsApp-like chat experience is available for local/dev use. Bring up the RAG stack (including the `web_ui` and gateway services) with Docker Compose:
+
+```bash
+docker compose -f docker-compose.rag.yml up web_ui gateway rag_engine phi3 qdrant
+```
+
+Once the containers are running, open the UI in a browser on the same network (mobile-friendly):
+
+```
+http://<LAPTOP_IP>:8501
+```
+
+See `docs/WHATSAPP_CHAT_UI.md` for tips on connecting from a phone and for additional notes.
