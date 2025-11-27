@@ -1,0 +1,53 @@
+{
+  "id": null,
+  "title": "Security Dashboard",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Failed Login Attempts",
+      "targets": [
+        {
+          "expr": "rate(auth_failed_logins_total[5m])",
+          "legendFormat": "Failed logins / 5m"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "type": "graph",
+      "title": "Successful Logins",
+      "targets": [
+        {
+          "expr": "rate(auth_successful_logins_total[5m])",
+          "legendFormat": "Successful logins / 5m"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 }
+    },
+    {
+      "type": "graph",
+      "title": "JWT Expired Tokens",
+      "targets": [
+        {
+          "expr": "rate(jwt_expired_total[5m])",
+          "legendFormat": "Expired JWTs"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 }
+    },
+    {
+      "type": "graph",
+      "title": "OAuth Requests",
+      "targets": [
+        {
+          "expr": "rate(oauth_requests_total[5m])",
+          "legendFormat": "OAuth / 5m"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 }
+    }
+  ],
+  "schemaVersion": 16,
+  "version": 1
+}
