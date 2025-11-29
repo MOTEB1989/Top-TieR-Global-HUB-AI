@@ -1,91 +1,95 @@
 name: External API Diagnosis
 
-env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  DB_URL: ${{ secrets.DB_URL }}
-  OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
-  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
-  MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-  MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
-  REDIS_URL: ${{ secrets.REDIS_URL }}
-  NEO4J_URI: ${{ secrets.NEO4J_URI }}
-  NEO4J_AUTH: ${{ secrets.NEO4J_AUTH }}
-  CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
-
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"   # كل 6 ساعات (تقدر تعدل)
-  workflow_dispatch:          # تشغيل يدوي
-
-permissions:
-  issues: write
-  contents: read
+    - cron: "0 * * * *"  # تشغيل كل ساعة - عدّلها إذا أردت
 
 jobs:
-  diagnose:
+  diagnose-external-api:
     runs-on: ubuntu-latest
+
+    env:
+      EXTERNAL_API_URL: ${{ secrets.EXTERNAL_API_URL }}
+      EXTERNAL_API_KEY: ${{ secrets.EXTERNAL_API_KEY }}
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install deps
-        run: pip install requests openai
-
-      - name: Run diagnosis
-        id: run_diag
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Install dependencies
         run: |
-          python scripts/diagnose_external_apis.py > report.log
+          python -m pip install --upgrade pip
+          pip install httpx
 
-      - name: Find or create persistent issue
-        id: issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show basic debug info
         run: |
-          number=$(gh issue list \
-            --state open \
-            --limit 1 \
-            --search '"🌐 External API Diagnosis" in:title' \
-            --json number -q '.[0].number' || true)
+          echo "Running External API Diagnosis..."
+          echo "Current time: $(date -u)"
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Workflow: $GITHUB_WORKFLOW"
+          echo "API URL (masked): ${EXTERNAL_API_URL%%\?*}"
 
-          if [ -z "$number" ]; then
-            body="🌐 Persistent External API Diagnosis Issue\n\nThis issue tracks connectivity to OpenAI + WHO + World Bank + Wikidata.\n\nLatest run: $(date -u)"
-            number=$(gh issue create \
-              --title "🌐 External API Diagnosis" \
-              --body "$body" \
-              --label "automation,api-diagnosis" \
-              --json number -q '.number')
-            echo "Created issue #$number"
-          fi
-          echo "number=$number" >> $GITHUB_OUTPUT
-
-      - name: Update issue body & comment
-        if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Diagnose external API
+        id: diagnose
         run: |
-          issue=${{ steps.issue.outputs.number }}
-          stamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          summary=$(cat report.log)
+          python << 'PYCODE'
+          import os, sys, time
+          import httpx
 
-          # Add comment
-          gh issue comment $issue \
-            --body "🕒 Run at $stamp (UTC)\n\n\`\`\`\n$summary\n\`\`\`"
+          api_url = os.getenv("EXTERNAL_API_URL")
+          api_key = os.getenv("EXTERNAL_API_KEY")
 
-          # Update body with last run
-          current=$(gh api repos/${{ github.repository }}/issues/$issue --jq '.body')
-          updated="$current\n\n_Last run: $stamp UTC_"
-          gh issue edit $issue --body "$updated"
+          if not api_url:
+              print("[ERROR] EXTERNAL_API_URL is not set (secret missing).")
+              sys.exit(1)
 
-      - name: Upload report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-diagnosis-log
-          path: report.log
-          retention-days: 7
+          if not api_key:
+              print("[WARN] EXTERNAL_API_KEY is not set. Trying without API key...")
+
+          headers = {}
+          if api_key:
+              headers["Authorization"] = f"Bearer {api_key}"
+
+          timeout = httpx.Timeout(10.0, connect=5.0)
+          try:
+              with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+                  response = client.get(api_url, headers=headers)
+                  print(f"[INFO] Status code: {response.status_code}")
+                  print(f"[INFO] Response headers: {dict(response.headers)}")
+
+                  # اقتصار الـ body على أول 500 حرف لعدم تدمير الـ logs
+                  text_preview = response.text[:500].replace("\n", " ") if response.text else ""
+                  print(f"[INFO] Response body (preview): {text_preview!r}")
+
+                  if response.status_code >= 500:
+                      print("[ERROR] Server-side error from external API.")
+                      sys.exit(2)
+                  elif response.status_code >= 400:
+                      print("[ERROR] Client-side error (check auth, URL, params).")
+                      sys.exit(3)
+                  else:
+                      print("[SUCCESS] External API is reachable and responding OK.")
+          except httpx.RequestError as exc:
+              print(f"[ERROR] Request error while calling {exc.request.url!r}: {exc}")
+              sys.exit(4)
+          except Exception as exc:
+              print(f"[ERROR] Unexpected exception: {exc}")
+              sys.exit(5)
+          PYCODE
+
+      - name: Mark job result
+        if: failure()
+        run: |
+          echo "External API diagnosis failed. Check logs above for details."
+          exit 1
+
+      - name: Mark job success
+        if: success()
+        run: |
+          echo "External API diagnosis succeeded."
