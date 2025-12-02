@@ -1,0 +1,201 @@
+name: Platform CI (Health + API Audit + Allowlist)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  # غيّرها إلى "false" لو تبغى الصحة تظهر خضراء حتى لو فشل الاتصال (لا يُفشل الـ CI)
+  STRICT_HEALTHCHECK: "true"
+
+jobs:
+  platform-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests jsonschema
+
+      # 1) Healthcheck على بوابة Codex (أخضر/أحمر حسب STRICT_HEALTHCHECK)
+      - name: Codex Healthcheck
+        env:
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+          STRICT: ${{ env.STRICT_HEALTHCHECK }}
+        run: |
+          set -e
+          URL="https://api.lexcode.ai/v1/lex/run"
+          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CODEX_API_KEY}" \
+            -H "User-Agent: platform-ci-health" \
+            -F "task=heartbeat" \
+            "$URL" || true)
+          echo "HTTP: $STATUS"
+          echo "Response:" && cat /tmp/resp.json || true
+
+          if [ "$STRICT" = "true" ]; then
+            if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 300 ]; then
+              echo "Codex endpoint not healthy -> failing as STRICT=true"
+              exit 1
+            fi
+          else
+            echo "STRICT=false -> لن نفشل الـ CI حتى لو فشل الاتصال."
+          fi
+
+      # 2) تشخيص البيئة (يستخدم diagnose_env.py إن كان موجودًا؛ وإلا نكتب نسخة خفيفة)
+      - name: Diagnose environment
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -f "diagnose_env.py" ]; then
+            python diagnose_env.py
+          else
+            cat > diagnose_env.py << 'PY'
+import os, requests
+EXPECTED_SECRETS=["GIT_TOKEN","CODEX_API_KEY","OPENAI_API_KEY"]
+CHECK_ENDPOINTS={"codex":"https://api.lexcode.ai/v1/lex/run","github":"https://api.github.com","openai":"https://api.openai.com/v1/models"}
+missing=[]
+print("🔍 فحص المتغيرات البيئية:")
+for v in EXPECTED_SECRETS:
+    if os.getenv(v): print(f"✅ {v} موجود")
+    else: print(f"⚠️  {v} غير موجود"); missing.append(v)
+print("\n🌐 اختبار الاتصال بالواجهات:")
+for name,url in CHECK_ENDPOINTS.items():
+    try:
+        r=requests.get(url,timeout=5); c=r.status_code
+        print(f"{'✅' if 200<=c<400 else '⚠️ '} {name} ({c})")
+    except Exception as e:
+        print(f"❌ {name} فشل الاتصال: {e}")
+if missing:
+    print("\n🚫 المتغيرات المفقودة:"); [print(" -",m) for m in missing]
+else:
+    print("\n✅ جميع الأسرار المطلوبة متوفّرة.")
+PY
+            python diagnose_env.py
+          fi
+
+      # 3) تدقيق الـ APIs (باستخدام سكربتك codex_api_audit.py) + إرسال اختياري إلى Codex
+      - name: Run API audit
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+        run: |
+          if [ -f "codex_api_audit.py" ]; then
+            if [ -n "${CODEX_API_KEY}" ]; then
+              python codex_api_audit.py --repo-path . --output api_audit_report.json --send-to-codex
+            else
+              python codex_api_audit.py --repo-path . --output api_audit_report.json
+            fi
+          else
+            echo "❌ codex_api_audit.py غير موجود في المستودع."
+            exit 1
+          fi
+          test -f api_audit_report.json && jq '.apis_by_domain | length as $n | "✅ API domains found: \($n)"' api_audit_report.json | sed 's/"//g' || true
+
+      # 4) إعداد/توفير ملفات السياسة: allowlist + catalog (إن لم تكن موجودة)
+      - name: Ensure policy files exist
+        run: |
+          mkdir -p security
+          if [ ! -f security/api-allowlist.json ]; then
+            cat > security/api-allowlist.json << 'JSON'
+{
+  "allowed_domains": [
+    "api.lexcode.ai",
+    "api.openai.com",
+    "api.github.com",
+    "github.com"
+  ]
+}
+JSON
+          fi
+          if [ ! -f security/api_catalog.yml ]; then
+            cat > security/api_catalog.yml << 'YML'
+apis:
+  - domain: api.lexcode.ai
+    label: Codex Gateway
+    purpose: فحص/استلام أرشيفات وتقارير
+    auth: Bearer ${CODEX_API_KEY}
+    owner: Platform
+
+  - domain: api.openai.com
+    label: OpenAI API
+    purpose: نماذج محادثة/تضمين
+    auth: Bearer ${OPENAI_API_KEY}
+    owner: AI
+
+  - domain: api.github.com
+    label: GitHub API
+    purpose: تنزيل الأرشيف والميتاداتا
+    auth: token ${GIT_TOKEN}
+    owner: DevOps
+YML
+          fi
+          echo "---- API Catalog ----"
+          cat security/api_catalog.yml
+
+      # 5) فرض قائمة النطاقات المسموح بها
+      - name: Enforce API allowlist
+        run: |
+          python - << 'PY'
+import json,sys
+allow = json.load(open("security/api-allowlist.json"))["allowed_domains"]
+report = json.load(open("api_audit_report.json"))
+found = {item["domain"] for item in report.get("apis_by_domain", [])}
+extras = sorted(d for d in found if d not in allow)
+if extras:
+    print("❌ External APIs not on allowlist:")
+    for d in extras: print(" -", d)
+    sys.exit(1)
+print("✅ All external APIs are on the allowlist.")
+PY
+
+      # 6) (اختياري) تحقّق مخطط JSON لملفات الاستخلاص إن وُجد schema وملفات
+      - name: Validate ingestion schema (optional)
+        if: ${{ hashFiles('schemas/ingestion_record.schema.json') != '' }}
+        run: |
+          python - << 'PY'
+import os, json, glob, sys
+from jsonschema import validate, ValidationError
+schema_path="schemas/ingestion_record.schema.json"
+if not os.path.exists(schema_path):
+    print("No schema file found; skipping."); sys.exit(0)
+schema=json.load(open(schema_path))
+errors=0
+for path in glob.glob("**/*.jsonl", recursive=True):
+    for i,line in enumerate(open(path,encoding="utf-8")):
+        if not line.strip(): continue
+        try:
+            validate(instance=json.loads(line), schema=schema)
+        except ValidationError as e:
+            print(f"❌ {path}:{i+1} -> {e.message}")
+            errors+=1
+if errors:
+    print(f"Total schema errors: {errors}"); sys.exit(1)
+print("✅ JSONL matches schema.")
+PY
+
+      # 7) رفع التقارير كـ artifact
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-ci-artifacts
+          path: |
+            api_audit_report.json
+            security/api-allowlist.json
+            security/api_catalog.yml
+          if-no-files-found: warn
